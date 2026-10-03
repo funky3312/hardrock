@@ -21,13 +21,18 @@
       --btn-backup: #7e57c2;  /* 백업 */
     }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    
+    /* 100dvh로 모바일 웹 브라우저 툴바 높이 자동 대응 */
+    html, body {
+      height: 100%;
+      height: 100dvh;
+    }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
       background-color: var(--bg);
       color: var(--text);
       display: flex;
       flex-direction: column;
-      height: 100vh;
       overflow: hidden;
       user-select: none;
     }
@@ -105,33 +110,36 @@
       transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
       will-change: transform;
     }
+    
+    /* 하단 여백 대폭 확장: 모바일 웹에서도 마지막 항목이 메뉴에 가려지지 않음 */
     .slide-page {
       width: 33.333333%;
       height: 100%;
       overflow-y: auto;
-      padding: 10px 10px calc(75px + env(safe-area-inset-bottom) + 30px) 10px;
+      padding: 10px 10px calc(100px + env(safe-area-inset-bottom, 20px) + 20px) 10px;
       -webkit-overflow-scrolling: touch;
     }
 
-    /* 하단 탭 바 */
+    /* 하단 탭 바 (높이 및 세이프 에어리어 보강) */
     nav.tab-bar {
       position: fixed;
       bottom: 0; left: 0; right: 0;
-      height: 64px;
+      height: calc(64px + env(safe-area-inset-bottom, 0px));
       background: #ffffff;
       border-top: 1px solid var(--border);
       display: flex;
       justify-content: space-around;
-      align-items: center;
-      padding-bottom: env(safe-area-inset-bottom);
+      align-items: flex-start;
+      padding-top: 6px;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
       z-index: 100;
-      box-shadow: 0 -2px 10px rgba(0,0,0,0.03);
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.04);
     }
     .tab-btn {
       background: none; border: none; color: #a4b0be;
       display: flex; flex-direction: column; align-items: center;
-      font-size: 0.78rem; gap: 4px; cursor: pointer; flex: 1;
-      height: 100%; justify-content: center;
+      font-size: 0.78rem; gap: 3px; cursor: pointer; flex: 1;
+      height: 52px; justify-content: center;
       transition: color 0.15s ease, transform 0.1s ease;
     }
     .tab-btn i { font-size: 1.35rem; }
@@ -223,7 +231,7 @@
     .modal-btn.btn-백업 { background-color: var(--btn-backup); }
     .modal-btn.btn-취소 { background-color: #f1f2f6; color: #57606f; margin-top: 4px; }
 
-    /* 공연현황 (슬림 & 콤팩트) */
+    /* 공연현황 */
     .gigs-wrap { max-width: 600px; margin: 0 auto; }
     .gig-member-row {
       display: flex; align-items: center; margin-bottom: 3px; gap: 10px;
@@ -343,7 +351,6 @@
     }
     .score-file-row:last-child { border-bottom: none; }
     
-    /* 파트명: 2줄 이상이어도 전체 이름 다 보여줌 */
     .score-part-badge {
       flex: 1;
       font-weight: 700;
@@ -357,11 +364,10 @@
       white-space: normal;
     }
 
-    /* 버튼 영역: 2줄이 되어도 절대 찌그러지지 않고 크기 고정 */
     .score-btns {
       display: flex;
       gap: 6px;
-      flex-shrink: 0; /* 폭 축소 방지 */
+      flex-shrink: 0;
     }
     .btn-action {
       padding: 6px 11px;
@@ -375,7 +381,7 @@
       justify-content: center;
       gap: 4px;
       text-decoration: none;
-      white-space: nowrap; /* 글자 세로 줄바꿈 원천 차단 */
+      white-space: nowrap;
       flex-shrink: 0;
       min-width: 58px;
       height: 32px;
@@ -804,6 +810,9 @@
         return;
       }
 
+      // 애플(iOS / iPadOS / Mac Safari) 환경 감지
+      const isApple = /iPad|iPhone|iPod|Macintosh/i.test(navigator.userAgent);
+
       const groups = {};
       appData.scores.forEach(row => {
         const [song, part, preview, download] = row;
@@ -829,15 +838,18 @@
           const fileIdMatch = (f.preview || f.download || '').match(/[-\w]{25,}/);
           const fileId = fileIdMatch ? fileIdMatch[0] : '';
           
-          // ⭐ 계정 물어보는 팝업 없이 웹 브라우저에서 바로 열리는 순수 프리뷰 링크
+          // 열기 링크 (계정 팝업 없는 웹 프리뷰)
           const cleanViewUrl = fileId 
             ? `https://drive.google.com/file/d/${fileId}/preview` 
             : f.preview;
 
-          // 로그인 없이 바로 브라우저 다운로드
-          const cleanDownloadUrl = fileId
-            ? `https://drive.google.com/uc?export=download&id=${fileId}`
-            : f.download;
+          // 다운로드 링크 (애플 기기 무한로딩 방지 분기)
+          let cleanDownloadUrl = f.download;
+          if (fileId) {
+            cleanDownloadUrl = isApple 
+              ? `https://drive.google.com/file/d/${fileId}/view`  // 애플 기기: 뷰어 화면에서 다운로드/공유로 저장
+              : `https://drive.google.com/uc?export=download&id=${fileId}`; // 안드로이드/PC: 즉시 다운로드
+          }
 
           return `
             <div class="score-file-row">
