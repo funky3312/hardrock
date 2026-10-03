@@ -287,6 +287,11 @@
       border-radius: 8px;
       margin-bottom: 5px;
       overflow: hidden;
+      transition: border-color 0.15s ease;
+    }
+    /* 즐겨찾기된 곡은 테두리를 은은하게 강조 */
+    .song-accordion.favorite {
+      border: 1px solid #ffd43b;
     }
     .song-header-btn {
       width: 100%;
@@ -313,11 +318,31 @@
     .song-meta-box {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       color: #a4b0be;
       font-size: 0.78rem;
       flex-shrink: 0;
     }
+    /* 즐겨찾기 별표 버튼 */
+    .fav-star-btn {
+      background: none;
+      border: none;
+      padding: 4px;
+      cursor: pointer;
+      color: #ced4da;
+      font-size: 1.05rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s ease, color 0.15s ease;
+    }
+    .fav-star-btn.active {
+      color: #fcc419;
+    }
+    .fav-star-btn:active {
+      transform: scale(1.25);
+    }
+
     .song-arrow-icon {
       transition: transform 0.2s ease;
       font-size: 0.8rem;
@@ -381,7 +406,7 @@
       word-break: break-all;
     }
 
-    /* 파트명 행 전체 터치 버튼 스타일 */
+    /* 파트명 행 전체 터치 버튼 */
     .score-file-row {
       display: flex;
       align-items: center;
@@ -507,6 +532,30 @@
     let deferredPrompt = null;
     let currentTabIndex = 0;
     const tabTitles = ['🎸 HardRock 출석부', '📊 HardRock 공연현황', '🎵 HardRock 악보집'];
+
+    // 스마트폰 로컬 저장소에서 즐겨찾기 곡 목록 불러오기
+    function getFavorites() {
+      try {
+        return JSON.parse(localStorage.getItem('hr_favorite_songs') || '[]');
+      } catch (e) {
+        return [];
+      }
+    }
+
+    // 즐겨찾기 토글 (본인 폰에 영구 보관 & 화면 즉시 재정렬)
+    function toggleFavorite(songName, event) {
+      if (event) event.stopPropagation(); // 아코디언이 접히거나 펼쳐지지 않도록 방지
+      
+      let favs = getFavorites();
+      const idx = favs.indexOf(songName);
+      if (idx > -1) {
+        favs.splice(idx, 1);
+      } else {
+        favs.push(songName);
+      }
+      localStorage.setItem('hr_favorite_songs', JSON.stringify(favs));
+      renderScores(); // 순서 즉시 재정렬
+    }
 
     window.addEventListener('popstate', (e) => {
       const modal = document.getElementById('att-modal-overlay');
@@ -846,7 +895,7 @@
       return results;
     }
 
-    // 악보 렌더링: 파트명 행 전체 클릭 시 즉시 악보 오픈 (버튼 제거)
+    // 악보 렌더링: 즐겨찾기(⭐) 상단 자동 정렬
     function renderScores() {
       const container = document.getElementById('scores-container');
       const query = document.getElementById('score-search').value.toLowerCase().trim();
@@ -880,15 +929,26 @@
         if (memo && !groups[song].memo) groups[song].memo = memo;
       });
 
-      const songNames = Object.keys(groups).sort();
+      const favs = getFavorites();
+
+      // ⭐ 정렬: 즐겨찾기 된 곡을 최우선으로, 그 안에서는 가나다 순으로 배치
+      const songNames = Object.keys(groups).sort((a, b) => {
+        const aFav = favs.includes(a);
+        const bFav = favs.includes(b);
+        if (aFav && !bFav) return -1;
+        if (!aFav && bFav) return 1;
+        return a.localeCompare(b);
+      });
+
       if (songNames.length === 0) {
         container.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-sub);">검색 결과가 없습니다.</div>';
         return;
       }
 
       songNames.forEach(song => {
+        const isFav = favs.includes(song);
         const accordion = document.createElement('div');
-        accordion.className = 'song-accordion';
+        accordion.className = `song-accordion ${isFav ? 'favorite' : ''}`;
         if (query.length > 0) accordion.classList.add('open');
 
         const songData = groups[song];
@@ -918,12 +978,10 @@
           extraHtml += '</div>';
         }
 
-        // 파트명 행 전체가 터치 영역으로 작동
         let filesHtml = songData.files.map(f => {
           const fileIdMatch = (f.preview || f.download || '').match(/[-\w]{25,}/);
           const fileId = fileIdMatch ? fileIdMatch[0] : '';
           
-          // 구글 표준 웹 프리뷰 링크 (안드로이드/아이폰/PC 모두 최적화 뷰어로 즉시 열림)
           const cleanViewUrl = fileId 
             ? `https://drive.google.com/file/d/${fileId}/preview` 
             : f.preview;
@@ -936,10 +994,14 @@
           `;
         }).join('');
 
+        // 헤더: 곡명 + 파일 개수 + 즐겨찾기 별표(⭐) + 드롭다운 화살표
         accordion.innerHTML = `
           <button class="song-header-btn" onclick="toggleAccordion(this)">
             <span class="song-title-text">${song}</span>
             <div class="song-meta-box">
+              <span class="fav-star-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${escapeHtml(song)}', event)" title="즐겨찾기">
+                <i class="${isFav ? 'fa-solid' : 'fa-regular'} fa-star"></i>
+              </span>
               <span>${songData.files.length}개</span>
               <i class="fa-solid fa-chevron-down song-arrow-icon"></i>
             </div>
