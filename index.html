@@ -340,7 +340,7 @@
       flex-direction: column;
     }
 
-    /* 유튜브 다중 링크 및 메모 스타일 */
+    /* 유튜브 & 메모 영역 */
     .song-extra-box {
       margin-bottom: 8px;
       display: flex;
@@ -352,29 +352,33 @@
       flex-wrap: wrap;
       gap: 6px;
     }
+    /* 유튜브 오리지널 레드 톤 적용 */
     .youtube-link-btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 5px;
-      background: #ff0000;
+      background: #d91c1c; /* 오리지널 YouTube 레드 톤 */
       color: #ffffff;
       text-decoration: none;
       font-size: 0.78rem;
       font-weight: 700;
-      padding: 6px 10px;
+      padding: 6px 11px;
       border-radius: 6px;
-      box-shadow: 0 1px 3px rgba(255, 0, 0, 0.2);
+      box-shadow: 0 1px 3px rgba(217, 28, 28, 0.25);
     }
-    .youtube-link-btn:active { background: #cc0000; transform: scale(0.98); }
+    .youtube-link-btn:active { background: #b01515; transform: scale(0.98); }
+
+    /* 포스트잇 메모: 글자 확대 & 미니멀 심플화 */
     .song-memo-card {
       background: #fff9db;
       border-left: 4px solid #f59f00;
-      padding: 7px 10px;
+      padding: 8px 11px;
       border-radius: 4px;
-      font-size: 0.78rem;
-      color: #495057;
-      line-height: 1.45;
+      font-size: 0.84rem; /* 글자 크기 살짝 확대 */
+      font-weight: 500;
+      color: #343a40;
+      line-height: 1.5;
       white-space: pre-wrap;
       word-break: break-all;
     }
@@ -838,7 +842,6 @@
       container.innerHTML = html;
     }
 
-    // 유튜브 링크 문자열에서 개별 링크/라벨 스마트 파싱
     function parseYoutubeLinks(rawText) {
       if (!rawText) return [];
       const lines = rawText.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
@@ -849,7 +852,6 @@
         if (match) {
           const url = match[1];
           let label = line.replace(url, '').trim();
-          // [원곡] 처럼 괄호가 있으면 정리
           label = label.replace(/[\[\]]/g, '').trim();
           if (!label) {
             label = lines.length > 1 ? `영상 ${idx + 1}` : '참고 영상';
@@ -874,7 +876,6 @@
 
       const groups = {};
       appData.scores.forEach(row => {
-        // [곡명, 파트, 보기, 다운, 유튜브, 메모]
         const song = (row[0] || '').trim();
         const part = (row[1] || '').trim();
         const preview = (row[2] || '').trim();
@@ -910,7 +911,7 @@
         const songData = groups[song];
         const ytList = parseYoutubeLinks(songData.youtube);
 
-        // 유튜브 버튼(다중 지원) & 메모 조립
+        // 유튜브 버튼 & 메모 (군더더기 텍스트 제거 및 글자 확대)
         let extraHtml = '';
         if (ytList.length > 0 || songData.memo) {
           extraHtml += '<div class="song-extra-box">';
@@ -928,7 +929,7 @@
           if (songData.memo) {
             extraHtml += `
               <div class="song-memo-card">
-                <i class="fa-regular fa-clipboard"></i> <strong>메모:</strong><br>${escapeHtml(songData.memo)}
+                ${escapeHtml(songData.memo)}
               </div>
             `;
           }
