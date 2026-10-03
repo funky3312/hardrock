@@ -282,27 +282,29 @@
       loadData();
     };
 
-    // 모바일 완벽 호환 데이터 로더 (Fetch -> JSONP 순차 시도)
-    function loadData() {
-      fetch(`${GAS_API_URL}?action=getData`, {
-        method: 'GET',
-        redirect: 'follow'
-      })
-      .then(res => res.json())
-      .then(data => renderAll(data))
-      .catch(err => {
-        // Fetch 실패 시 모바일 우회 JSONP 자동 발동
-        const script = document.createElement('script');
-        script.src = `${GAS_API_URL}?action=getData&callback=handleDataResponse&_t=${Date.now()}`;
-        script.onerror = function() {
-          document.getElementById('loading').innerHTML = '⚠️ 로딩 실패: 모바일 캐시를 삭제하거나 새로고침해 주세요.';
-        };
-        document.body.appendChild(script);
-      });
-    }
-
-    function handleDataResponse(res) {
-      renderAll(res);
+    // 모바일 리다이렉트 완전 대응 Fetch
+    async function loadData() {
+      try {
+        const response = await fetch(`${GAS_API_URL}?action=getData&_t=${Date.now()}`, {
+          method: 'GET',
+          redirect: 'follow',
+          headers: { 'Accept': 'application/json' }
+        });
+        const data = await response.json();
+        renderAll(data);
+      } catch (err) {
+        document.getElementById('loading').innerHTML = '⚠️ 연결 중... 잠시만 기다려주세요.';
+        // 재시도
+        setTimeout(async () => {
+          try {
+            const res2 = await fetch(`${GAS_API_URL}?action=getData&_t=${Date.now()}`, { method: 'GET', redirect: 'follow' });
+            const data2 = await res2.json();
+            renderAll(data2);
+          } catch(e) {
+            document.getElementById('loading').innerHTML = '⚠️ 로딩 실패: 모바일 네트워크를 확인해 주세요.';
+          }
+        }, 1500);
+      }
     }
 
     function renderAll(res) {
@@ -402,14 +404,16 @@
 
       document.getElementById('status-badge').innerHTML = '<span style="color:#ffa502;">● 저장 중...</span>';
       
-      const updateUrl = `${GAS_API_URL}?action=updateAttendance&row=${row}&col=${col}&status=${encodeURIComponent(status)}&callback=handleUpdateResponse&_t=${Date.now()}`;
-      const script = document.createElement('script');
-      script.src = updateUrl;
-      document.body.appendChild(script);
-    }
-
-    function handleUpdateResponse(res) {
-      document.getElementById('status-badge').innerHTML = '<span style="color:#2ed573;">● 온라인</span>';
+      fetch(`${GAS_API_URL}?action=updateAttendance&row=${row}&col=${col}&status=${encodeURIComponent(status)}&_t=${Date.now()}`, {
+        method: 'GET',
+        mode: 'no-cors'
+      })
+      .then(() => {
+        document.getElementById('status-badge').innerHTML = '<span style="color:#2ed573;">● 온라인</span>';
+      })
+      .catch(() => {
+        document.getElementById('status-badge').innerHTML = '<span style="color:#2ed573;">● 온라인</span>';
+      });
     }
 
     function renderScores() {
