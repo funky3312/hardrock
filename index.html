@@ -22,7 +22,6 @@
     }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     
-    /* 100dvh로 모바일 웹 브라우저 툴바 높이 자동 대응 */
     html, body {
       height: 100%;
       height: 100dvh;
@@ -111,7 +110,6 @@
       will-change: transform;
     }
     
-    /* 하단 여백 대폭 확장: 모바일 웹에서도 마지막 항목이 메뉴에 가려지지 않음 */
     .slide-page {
       width: 33.333333%;
       height: 100%;
@@ -120,7 +118,7 @@
       -webkit-overflow-scrolling: touch;
     }
 
-    /* 하단 탭 바 (높이 및 세이프 에어리어 보강) */
+    /* 하단 탭 바 */
     nav.tab-bar {
       position: fixed;
       bottom: 0; left: 0; right: 0;
@@ -334,13 +332,53 @@
     }
     .file-accordion-body {
       display: none;
-      padding: 4px 10px 8px 10px;
+      padding: 8px 10px 10px 10px;
       background: #fafbfc;
     }
     .song-accordion.open .file-accordion-body {
       display: flex;
       flex-direction: column;
     }
+
+    /* 유튜브 다중 링크 및 메모 스타일 */
+    .song-extra-box {
+      margin-bottom: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .youtube-btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .youtube-link-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      background: #ff0000;
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 6px 10px;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px rgba(255, 0, 0, 0.2);
+    }
+    .youtube-link-btn:active { background: #cc0000; transform: scale(0.98); }
+    .song-memo-card {
+      background: #fff9db;
+      border-left: 4px solid #f59f00;
+      padding: 7px 10px;
+      border-radius: 4px;
+      font-size: 0.78rem;
+      color: #495057;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
     .score-file-row {
       display: flex;
       align-items: center;
@@ -800,6 +838,28 @@
       container.innerHTML = html;
     }
 
+    // 유튜브 링크 문자열에서 개별 링크/라벨 스마트 파싱
+    function parseYoutubeLinks(rawText) {
+      if (!rawText) return [];
+      const lines = rawText.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+      const results = [];
+      
+      lines.forEach((line, idx) => {
+        const match = line.match(/(https?:\/\/[^\s]+)/i);
+        if (match) {
+          const url = match[1];
+          let label = line.replace(url, '').trim();
+          // [원곡] 처럼 괄호가 있으면 정리
+          label = label.replace(/[\[\]]/g, '').trim();
+          if (!label) {
+            label = lines.length > 1 ? `영상 ${idx + 1}` : '참고 영상';
+          }
+          results.push({ label, url });
+        }
+      });
+      return results;
+    }
+
     function renderScores() {
       const container = document.getElementById('scores-container');
       const query = document.getElementById('score-search').value.toLowerCase().trim();
@@ -810,17 +870,30 @@
         return;
       }
 
-      // 애플(iOS / iPadOS / Mac Safari) 환경 감지
       const isApple = /iPad|iPhone|iPod|Macintosh/i.test(navigator.userAgent);
 
       const groups = {};
       appData.scores.forEach(row => {
-        const [song, part, preview, download] = row;
+        // [곡명, 파트, 보기, 다운, 유튜브, 메모]
+        const song = (row[0] || '').trim();
+        const part = (row[1] || '').trim();
+        const preview = (row[2] || '').trim();
+        const download = (row[3] || '').trim();
+        const youtube = (row[4] || '').trim();
+        const memo = (row[5] || '').trim();
+
         if (!song) return;
         if (query && !song.toLowerCase().includes(query) && !part.toLowerCase().includes(query)) return;
         
-        if (!groups[song]) groups[song] = [];
-        groups[song].push({ part, preview, download });
+        if (!groups[song]) {
+          groups[song] = { files: [], youtube: '', memo: '' };
+        }
+        
+        if (part || preview || download) {
+          groups[song].files.push({ part, preview, download });
+        }
+        if (youtube && !groups[song].youtube) groups[song].youtube = youtube;
+        if (memo && !groups[song].memo) groups[song].memo = memo;
       });
 
       const songNames = Object.keys(groups).sort();
@@ -834,26 +907,52 @@
         accordion.className = 'song-accordion';
         if (query.length > 0) accordion.classList.add('open');
 
-        let filesHtml = groups[song].map(f => {
+        const songData = groups[song];
+        const ytList = parseYoutubeLinks(songData.youtube);
+
+        // 유튜브 버튼(다중 지원) & 메모 조립
+        let extraHtml = '';
+        if (ytList.length > 0 || songData.memo) {
+          extraHtml += '<div class="song-extra-box">';
+          if (ytList.length > 0) {
+            extraHtml += '<div class="youtube-btn-group">';
+            ytList.forEach(yt => {
+              extraHtml += `
+                <a class="youtube-link-btn" href="${yt.url}" target="_blank" rel="noopener noreferrer">
+                  <i class="fa-brands fa-youtube"></i> ${escapeHtml(yt.label)}
+                </a>
+              `;
+            });
+            extraHtml += '</div>';
+          }
+          if (songData.memo) {
+            extraHtml += `
+              <div class="song-memo-card">
+                <i class="fa-regular fa-clipboard"></i> <strong>메모:</strong><br>${escapeHtml(songData.memo)}
+              </div>
+            `;
+          }
+          extraHtml += '</div>';
+        }
+
+        let filesHtml = songData.files.map(f => {
           const fileIdMatch = (f.preview || f.download || '').match(/[-\w]{25,}/);
           const fileId = fileIdMatch ? fileIdMatch[0] : '';
           
-          // 열기 링크 (계정 팝업 없는 웹 프리뷰)
           const cleanViewUrl = fileId 
             ? `https://drive.google.com/file/d/${fileId}/preview` 
             : f.preview;
 
-          // 다운로드 링크 (애플 기기 무한로딩 방지 분기)
           let cleanDownloadUrl = f.download;
           if (fileId) {
             cleanDownloadUrl = isApple 
-              ? `https://drive.google.com/file/d/${fileId}/view`  // 애플 기기: 뷰어 화면에서 다운로드/공유로 저장
-              : `https://drive.google.com/uc?export=download&id=${fileId}`; // 안드로이드/PC: 즉시 다운로드
+              ? `https://drive.google.com/file/d/${fileId}/view`
+              : `https://drive.google.com/uc?export=download&id=${fileId}`;
           }
 
           return `
             <div class="score-file-row">
-              <span class="score-part-badge">${f.part}</span>
+              <span class="score-part-badge">${f.part || '악보'}</span>
               <div class="score-btns">
                 <button class="btn-action view" onclick="openPdfFile('${cleanViewUrl}')">
                   <i class="fa-solid fa-eye"></i> 열기
@@ -870,16 +969,26 @@
           <button class="song-header-btn" onclick="toggleAccordion(this)">
             <span class="song-title-text">${song}</span>
             <div class="song-meta-box">
-              <span>${groups[song].length}개</span>
+              <span>${songData.files.length}개</span>
               <i class="fa-solid fa-chevron-down song-arrow-icon"></i>
             </div>
           </button>
           <div class="file-accordion-body">
+            ${extraHtml}
             ${filesHtml}
           </div>
         `;
         container.appendChild(accordion);
       });
+    }
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
     }
 
     function toggleAccordion(btn) {
