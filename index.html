@@ -315,7 +315,6 @@
       padding-right: 12px;
     }
     
-    /* 별표 단독 우측 끝 정렬 */
     .fav-star-btn {
       background: none;
       border: none;
@@ -961,8 +960,10 @@
       return results;
     }
 
+    // 🎧 오디오 확장자 감지 엔진 (대소문자/공백 완전 방어)
     function isAudioFile(filename) {
-      return /\.(mp3|m4a|wav|aac|flac)$/i.test(filename || '');
+      const cleanName = (filename || '').trim().toLowerCase();
+      return /\.(mp3|m4a|wav|aac|flac|ogg)$/i.test(cleanName);
     }
 
     function formatTime(seconds) {
@@ -980,6 +981,7 @@
 
       if (!audio) return;
 
+      // 싱글톤 제어: 다른 음악 정지
       if (activeAudioElement && activeAudioElement !== audio) {
         activeAudioElement.pause();
         if (activePlayButton) {
@@ -1018,7 +1020,7 @@
       };
     }
 
-    // 악보 렌더링 (메모 태그 인라인 밀착 조립으로 불필요한 공백 제거)
+    // 악보 렌더링
     function renderScores() {
       const container = document.getElementById('scores-container');
       const query = document.getElementById('score-search').value.toLowerCase().trim();
@@ -1101,7 +1103,7 @@
           extraHtml += '</div>';
         }
 
-        // 🎧 음원 파일(오디오) 카드 렌더링
+        // 🎧 음원 플레이어 바
         let audioHtml = '';
         if (songData.audios && songData.audios.length > 0) {
           songData.audios.forEach((aud, aIdx) => {
@@ -1139,7 +1141,7 @@
           });
         }
 
-        // 📄 파트 악보 행: 화살표 없이 이름만 꽉 채움
+        // 📄 파트 악보 행
         let filesHtml = songData.files.map(f => {
           const fileIdMatch = (f.preview || f.download || '').match(/[-\w]{25,}/);
           const fileId = fileIdMatch ? fileIdMatch[0] : '';
