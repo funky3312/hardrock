@@ -391,7 +391,7 @@
       text-align: left;
     }
 
-    /* 🎧 미니 오디오 플레이어 UI */
+    /* 🎧 아코디언 내부 슬림 미니 플레이어 (다운로드 버튼 완전 배제) */
     .song-audio-card {
       background: #ffffff;
       border: 1px solid var(--border);
@@ -399,57 +399,18 @@
       padding: 8px 10px;
       margin-bottom: 8px;
       display: flex;
-      flex-direction: column;
-      gap: 6px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
-    }
-    .audio-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 6px;
-    }
-    .audio-title-wrap {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 0.78rem;
-      font-weight: 700;
-      color: #2f3542;
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      flex: 1;
-    }
-    .audio-title-wrap i { color: #387d5e; }
-    .audio-download-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 3px;
-      background: #eef2f5;
-      color: #475569;
-      text-decoration: none;
-      font-size: 0.72rem;
-      font-weight: 700;
-      padding: 3px 8px;
-      border-radius: 4px;
-      flex-shrink: 0;
-      transition: background 0.15s;
-    }
-    .audio-download-btn:active { background: #dce2e6; color: #1e293b; }
-    .audio-controls {
-      display: flex;
       align-items: center;
       gap: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
     }
     .audio-play-btn {
-      width: 28px;
-      height: 28px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
       border: none;
       background: #387d5e;
       color: #ffffff;
-      font-size: 0.78rem;
+      font-size: 0.8rem;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -472,11 +433,11 @@
       color: #88909d;
       font-variant-numeric: tabular-nums;
       flex-shrink: 0;
-      min-width: 32px;
+      min-width: 34px;
       text-align: right;
     }
 
-    /* 파트명 행: 화살표 없이 이름만 꽉 채운 심플한 버튼 */
+    /* 파트명 행: 화살표 없이 이름만 꽉 채운 심플 버튼 */
     .score-file-row {
       display: flex;
       align-items: center;
@@ -494,7 +455,6 @@
       background: #e4e7eb;
       transform: scale(0.99);
     }
-    
     .score-part-title {
       flex: 1;
       font-weight: 700;
@@ -502,6 +462,83 @@
       font-size: 0.85rem;
       line-height: 1.35;
       word-break: break-all;
+    }
+
+    /* 📱 악보 인앱 화면분할 뷰어 (상단 PDF + 하단 오디오) */
+    #score-split-modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #ffffff;
+      z-index: 2000;
+      flex-direction: column;
+      height: 100%;
+      height: 100dvh;
+    }
+    .split-header {
+      height: 48px;
+      background: #ffffff;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      flex-shrink: 0;
+    }
+    .split-header-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #2f3542;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      flex: 1;
+      padding-right: 10px;
+    }
+    .split-close-btn {
+      background: #f1f2f6;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #57606f;
+      font-size: 0.95rem;
+      flex-shrink: 0;
+    }
+    .split-close-btn:active { background: #e4e7eb; }
+
+    .split-pdf-container {
+      flex: 1;
+      width: 100%;
+      position: relative;
+      background: #525659;
+      overflow: hidden;
+    }
+    .split-pdf-container iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* 하단 고정 오디오 컨트롤 바 */
+    .split-audio-bar {
+      height: 56px;
+      background: #ffffff;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 14px;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      flex-shrink: 0;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+    }
+    .split-audio-bar.no-audio {
+      display: none;
     }
 
     #loading { text-align: center; padding: 50px 20px; color: var(--text-sub); }
@@ -586,6 +623,27 @@
     </div>
   </div>
 
+  <!-- 📱 인앱 화면분할 뷰어 (상단 PDF + 하단 오디오 바) -->
+  <div id="score-split-modal">
+    <div class="split-header">
+      <div id="split-title" class="split-header-title">곡명 - 파트명</div>
+      <button type="button" class="split-close-btn" onclick="closeSplitModal()" title="닫기">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div class="split-pdf-container">
+      <iframe id="split-iframe" src="" allow="autoplay"></iframe>
+    </div>
+    <div id="split-audio-bar" class="split-audio-bar">
+      <audio id="split-audio-player" preload="none"></audio>
+      <button type="button" id="split-play-btn" class="audio-play-btn" onclick="handleSplitAudioToggle()">
+        <i class="fa-solid fa-play"></i>
+      </button>
+      <input type="range" id="split-range" class="audio-range" value="0" min="0" max="100" step="0.1">
+      <span id="split-time" class="audio-time">0:00</span>
+    </div>
+  </div>
+
   <script>
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxk46VNnAZtti3FtD2iMVPO9aPIohyoyLTI3cIegGl4jHXN8fyYSMU8QrAX47wpvt6c/exec";
 
@@ -595,7 +653,7 @@
     let currentTabIndex = 0;
     const tabTitles = ['🎸 HardRock 출석부', '📊 HardRock 공연현황', '🎵 HardRock 악보집'];
 
-    // 🎧 싱글톤 오디오 컨트롤 관리자
+    // 오디오 관리자
     let activeAudioElement = null;
     let activePlayButton = null;
 
@@ -621,7 +679,14 @@
       renderScores();
     }
 
+    // 안드로이드 뒤로가기 제어: 출석 모달 및 인앱 뷰어 모달 완벽 방어
     window.addEventListener('popstate', (e) => {
+      const splitModal = document.getElementById('score-split-modal');
+      if (splitModal && splitModal.style.display === 'flex') {
+        closeSplitModal(false);
+        return;
+      }
+
       const modal = document.getElementById('att-modal-overlay');
       if (modal && modal.style.display === 'flex') {
         closeAttModal(false);
@@ -772,6 +837,7 @@
 
       window.addEventListener('touchstart', (e) => {
         if (document.getElementById('att-modal-overlay').style.display === 'flex' ||
+            document.getElementById('score-split-modal').style.display === 'flex' ||
             e.target.tagName === 'INPUT' ||
             e.target.type === 'range') {
           touchStartX = 0;
@@ -960,7 +1026,6 @@
       return results;
     }
 
-    // 🎧 오디오 확장자 감지 엔진 (대소문자/공백 완전 방어)
     function isAudioFile(filename) {
       const cleanName = (filename || '').trim().toLowerCase();
       return /\.(mp3|m4a|wav|aac|flac|ogg)$/i.test(cleanName);
@@ -981,7 +1046,6 @@
 
       if (!audio) return;
 
-      // 싱글톤 제어: 다른 음악 정지
       if (activeAudioElement && activeAudioElement !== audio) {
         activeAudioElement.pause();
         if (activePlayButton) {
@@ -990,11 +1054,15 @@
       }
 
       if (audio.paused) {
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
         audio.play().then(() => {
           btn.innerHTML = '<i class="fa-solid fa-pause"></i>';
           activeAudioElement = audio;
           activePlayButton = btn;
-        }).catch(e => console.log('Audio Play Err:', e));
+        }).catch(e => {
+          console.log('Audio Play Err:', e);
+          btn.innerHTML = '<i class="fa-solid fa-play"></i>';
+        });
       } else {
         audio.pause();
         btn.innerHTML = '<i class="fa-solid fa-play"></i>';
@@ -1103,14 +1171,18 @@
           extraHtml += '</div>';
         }
 
-        // 🎧 음원 플레이어 바
+        // 🎧 아코디언 내부 슬림 미니 플레이어 (다운로드 버튼 완전 제거)
         let audioHtml = '';
+        let firstAudioSrc = '';
         if (songData.audios && songData.audios.length > 0) {
           songData.audios.forEach((aud, aIdx) => {
             const fileIdMatch = (aud.download || aud.preview || '').match(/[-\w]{25,}/);
             const fileId = fileIdMatch ? fileIdMatch[0] : '';
-            const audioSrc = fileId ? `https://drive.google.com/uc?export=download&id=${fileId}` : aud.download;
-            const directDownloadUrl = fileId ? `https://drive.google.com/uc?export=download&id=${fileId}` : aud.download;
+            const audioSrc = fileId 
+              ? `https://docs.google.com/uc?export=open&id=${fileId}` 
+              : aud.download;
+
+            if (aIdx === 0) firstAudioSrc = audioSrc;
 
             const audioId = `audio_${sIdx}_${aIdx}`;
             const playBtnId = `playbtn_${sIdx}_${aIdx}`;
@@ -1119,29 +1191,18 @@
 
             audioHtml += `
               <div class="song-audio-card">
-                <div class="audio-header">
-                  <div class="audio-title-wrap">
-                    <i class="fa-solid fa-headphones"></i>
-                    <span>${escapeHtml(aud.part)}</span>
-                  </div>
-                  <a class="audio-download-btn" href="${directDownloadUrl}" download target="_blank" rel="noopener noreferrer" title="음원 다운로드">
-                    <i class="fa-solid fa-arrow-down"></i> 음원
-                  </a>
-                </div>
-                <div class="audio-controls">
-                  <audio id="${audioId}" src="${audioSrc}" preload="metadata"></audio>
-                  <button type="button" id="${playBtnId}" class="audio-play-btn" onclick="handleAudioPlay('${audioId}', '${playBtnId}', '${rangeId}', '${timeId}')">
-                    <i class="fa-solid fa-play"></i>
-                  </button>
-                  <input type="range" id="${rangeId}" class="audio-range" value="0" min="0" max="100" step="0.1">
-                  <span id="${timeId}" class="audio-time">0:00</span>
-                </div>
+                <audio id="${audioId}" src="${audioSrc}" preload="none"></audio>
+                <button type="button" id="${playBtnId}" class="audio-play-btn" onclick="handleAudioPlay('${audioId}', '${playBtnId}', '${rangeId}', '${timeId}')">
+                  <i class="fa-solid fa-play"></i>
+                </button>
+                <input type="range" id="${rangeId}" class="audio-range" value="0" min="0" max="100" step="0.1">
+                <span id="${timeId}" class="audio-time">0:00</span>
               </div>
             `;
           });
         }
 
-        // 📄 파트 악보 행
+        // 📄 파트 악보 행: 클릭 시 인앱 분할 뷰어 오픈
         let filesHtml = songData.files.map(f => {
           const fileIdMatch = (f.preview || f.download || '').match(/[-\w]{25,}/);
           const fileId = fileIdMatch ? fileIdMatch[0] : '';
@@ -1151,7 +1212,7 @@
             : f.preview;
 
           return `
-            <div class="score-file-row" onclick="openPdfFile('${cleanViewUrl}')" title="${escapeHtml(f.part)} 열기">
+            <div class="score-file-row" onclick="openSplitViewer('${escapeHtml(song)}', '${escapeHtml(f.part)}', '${cleanViewUrl}', '${firstAudioSrc}')" title="${escapeHtml(f.part)} 열기">
               <span class="score-part-title">${escapeHtml(f.part || '악보')}</span>
             </div>
           `;
@@ -1204,8 +1265,97 @@
 
     function filterScores() { renderScores(); }
 
-    function openPdfFile(url) {
-      window.open(url, '_blank');
+    /* ====================================================
+       📱 인앱 분할 뷰어 (상단 PDF + 하단 오디오 바) 제어 로직
+       ==================================================== */
+    function openSplitViewer(songTitle, partTitle, previewUrl, audioSrc) {
+      // 바깥에서 재생 중이던 오디오 일시정지
+      if (activeAudioElement) {
+        activeAudioElement.pause();
+        if (activePlayButton) activePlayButton.innerHTML = '<i class="fa-solid fa-play"></i>';
+      }
+
+      document.getElementById('split-title').innerText = `${songTitle} - ${partTitle}`;
+      document.getElementById('split-iframe').src = previewUrl;
+
+      const audioBar = document.getElementById('split-audio-bar');
+      const audioPlayer = document.getElementById('split-audio-player');
+      const playBtn = document.getElementById('split-play-btn');
+      const range = document.getElementById('split-range');
+      const time = document.getElementById('split-time');
+
+      if (audioSrc) {
+        audioBar.classList.remove('no-audio');
+        audioPlayer.src = audioSrc;
+        range.value = 0;
+        time.innerText = '0:00';
+        playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+        
+        // 싱글톤 포인터를 인앱 플레이어로 바인딩
+        activeAudioElement = audioPlayer;
+        activePlayButton = playBtn;
+
+        audioPlayer.ontimeupdate = () => {
+          if (!isNaN(audioPlayer.duration) && audioPlayer.duration > 0) {
+            range.value = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+            time.innerText = formatTime(audioPlayer.duration - audioPlayer.currentTime);
+          }
+        };
+
+        audioPlayer.onended = () => {
+          playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+          range.value = 0;
+          time.innerText = formatTime(audioPlayer.duration || 0);
+        };
+
+        range.oninput = () => {
+          if (!isNaN(audioPlayer.duration) && audioPlayer.duration > 0) {
+            audioPlayer.currentTime = (range.value / 100) * audioPlayer.duration;
+          }
+        };
+      } else {
+        audioBar.classList.add('no-audio');
+        audioPlayer.src = '';
+      }
+
+      document.getElementById('score-split-modal').style.display = 'flex';
+      history.pushState({ splitOpen: true }, '');
+    }
+
+    function handleSplitAudioToggle() {
+      const audio = document.getElementById('split-audio-player');
+      const btn = document.getElementById('split-play-btn');
+      if (!audio || !audio.src) return;
+
+      if (audio.paused) {
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+        audio.play().then(() => {
+          btn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+        }).catch(e => {
+          console.log('Split Audio Err:', e);
+          btn.innerHTML = '<i class="fa-solid fa-play"></i>';
+        });
+      } else {
+        audio.pause();
+        btn.innerHTML = '<i class="fa-solid fa-play"></i>';
+      }
+    }
+
+    function closeSplitModal(needHistoryBack = true) {
+      const modal = document.getElementById('score-split-modal');
+      modal.style.display = 'none';
+
+      // 뷰어 종료 시 오디오 및 아이프레임 리셋
+      const audioPlayer = document.getElementById('split-audio-player');
+      if (audioPlayer) {
+        audioPlayer.pause();
+        audioPlayer.src = '';
+      }
+      document.getElementById('split-iframe').src = '';
+
+      if (needHistoryBack && window.history.state && window.history.state.splitOpen) {
+        history.back();
+      }
     }
   </script>
 </body>
