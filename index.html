@@ -437,7 +437,7 @@
       text-align: right;
     }
 
-    /* 파트명 행: 화살표 없이 이름만 꽉 채운 심플 버튼 */
+    /* 파트명 행: 심플 버튼 */
     .score-file-row {
       display: flex;
       align-items: center;
@@ -464,7 +464,7 @@
       word-break: break-all;
     }
 
-    /* 📱 악보 인앱 화면분할 뷰어 (상단 PDF + 하단 오디오) */
+    /* 📱 악보 인앱 화면분할 뷰어 */
     #score-split-modal {
       display: none;
       position: fixed;
@@ -634,7 +634,7 @@
       <iframe id="split-iframe" src="" allow="autoplay"></iframe>
     </div>
     <div id="split-audio-bar" class="split-audio-bar">
-      <audio id="split-audio-player" preload="none"></audio>
+      <audio id="split-audio-player" preload="metadata"></audio>
       <button type="button" id="split-play-btn" class="audio-play-btn" onclick="handleSplitAudioToggle()">
         <i class="fa-solid fa-play"></i>
       </button>
@@ -678,7 +678,6 @@
       renderScores();
     }
 
-    // 안드로이드 뒤로가기 제어: 출석 모달 및 인앱 뷰어 모달 완벽 방어
     window.addEventListener('popstate', (e) => {
       const splitModal = document.getElementById('score-split-modal');
       if (splitModal && splitModal.style.display === 'flex') {
@@ -782,11 +781,10 @@
           const oldScoresStr = localStorage.getItem('hr_scores') || '[]';
           const newScoresStr = JSON.stringify(newScores);
 
-          // 데이터가 완전히 동일하면 불필요한 DOM 재생성을 아예 건너뜀 (초고속 방어)
           if (oldScoresStr !== newScoresStr) {
             appData.scores = newScores;
             localStorage.setItem('hr_scores', newScoresStr);
-            renderScores(); // 기존에 열려있던 폴더 기억 로직이 적용된 렌더러 호출
+            renderScores();
           }
         }
       } catch (e) {
@@ -1032,9 +1030,19 @@
       return results;
     }
 
+    // 🎧 오디오 확장자 감지 엔진
     function isAudioFile(filename) {
       const cleanName = (filename || '').trim().toLowerCase();
       return /\.(mp3|m4a|wav|aac|flac|ogg)$/i.test(cleanName);
+    }
+
+    // 🎧 구글 드라이브 CORS 차단 우회 공식 CDN 스트리밍 주소
+    function getDirectAudioUrl(rawUrl, fileId) {
+      const targetId = fileId || ((rawUrl || '').match(/[-\w]{25,}/) ? (rawUrl || '').match(/[-\w]{25,}/)[0] : '');
+      if (targetId) {
+        return `https://lh3.googleusercontent.com/d/${targetId}`;
+      }
+      return rawUrl || '';
     }
 
     function formatTime(seconds) {
@@ -1094,12 +1102,11 @@
       };
     }
 
-    // 악보 렌더링 (★ 기존 열려있던 폴더 상태 보존 기능 완벽 탑재)
+    // 악보 렌더링
     function renderScores() {
       const container = document.getElementById('scores-container');
       const query = document.getElementById('score-search').value.toLowerCase().trim();
 
-      // 1. 재렌더링 직전, 현재 멤버가 열어둔 곡명을 Set으로 캡처
       const openSongs = new Set();
       container.querySelectorAll('.song-accordion.open').forEach(el => {
         const title = el.querySelector('.song-title-text')?.innerText?.trim();
@@ -1121,6 +1128,7 @@
         const download = (row[3] || '').trim();
         const youtube = (row[4] || '').trim();
         const memo = (row[5] || '').trim();
+        const fileId = (row[6] || '').trim();
 
         if (!song) return;
         if (query && !song.toLowerCase().includes(query) && !part.toLowerCase().includes(query)) return;
@@ -1131,9 +1139,9 @@
         
         if (part || preview || download) {
           if (isAudioFile(part)) {
-            groups[song].audios.push({ part, preview, download });
+            groups[song].audios.push({ part, preview, download, fileId });
           } else {
-            groups[song].files.push({ part, preview, download });
+            groups[song].files.push({ part, preview, download, fileId });
           }
         }
         if (youtube && !groups[song].youtube) groups[song].youtube = youtube;
@@ -1160,7 +1168,6 @@
         const accordion = document.createElement('div');
         accordion.className = `song-accordion ${isFav ? 'favorite' : ''}`;
 
-        // 2. 검색 중이거나, 사용자가 이전에 열어둔 곡이면 open 상태 그대로 복원!
         if (query.length > 0 || openSongs.has(song)) {
           accordion.classList.add('open');
         }
@@ -1189,18 +1196,22 @@
           extraHtml += '</div>';
         }
 
-        // 🎧 아코디언 내부 슬림 미니 플레이어 (다운로드 버튼 완전 제거)
+        // 🎧 아코디언 내부 슬림 미니 플레이어
         let audioHtml = '';
         let firstAudioSrc = '';
+        let firstAudioPreviewUrl = '';
+
         if (songData.audios && songData.audios.length > 0) {
           songData.audios.forEach((aud, aIdx) => {
-            const fileIdMatch = (aud.download || aud.preview || '').match(/[-\w]{25,}/);
-            const fileId = fileIdMatch ? fileIdMatch[0] : '';
-            const audioSrc = fileId 
-              ? `https://docs.google.com/uc?export=open&id=${fileId}` 
-              : aud.download;
+            const audioSrc = getDirectAudioUrl(aud.download || aud.preview, aud.fileId);
+            const fileIdMatch = (aud.preview || aud.download || '').match(/[-\w]{25,}/);
+            const aFileId = aud.fileId || (fileIdMatch ? fileIdMatch[0] : '');
+            const audioPreviewUrl = aFileId ? `https://drive.google.com/file/d/${aFileId}/preview` : aud.preview;
 
-            if (aIdx === 0) firstAudioSrc = audioSrc;
+            if (aIdx === 0) {
+              firstAudioSrc = audioSrc;
+              firstAudioPreviewUrl = audioPreviewUrl;
+            }
 
             const audioId = `audio_${sIdx}_${aIdx}`;
             const playBtnId = `playbtn_${sIdx}_${aIdx}`;
@@ -1209,7 +1220,7 @@
 
             audioHtml += `
               <div class="song-audio-card">
-                <audio id="${audioId}" src="${audioSrc}" preload="none"></audio>
+                <audio id="${audioId}" src="${audioSrc}" preload="metadata"></audio>
                 <button type="button" id="${playBtnId}" class="audio-play-btn" onclick="handleAudioPlay('${audioId}', '${playBtnId}', '${rangeId}', '${timeId}')">
                   <i class="fa-solid fa-play"></i>
                 </button>
@@ -1223,14 +1234,14 @@
         // 📄 파트 악보 행: 클릭 시 인앱 분할 뷰어 오픈
         let filesHtml = songData.files.map(f => {
           const fileIdMatch = (f.preview || f.download || '').match(/[-\w]{25,}/);
-          const fileId = fileIdMatch ? fileIdMatch[0] : '';
+          const fileId = f.fileId || (fileIdMatch ? fileIdMatch[0] : '');
           
           const cleanViewUrl = fileId 
             ? `https://drive.google.com/file/d/${fileId}/preview` 
             : f.preview;
 
           return `
-            <div class="score-file-row" onclick="openSplitViewer('${escapeHtml(song)}', '${escapeHtml(f.part)}', '${cleanViewUrl}', '${firstAudioSrc}')" title="${escapeHtml(f.part)} 열기">
+            <div class="score-file-row" onclick="openSplitViewer('${escapeHtml(song)}', '${escapeHtml(f.part)}', '${cleanViewUrl}', '${firstAudioSrc}', '${firstAudioPreviewUrl}')" title="${escapeHtml(f.part)} 열기">
               <span class="score-part-title">${escapeHtml(f.part || '악보')}</span>
             </div>
           `;
@@ -1286,7 +1297,7 @@
     /* ====================================================
        📱 인앱 분할 뷰어 (상단 PDF + 하단 오디오 바) 제어 로직
        ==================================================== */
-    function openSplitViewer(songTitle, partTitle, previewUrl, audioSrc) {
+    function openSplitViewer(songTitle, partTitle, previewUrl, audioSrc, audioPreviewUrl) {
       if (activeAudioElement) {
         activeAudioElement.pause();
         if (activePlayButton) activePlayButton.innerHTML = '<i class="fa-solid fa-play"></i>';
