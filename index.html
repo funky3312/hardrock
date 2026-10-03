@@ -289,13 +289,12 @@
       overflow: hidden;
       transition: border-color 0.15s ease;
     }
-    /* 즐겨찾기된 곡은 테두리를 은은하게 강조 */
     .song-accordion.favorite {
       border: 1px solid #ffd43b;
     }
     .song-header-btn {
       width: 100%;
-      padding: 10px 12px;
+      padding: 11px 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -313,44 +312,30 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      padding-right: 8px;
+      padding-right: 12px;
     }
-    .song-meta-box {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: #a4b0be;
-      font-size: 0.78rem;
-      flex-shrink: 0;
-    }
-    /* 즐겨찾기 별표 버튼 */
+    
+    /* 별표 단독 우측 끝 정렬 (칼각 고정) */
     .fav-star-btn {
       background: none;
       border: none;
-      padding: 4px;
+      padding: 4px 6px;
       cursor: pointer;
       color: #ced4da;
-      font-size: 1.05rem;
+      font-size: 1.15rem;
       display: flex;
       align-items: center;
       justify-content: center;
+      flex-shrink: 0;
       transition: transform 0.15s ease, color 0.15s ease;
     }
     .fav-star-btn.active {
       color: #fcc419;
     }
     .fav-star-btn:active {
-      transform: scale(1.25);
+      transform: scale(1.3);
     }
 
-    .song-arrow-icon {
-      transition: transform 0.2s ease;
-      font-size: 0.8rem;
-    }
-    .song-accordion.open .song-arrow-icon {
-      transform: rotate(180deg);
-      color: #4a90e2;
-    }
     .song-accordion.open .song-header-btn {
       background: #f8f9fa;
       border-bottom: 1px solid #edf0f2;
@@ -533,7 +518,6 @@
     let currentTabIndex = 0;
     const tabTitles = ['🎸 HardRock 출석부', '📊 HardRock 공연현황', '🎵 HardRock 악보집'];
 
-    // 스마트폰 로컬 저장소에서 즐겨찾기 곡 목록 불러오기
     function getFavorites() {
       try {
         return JSON.parse(localStorage.getItem('hr_favorite_songs') || '[]');
@@ -542,9 +526,8 @@
       }
     }
 
-    // 즐겨찾기 토글 (본인 폰에 영구 보관 & 화면 즉시 재정렬)
     function toggleFavorite(songName, event) {
-      if (event) event.stopPropagation(); // 아코디언이 접히거나 펼쳐지지 않도록 방지
+      if (event) event.stopPropagation();
       
       let favs = getFavorites();
       const idx = favs.indexOf(songName);
@@ -554,7 +537,7 @@
         favs.push(songName);
       }
       localStorage.setItem('hr_favorite_songs', JSON.stringify(favs));
-      renderScores(); // 순서 즉시 재정렬
+      renderScores();
     }
 
     window.addEventListener('popstate', (e) => {
@@ -895,7 +878,7 @@
       return results;
     }
 
-    // 악보 렌더링: 즐겨찾기(⭐) 상단 자동 정렬
+    // 악보 렌더링: 파일 개수/화살표 제거 & 별표(⭐) 단독 우측 칼각 정렬
     function renderScores() {
       const container = document.getElementById('scores-container');
       const query = document.getElementById('score-search').value.toLowerCase().trim();
@@ -931,7 +914,7 @@
 
       const favs = getFavorites();
 
-      // ⭐ 정렬: 즐겨찾기 된 곡을 최우선으로, 그 안에서는 가나다 순으로 배치
+      // 즐겨찾기 곡 최상단 + 가나다순 정렬
       const songNames = Object.keys(groups).sort((a, b) => {
         const aFav = favs.includes(a);
         const bFav = favs.includes(b);
@@ -994,17 +977,13 @@
           `;
         }).join('');
 
-        // 헤더: 곡명 + 파일 개수 + 즐겨찾기 별표(⭐) + 드롭다운 화살표
+        // 헤더: 곡명 + 우측 별표(⭐) 단독 배치 (개수 및 화살표 제거)
         accordion.innerHTML = `
           <button class="song-header-btn" onclick="toggleAccordion(this)">
             <span class="song-title-text">${song}</span>
-            <div class="song-meta-box">
-              <span class="fav-star-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${escapeHtml(song)}', event)" title="즐겨찾기">
-                <i class="${isFav ? 'fa-solid' : 'fa-regular'} fa-star"></i>
-              </span>
-              <span>${songData.files.length}개</span>
-              <i class="fa-solid fa-chevron-down song-arrow-icon"></i>
-            </div>
+            <span class="fav-star-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${escapeHtml(song)}', event)" title="즐겨찾기">
+              <i class="${isFav ? 'fa-solid' : 'fa-regular'} fa-star"></i>
+            </span>
           </button>
           <div class="file-accordion-body">
             ${extraHtml}
