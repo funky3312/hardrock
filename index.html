@@ -3,25 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#121214">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#ffffff">
   <title>HardRock BAND</title>
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
-      --bg: #121214;
-      --card-bg: #1e1e24;
-      --accent: #e056fd;
-      --primary-color: #f1f2f6;
-      --text: #ffffff;
-      --text-sub: #a4b0be;
-      --border: #2a2d34;
-      --btn-ok: #0d7a5f;      /* 참석 */
-      --btn-no: #c0262b;      /* 불참 */
-      --btn-wait: #1a73e8;    /* 미정 */
-      --btn-backup: #7b42f6;  /* 백업 */
+      --bg: #ffffff;
+      --text: #2f3542;
+      --text-sub: #747d8c;
+      --border: #e4e7eb;
+      --header-bg: #f8f9fa;
+      
+      /* 이미지의 부드러운 파스텔 톤 색상 */
+      --btn-ok: #387d5e;      /* 차분한 참석 그린 */
+      --btn-no: #b83b33;      /* 차분한 불참 레드 */
+      --btn-wait: #4a90e2;    /* 부드러운 미정 블루 */
+      --btn-backup: #7e57c2;  /* 백업 퍼플 */
     }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body {
@@ -35,41 +33,33 @@
     }
     header {
       padding: 0 16px;
-      background: #16171b;
+      background: #ffffff;
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      height: 54px;
+      height: 52px;
     }
-    /* 모던 메탈릭 실버 타이포그래피 */
     header h1 {
       font-size: 1.15rem;
       font-weight: 800;
-      letter-spacing: 0.8px;
-      background: linear-gradient(135deg, #ffffff 30%, #a4b0be 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: #2f3542;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
-    header h1 i {
-      font-size: 1.05rem;
-      background: linear-gradient(135deg, #f0932b, #ffbe76);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
+    header h1 span { font-size: 1.25rem; }
 
-    #content { flex: 1; overflow-y: auto; padding: 10px 8px 80px 8px; }
+    #content { flex: 1; overflow-y: auto; padding: 10px 8px 75px 8px; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
+    /* 하단 네비게이션 바 (화이트 톤) */
     nav.tab-bar {
       position: fixed;
       bottom: 0; left: 0; right: 0;
-      height: 60px;
-      background: #16171b;
+      height: 56px;
+      background: #ffffff;
       border-top: 1px solid var(--border);
       display: flex;
       justify-content: space-around;
@@ -78,90 +68,100 @@
       z-index: 100;
     }
     .tab-btn {
-      background: none; border: none; color: var(--text-sub);
+      background: none; border: none; color: #a4b0be;
       display: flex; flex-direction: column; align-items: center;
-      font-size: 0.72rem; gap: 4px; cursor: pointer; flex: 1;
+      font-size: 0.72rem; gap: 3px; cursor: pointer; flex: 1;
     }
-    .tab-btn i { font-size: 1.2rem; }
-    .tab-btn.active { color: #f1f2f6; font-weight: bold; }
-    .tab-btn.active i { color: #f0932b; }
+    .tab-btn i { font-size: 1.15rem; }
+    .tab-btn.active { color: #2f3542; font-weight: bold; }
+    .tab-btn.active i { color: #387d5e; }
 
-    /* 출석부 테이블 */
+    /* 출석부 정돈된 표 스타일 */
     .att-table-wrap {
       background: #ffffff;
-      border-radius: 10px;
-      padding: 10px 6px;
       width: 100%;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      max-width: 600px;
+      margin: 0 auto;
     }
     table.att-table {
       width: 100%;
       table-layout: fixed;
-      border-collapse: separate;
-      border-spacing: 3px 5px;
+      border-collapse: collapse;
       text-align: center;
     }
     table.att-table th {
-      padding: 4px 1px 6px 1px;
-      font-weight: 700;
+      padding: 9px 2px;
+      font-weight: 600;
       color: #57606f;
-      font-size: 0.75rem;
+      font-size: 0.8rem;
+      border: 1px solid var(--border);
+      background-color: var(--header-bg);
       white-space: nowrap;
+    }
+    table.att-table td {
+      border: 1px solid var(--border);
+      padding: 5px 3px;
+    }
+    /* 파트 구분 빈 줄 스타일 */
+    table.att-table tr.separator-row td {
+      border: 1px solid var(--border);
+      height: 14px;
+      background-color: #fafbfc;
+      padding: 0;
     }
     .member-name-cell {
       font-weight: 700;
       color: #2f3542;
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       text-align: center;
       white-space: nowrap;
-      padding: 0 2px;
-      width: 48px;
+      background-color: #ffffff;
+      width: 58px;
     }
     .att-btn {
       display: block;
       width: 100%;
-      height: 28px;
-      line-height: 28px;
-      border-radius: 5px;
-      font-weight: 700;
-      font-size: 0.75rem;
+      height: 32px;
+      line-height: 32px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.78rem;
       color: #ffffff;
       cursor: pointer;
       user-select: none;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.08);
       transition: transform 0.08s, opacity 0.08s;
       white-space: nowrap;
     }
-    .att-btn:active { transform: scale(0.94); opacity: 0.85; }
+    .att-btn:active { transform: scale(0.95); opacity: 0.85; }
     .att-btn.참석 { background-color: var(--btn-ok); }
     .att-btn.불참 { background-color: var(--btn-no); }
     .att-btn.미정 { background-color: var(--btn-wait); }
     .att-btn.백업 { background-color: var(--btn-backup); }
 
-    /* 출석 선택 모달 */
+    /* 출석 선택 모달창 */
     #att-modal-overlay {
       display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.65); z-index: 1000;
+      background: rgba(0, 0, 0, 0.45); z-index: 1000;
       align-items: center; justify-content: center; padding: 20px;
     }
     .att-modal-card {
-      background: #ffffff; border-radius: 16px; width: 100%; max-width: 300px;
-      padding: 22px 18px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+      background: #ffffff; border-radius: 14px; width: 100%; max-width: 290px;
+      padding: 20px 18px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.15);
       animation: popIn 0.15s ease-out;
     }
     @keyframes popIn {
-      from { transform: scale(0.9); opacity: 0; }
+      from { transform: scale(0.92); opacity: 0; }
       to { transform: scale(1); opacity: 1; }
     }
-    .modal-target-name { font-size: 1.2rem; font-weight: 800; color: #1e1e24; margin-bottom: 4px; }
-    .modal-target-date { font-size: 0.88rem; font-weight: 500; color: #57606f; margin-bottom: 18px; }
+    .modal-target-name { font-size: 1.15rem; font-weight: 700; color: #2f3542; margin-bottom: 2px; }
+    .modal-target-date { font-size: 0.85rem; font-weight: 500; color: #747d8c; margin-bottom: 16px; }
     
-    .modal-choice-list { display: flex; flex-direction: column; gap: 9px; }
+    .modal-choice-list { display: flex; flex-direction: column; gap: 8px; }
     .modal-btn {
-      width: 100%; height: 44px; border: none; border-radius: 8px;
-      font-size: 0.95rem; font-weight: 700; color: #ffffff; cursor: pointer;
+      width: 100%; height: 42px; border: none; border-radius: 6px;
+      font-size: 0.92rem; font-weight: 600; color: #ffffff; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      transition: transform 0.08s;
     }
     .modal-btn:active { transform: scale(0.97); }
     .modal-btn.btn-참석 { background-color: var(--btn-ok); }
@@ -171,54 +171,57 @@
     .modal-btn.btn-취소 { background-color: #f1f2f6; color: #57606f; margin-top: 4px; }
 
     /* 악보 탭 */
-    .search-box { position: sticky; top: 0; z-index: 10; background: var(--bg); padding-bottom: 12px; }
+    .search-box { position: sticky; top: 0; z-index: 10; background: var(--bg); padding-bottom: 10px; max-width: 600px; margin: 0 auto; }
     .search-input {
-      width: 100%; padding: 12px 16px; border-radius: 12px;
-      border: 1px solid var(--border); background: var(--card-bg);
-      color: #fff; font-size: 0.95rem; outline: none;
+      width: 100%; padding: 10px 14px; border-radius: 8px;
+      border: 1px solid var(--border); background: #f8f9fa;
+      color: #2f3542; font-size: 0.9rem; outline: none;
     }
     .song-group {
-      background: var(--card-bg); border-radius: 12px;
-      margin-bottom: 12px; border: 1px solid var(--border); overflow: hidden;
+      background: #ffffff; border-radius: 10px; max-width: 600px; margin: 0 auto 10px auto;
+      border: 1px solid var(--border); overflow: hidden;
     }
     .song-header {
-      padding: 14px 16px; font-weight: 700; font-size: 1.05rem;
-      display: flex; justify-content: space-between; align-items: center; background: #22232a;
+      padding: 12px 14px; font-weight: 700; font-size: 0.98rem; color: #2f3542;
+      display: flex; justify-content: space-between; align-items: center; background: #f8f9fa;
+      border-bottom: 1px solid var(--border);
     }
-    .file-list { padding: 8px 16px; display: flex; flex-direction: column; gap: 8px; }
+    .file-list { padding: 4px 14px; display: flex; flex-direction: column; }
     .file-item {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 8px 0; border-bottom: 1px solid #2a2d34; font-size: 0.9rem;
+      padding: 10px 0; border-bottom: 1px solid #f1f2f6; font-size: 0.88rem; color: #2f3542;
     }
     .file-item:last-child { border-bottom: none; }
-    .action-btns { display: flex; gap: 8px; }
+    .action-btns { display: flex; gap: 6px; }
     .btn {
-      padding: 6px 12px; border-radius: 8px; font-size: 0.78rem;
+      padding: 5px 10px; border-radius: 6px; font-size: 0.78rem;
       border: none; cursor: pointer; text-decoration: none; font-weight: 600;
       display: inline-flex; align-items: center; gap: 4px;
     }
-    .btn-view { background: #3742fa; color: #fff; }
-    .btn-down { background: #2f3542; color: #ced6e0; }
+    .btn-view { background: #4a90e2; color: #fff; }
+    .btn-down { background: #f1f2f6; color: #57606f; border: 1px solid var(--border); }
 
     /* 공연현황 */
+    .gigs-wrap { max-width: 600px; margin: 0 auto; }
     .member-row {
-      display: flex; align-items: center; margin-bottom: 12px; gap: 12px;
-      background: var(--card-bg); padding: 12px; border-radius: 8px;
+      display: flex; align-items: center; margin-bottom: 8px; gap: 10px;
+      background: #f8f9fa; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border);
     }
-    .member-name { width: 70px; font-weight: 600; font-size: 0.95rem; }
-    .bar-wrap { flex: 1; background: #2a2d34; height: 16px; border-radius: 8px; overflow: hidden; }
-    .bar-fill { background: linear-gradient(90deg, #f0932b, #ffbe76); height: 100%; border-radius: 8px; }
-    .score-num { width: 40px; text-align: right; font-weight: 700; color: #ffbe76; font-size: 0.95rem; }
+    .member-name { width: 64px; font-weight: 700; font-size: 0.88rem; color: #2f3542; }
+    .bar-wrap { flex: 1; background: #e4e7eb; height: 14px; border-radius: 7px; overflow: hidden; }
+    .bar-fill { background: #4a90e2; height: 100%; border-radius: 7px; }
+    .score-num { width: 38px; text-align: right; font-weight: 700; color: #2f3542; font-size: 0.88rem; }
 
     /* 악보 뷰어 모달 */
     #score-modal {
       display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: #000; z-index: 1000; flex-direction: column;
+      background: rgba(0,0,0,0.7); z-index: 1000; flex-direction: column;
     }
     #modal-header {
-      background: #16171b; padding: 12px 16px; display: flex;
-      justify-content: space-between; align-items: center;
+      background: #ffffff; padding: 12px 16px; display: flex;
+      justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border);
     }
+    #modal-title { font-size: 0.9rem; font-weight: bold; color: #2f3542; }
     #modal-frame { flex: 1; border: none; width: 100%; height: 100%; background: #fff; }
 
     #loading { text-align: center; padding: 50px 20px; color: var(--text-sub); }
@@ -227,14 +230,14 @@
 <body>
 
   <header>
-    <h1><i class="fa-solid fa-guitar"></i> HardRock BAND</h1>
+    <h1><span>🎸</span> HardRock 출석부</h1>
     <div></div>
   </header>
 
   <div id="content">
     <div id="loading"><i class="fa-solid fa-circle-notch fa-spin fa-2x"></i><br><br>출석부를 불러오는 중입니다...</div>
 
-    <!-- 1. 출석부 탭 (기본 활성) -->
+    <!-- 1. 출석부 탭 -->
     <div id="tab-attendance" class="tab-content active">
       <div class="att-table-wrap">
         <div id="attendance-container"></div>
@@ -243,7 +246,7 @@
 
     <!-- 2. 공연현황 탭 -->
     <div id="tab-gigs" class="tab-content">
-      <div id="gigs-container"></div>
+      <div class="gigs-wrap" id="gigs-container"></div>
     </div>
 
     <!-- 3. 악보 탭 -->
@@ -255,6 +258,7 @@
     </div>
   </div>
 
+  <!-- 하단 탭 바 -->
   <nav class="tab-bar">
     <button class="tab-btn active" onclick="switchTab('attendance')">
       <i class="fa-solid fa-calendar-check"></i> 출석부
@@ -267,7 +271,7 @@
     </button>
   </nav>
 
-  <!-- 출석 모달 -->
+  <!-- 출석 선택 모달 -->
   <div id="att-modal-overlay">
     <div class="att-modal-card">
       <div id="modal-user-name" class="modal-target-name">멤버 이름 님</div>
@@ -283,11 +287,11 @@
     </div>
   </div>
 
-  <!-- 악보 모달 -->
+  <!-- 악보 인앱 뷰어 모달 -->
   <div id="score-modal">
     <div id="modal-header">
-      <span id="modal-title" style="font-size:0.9rem; font-weight:bold; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:70%;"></span>
-      <button onclick="closeModal()" style="background:#2f3542; border:1px solid #57606f; color:#fff; padding:6px 14px; border-radius:6px; font-weight:bold; cursor:pointer;">닫기</button>
+      <span id="modal-title"></span>
+      <button onclick="closeModal()" style="background:#f1f2f6; border:1px solid var(--border); color:#2f3542; padding:5px 12px; border-radius:6px; font-weight:600; cursor:pointer;">닫기</button>
     </div>
     <iframe id="modal-frame" src=""></iframe>
   </div>
@@ -298,7 +302,6 @@
     let appData = { attendance: [], gigs: [], scores: [] };
     let currentEditTarget = null;
 
-    // 백그라운드 PWA 서비스 워커 등록 유지
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./service-worker.js').catch(err => console.log('SW Fail:', err));
     }
@@ -323,7 +326,7 @@
             const data2 = await res2.json();
             renderAll(data2);
           } catch(e) {
-            document.getElementById('loading').innerHTML = '⚠️ 로딩 실패: 모바일 네트워크를 확인해 주세요.';
+            document.getElementById('loading').innerHTML = '⚠️ 로딩 실패: 네트워크를 확인해 주세요.';
           }
         }, 1200);
       }
@@ -358,8 +361,10 @@
       }
 
       const rows = appData.attendance;
+      const colCount = rows[0].length;
       let html = '<table class="att-table">';
       
+      // 헤더 날짜 렌더링
       html += '<thead><tr>';
       rows[0].forEach((header, colIdx) => {
         html += `<th class="${colIdx === 0 ? 'member-name-cell' : ''}">${header}</th>`;
@@ -367,10 +372,17 @@
       html += '</tr></thead><tbody>';
 
       for (let r = 1; r < rows.length; r++) {
-        const memberName = rows[r][0];
+        const memberName = (rows[r][0] || '').trim();
+        
+        // 이름이 비어 있는 행은 파트 구분용 빈 줄로 처리
+        if (!memberName) {
+          html += `<tr class="separator-row"><td colspan="${colCount}"></td></tr>`;
+          continue;
+        }
+
         html += '<tr>';
         for (let c = 0; c < rows[r].length; c++) {
-          const val = rows[r][c] || '';
+          const val = (rows[r][c] || '').trim();
           if (c === 0) {
             html += `<td class="member-name-cell">${val}</td>`;
           } else {
@@ -378,7 +390,7 @@
             const rowCoord = r + 1;
             const colCoord = c + 1;
             const statusClass = normalizeStatus(val);
-            const displayText = val.trim() === '' ? '미정' : val;
+            const displayText = val === '' ? '미정' : val;
 
             html += `<td>
               <span class="att-btn ${statusClass}" id="cell_${rowCoord}_${colCoord}"
@@ -456,7 +468,7 @@
         
         let filesHtml = groups[song].map(f => `
           <div class="file-item">
-            <span style="font-weight:500;">${f.part}</span>
+            <span style="font-weight:600;">${f.part}</span>
             <div class="action-btns">
               <button class="btn btn-view" onclick="openScore('${f.preview}', '${song} - ${f.part}')"><i class="fa-solid fa-eye"></i> 열기</button>
               <a class="btn btn-down" href="${f.download}" target="_blank"><i class="fa-solid fa-download"></i> 받기</a>
@@ -466,8 +478,8 @@
 
         groupEl.innerHTML = `
           <div class="song-header">
-            <span><i class="fa-solid fa-record-vinyl" style="color:#f0932b; margin-right:8px;"></i>${song}</span>
-            <span style="font-size:0.8rem; color:var(--text-sub);">${groups[song].length}개</span>
+            <span>🎸 ${song}</span>
+            <span style="font-size:0.8rem; color:var(--text-sub); font-weight:normal;">${groups[song].length}개</span>
           </div>
           <div class="file-list">${filesHtml}</div>
         `;
