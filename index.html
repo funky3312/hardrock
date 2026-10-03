@@ -352,13 +352,12 @@
       flex-wrap: wrap;
       gap: 6px;
     }
-    /* 유튜브 오리지널 레드 톤 적용 */
     .youtube-link-btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 5px;
-      background: #d91c1c; /* 오리지널 YouTube 레드 톤 */
+      background: #d91c1c;
       color: #ffffff;
       text-decoration: none;
       font-size: 0.78rem;
@@ -369,13 +368,12 @@
     }
     .youtube-link-btn:active { background: #b01515; transform: scale(0.98); }
 
-    /* 포스트잇 메모: 글자 확대 & 미니멀 심플화 */
     .song-memo-card {
       background: #fff9db;
       border-left: 4px solid #f59f00;
       padding: 8px 11px;
       border-radius: 4px;
-      font-size: 0.84rem; /* 글자 크기 살짝 확대 */
+      font-size: 0.84rem;
       font-weight: 500;
       color: #343a40;
       line-height: 1.5;
@@ -383,55 +381,41 @@
       word-break: break-all;
     }
 
+    /* 파트명 행 전체 터치 버튼 스타일 */
     .score-file-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 8px 0;
-      border-bottom: 1px solid #edf0f2;
-      gap: 8px;
+      padding: 10px 12px;
+      margin-bottom: 4px;
+      background: #f1f3f5;
+      border-radius: 6px;
+      border: 1px solid #e9ecef;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.12s ease, transform 0.08s ease;
+      gap: 10px;
     }
-    .score-file-row:last-child { border-bottom: none; }
+    .score-file-row:last-child { margin-bottom: 0; }
+    .score-file-row:active {
+      background: #e4e7eb;
+      transform: scale(0.99);
+    }
     
-    .score-part-badge {
+    .score-part-title {
       flex: 1;
       font-weight: 700;
-      color: #384047;
-      background: #e9ecef;
-      padding: 4px 8px;
-      border-radius: 5px;
-      font-size: 0.78rem;
+      color: #2f3542;
+      font-size: 0.84rem;
       line-height: 1.35;
       word-break: break-all;
-      white-space: normal;
     }
 
-    .score-btns {
-      display: flex;
-      gap: 6px;
+    .score-part-arrow {
+      color: #868e96;
+      font-size: 0.82rem;
       flex-shrink: 0;
     }
-    .btn-action {
-      padding: 6px 11px;
-      border-radius: 6px;
-      font-size: 0.76rem;
-      font-weight: 700;
-      border: none;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      text-decoration: none;
-      white-space: nowrap;
-      flex-shrink: 0;
-      min-width: 58px;
-      height: 32px;
-    }
-    .btn-action.view { background: #4a90e2; color: #fff; }
-    .btn-action.view:active { background: #357abd; }
-    .btn-action.download { background: #f1f2f6; color: #57606f; border: 1px solid var(--border); }
-    .btn-action.download:active { background: #e4e7eb; }
 
     #loading { text-align: center; padding: 50px 20px; color: var(--text-sub); }
   </style>
@@ -862,6 +846,7 @@
       return results;
     }
 
+    // 악보 렌더링: 파트명 행 전체 클릭 시 즉시 악보 오픈 (버튼 제거)
     function renderScores() {
       const container = document.getElementById('scores-container');
       const query = document.getElementById('score-search').value.toLowerCase().trim();
@@ -871,8 +856,6 @@
         container.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-sub);">등록된 악보가 없습니다.</div>';
         return;
       }
-
-      const isApple = /iPad|iPhone|iPod|Macintosh/i.test(navigator.userAgent);
 
       const groups = {};
       appData.scores.forEach(row => {
@@ -911,7 +894,6 @@
         const songData = groups[song];
         const ytList = parseYoutubeLinks(songData.youtube);
 
-        // 유튜브 버튼 & 메모 (군더더기 텍스트 제거 및 글자 확대)
         let extraHtml = '';
         if (ytList.length > 0 || songData.memo) {
           extraHtml += '<div class="song-extra-box">';
@@ -936,32 +918,20 @@
           extraHtml += '</div>';
         }
 
+        // 파트명 행 전체가 터치 영역으로 작동
         let filesHtml = songData.files.map(f => {
           const fileIdMatch = (f.preview || f.download || '').match(/[-\w]{25,}/);
           const fileId = fileIdMatch ? fileIdMatch[0] : '';
           
+          // 구글 표준 웹 프리뷰 링크 (안드로이드/아이폰/PC 모두 최적화 뷰어로 즉시 열림)
           const cleanViewUrl = fileId 
             ? `https://drive.google.com/file/d/${fileId}/preview` 
             : f.preview;
 
-          let cleanDownloadUrl = f.download;
-          if (fileId) {
-            cleanDownloadUrl = isApple 
-              ? `https://drive.google.com/file/d/${fileId}/view`
-              : `https://drive.google.com/uc?export=download&id=${fileId}`;
-          }
-
           return `
-            <div class="score-file-row">
-              <span class="score-part-badge">${f.part || '악보'}</span>
-              <div class="score-btns">
-                <button class="btn-action view" onclick="openPdfFile('${cleanViewUrl}')">
-                  <i class="fa-solid fa-eye"></i> 열기
-                </button>
-                <a class="btn-action download" href="${cleanDownloadUrl}" target="_blank" rel="noopener noreferrer">
-                  <i class="fa-solid fa-download"></i> 받기
-                </a>
-              </div>
+            <div class="score-file-row" onclick="openPdfFile('${cleanViewUrl}')" title="${escapeHtml(f.part)} 열기">
+              <span class="score-part-title">${escapeHtml(f.part || '악보')}</span>
+              <i class="fa-solid fa-chevron-right score-part-arrow"></i>
             </div>
           `;
         }).join('');
