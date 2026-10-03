@@ -389,6 +389,7 @@
       line-height: 1.5;
       white-space: pre-wrap;
       word-break: break-all;
+      text-align: left;
     }
 
     /* 🎧 미니 오디오 플레이어 UI */
@@ -979,7 +980,6 @@
 
       if (!audio) return;
 
-      // 이미 다른 음악이 재생 중이면 멈추기 (싱글톤)
       if (activeAudioElement && activeAudioElement !== audio) {
         activeAudioElement.pause();
         if (activePlayButton) {
@@ -998,7 +998,6 @@
         btn.innerHTML = '<i class="fa-solid fa-play"></i>';
       }
 
-      // 탐색바 & 시간 업데이트
       audio.ontimeupdate = () => {
         if (!isNaN(audio.duration) && audio.duration > 0) {
           range.value = (audio.currentTime / audio.duration) * 100;
@@ -1019,7 +1018,7 @@
       };
     }
 
-    // 악보 렌더링 (오디오 플레이어 자동 분류 포함)
+    // 악보 렌더링 (메모 태그 인라인 밀착 조립으로 불필요한 공백 제거)
     function renderScores() {
       const container = document.getElementById('scores-container');
       const query = document.getElementById('score-search').value.toLowerCase().trim();
@@ -1082,7 +1081,8 @@
         const ytList = parseYoutubeLinks(songData.youtube);
 
         let extraHtml = '';
-        if (ytList.length > 0 || songData.memo) {
+        const memoContent = (songData.memo || '').trim();
+        if (ytList.length > 0 || memoContent) {
           extraHtml += '<div class="song-extra-box">';
           if (ytList.length > 0) {
             extraHtml += '<div class="youtube-btn-group">';
@@ -1095,12 +1095,8 @@
             });
             extraHtml += '</div>';
           }
-          if (songData.memo) {
-            extraHtml += `
-              <div class="song-memo-card">
-                ${escapeHtml(songData.memo)}
-              </div>
-            `;
+          if (memoContent) {
+            extraHtml += `<div class="song-memo-card">${escapeHtml(memoContent)}</div>`;
           }
           extraHtml += '</div>';
         }
@@ -1189,7 +1185,6 @@
       const parent = btn.closest('.song-accordion');
       const willOpen = !parent.classList.contains('open');
 
-      // 폴더를 닫을 때 내부에서 재생 중이던 오디오가 있다면 일시정지
       if (!willOpen) {
         const audios = parent.querySelectorAll('audio');
         audios.forEach(aud => {
