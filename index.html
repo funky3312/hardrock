@@ -409,12 +409,18 @@
       background: #e4e7eb;
       transform: scale(0.99);
     }
+    
+    /* 음원 파일 전용 스타일 (그린 톤 & 인앱 스트리밍) */
     .score-file-row.audio-type {
       background: #eef7f2;
       border-color: #d1e7dd;
     }
     .score-file-row.audio-type:active {
       background: #dcf1e6;
+    }
+    .score-file-row.audio-type.playing {
+      background: #d1e7dd;
+      border-color: #a3cfbb;
     }
     
     .score-part-title {
@@ -432,10 +438,22 @@
       color: #1b5e20;
     }
 
+    /* 화면 전환 없이 백그라운드로 오디오를 쏴주는 비가시형 스트리머 */
+    #bg-audio-frame {
+      position: absolute;
+      width: 0;
+      height: 0;
+      border: 0;
+      visibility: hidden;
+    }
+
     #loading { text-align: center; padding: 50px 20px; color: var(--text-sub); }
   </style>
 </head>
 <body>
+
+  <!-- 화면 이탈 없는 인앱 백그라운드 오디오 프레임 -->
+  <iframe id="bg-audio-frame" src="" allow="autoplay"></iframe>
 
   <header>
     <h1 id="header-title">🎸 HardRock 출석부</h1>
@@ -522,6 +540,10 @@
     let deferredPrompt = null;
     let currentTabIndex = 0;
     const tabTitles = ['🎸 HardRock 출석부', '📊 HardRock 공연현황', '🎵 HardRock 악보집'];
+
+    // 인앱 백그라운드 재생 상태 관리
+    let currentPlayingAudioUrl = null;
+    let currentPlayingBtnEl = null;
 
     function getFavorites() {
       try {
@@ -889,18 +911,16 @@
       return results;
     }
 
-    // 오디오 확장자 감지
     function isAudioFile(filename) {
       const cleanName = (filename || '').trim().toLowerCase();
       return /\.(mp3|m4a|wav|aac|flac|ogg)$/i.test(cleanName);
     }
 
-    // 악보 및 음원 렌더링 (정석 뷰어 & 상태 보존)
+    // 악보 및 음원 렌더링
     function renderScores() {
       const container = document.getElementById('scores-container');
       const query = document.getElementById('score-search').value.toLowerCase().trim();
 
-      // 재렌더링 직전 열려있던 폴더 캡처
       const openSongs = new Set();
       container.querySelectorAll('.song-accordion.open').forEach(el => {
         const title = el.querySelector('.song-title-text')?.innerText?.trim();
@@ -958,7 +978,6 @@
         const accordion = document.createElement('div');
         accordion.className = `song-accordion ${isFav ? 'favorite' : ''}`;
 
-        // 검색 중이거나 열려있던 폴더는 open 유지
         if (query.length > 0 || openSongs.has(song)) {
           accordion.classList.add('open');
         }
@@ -987,26 +1006,34 @@
           extraHtml += '</div>';
         }
 
-        // 악보 및 음원 행 렌더링 (음원은 헤드폰 아이콘 + 연한 그린 톤)
         let filesHtml = songData.files.map(f => {
           const fileIdMatch = (f.preview || f.download || '').match(/[-\w]{25,}/);
           const fileId = f.fileId || (fileIdMatch ? fileIdMatch[0] : '');
           const isAudio = isAudioFile(f.part);
           
-          // PDF는 구글 공식 프리뷰, 음원은 브라우저 네이티브 스트림/다운로드 URL로 정석 바인딩
-          const targetUrl = isAudio
-            ? (fileId ? `https://drive.google.com/uc?export=download&id=${fileId}` : f.download)
-            : (fileId ? `https://drive.google.com/file/d/${fileId}/preview` : f.preview);
+          const cleanViewUrl = fileId 
+            ? `https://drive.google.com/file/d/${fileId}/preview` 
+            : f.preview;
 
-          const iconHtml = isAudio 
-            ? '<i class="fa-solid fa-headphones" style="font-size:0.82rem; margin-right:2px;"></i>' 
-            : '';
-
-          return `
-            <div class="score-file-row ${isAudio ? 'audio-type' : ''}" onclick="openScoreMedia('${targetUrl}')" title="${escapeHtml(f.part)} 열기">
-              <span class="score-part-title">${iconHtml}${escapeHtml(f.part || '파일')}</span>
-            </div>
-          `;
+          if (isAudio) {
+            const isPlaying = (currentPlayingAudioUrl === cleanViewUrl);
+            return `
+              <div class="score-file-row audio-type ${isPlaying ? 'playing' : ''}" 
+                   onclick="toggleInAppAudio('${cleanViewUrl}', this)" 
+                   title="${escapeHtml(f.part)} 인앱 재생">
+                <span class="score-part-title">
+                  <i class="fa-solid ${isPlaying ? 'fa-circle-pause' : 'fa-headphones'}" style="font-size:0.85rem; margin-right:3px;"></i>
+                  ${escapeHtml(f.part || '음원')} ${isPlaying ? '(재생 중)' : ''}
+                </span>
+              </div>
+            `;
+          } else {
+            return `
+              <div class="score-file-row" onclick="openScorePdf('${cleanViewUrl}')" title="${escapeHtml(f.part)} 열기">
+                <span class="score-part-title">${escapeHtml(f.part || '악보')}</span>
+              </div>
+            `;
+          }
         }).join('');
 
         accordion.innerHTML = `
@@ -1041,8 +1068,50 @@
 
     function filterScores() { renderScores(); }
 
-    // 정석 새 창 뷰어 열기 (구글 계정 충돌 0% & 백그라운드 재생 완벽 호환)
-    function openScoreMedia(url) {
+    /* ====================================================
+       🎧 화면 이탈 없는 백그라운드 인앱 오디오 재생 컨트롤
+       ==================================================== */
+    function toggleInAppAudio(previewUrl, element) {
+      const frame = document.getElementById('bg-audio-frame');
+      
+      // 이미 재생 중인 음원을 다시 터치하면 일시정지(정지)
+      if (currentPlayingAudioUrl === previewUrl) {
+        frame.src = '';
+        currentPlayingAudioUrl = null;
+        if (currentPlayingBtnEl) {
+          currentPlayingBtnEl.classList.remove('playing');
+          const title = currentPlayingBtnEl.querySelector('.score-part-title');
+          if (title) {
+            title.innerHTML = title.innerHTML.replace('fa-circle-pause', 'fa-headphones').replace('(재생 중)', '');
+          }
+          currentPlayingBtnEl = null;
+        }
+        return;
+      }
+
+      // 이전 재생 중이던 버튼 UI 원복
+      if (currentPlayingBtnEl) {
+        currentPlayingBtnEl.classList.remove('playing');
+        const prevTitle = currentPlayingBtnEl.querySelector('.score-part-title');
+        if (prevTitle) {
+          prevTitle.innerHTML = prevTitle.innerHTML.replace('fa-circle-pause', 'fa-headphones').replace('(재생 중)', '');
+        }
+      }
+
+      // 화면 이탈 없이 백그라운드 프레임에 음원 프리뷰 바인딩 ➔ 즉시 재생 시작
+      frame.src = previewUrl;
+      currentPlayingAudioUrl = previewUrl;
+      currentPlayingBtnEl = element;
+
+      element.classList.add('playing');
+      const curTitle = element.querySelector('.score-part-title');
+      if (curTitle) {
+        curTitle.innerHTML = curTitle.innerHTML.replace('fa-headphones', 'fa-circle-pause') + ' (재생 중)';
+      }
+    }
+
+    // 악보 PDF는 새 창 전체화면으로 시원하게 열기
+    function openScorePdf(url) {
       window.open(url, '_blank');
     }
   </script>
