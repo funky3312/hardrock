@@ -391,7 +391,7 @@
       text-align: left;
     }
 
-    /* 🎧 아코디언 내부 슬림 미니 플레이어 (다운로드 버튼 완전 배제) */
+    /* 🎧 아코디언 내부 슬림 미니 플레이어 */
     .song-audio-card {
       background: #ffffff;
       border: 1px solid var(--border);
@@ -524,7 +524,6 @@
       border: none;
     }
 
-    /* 하단 고정 오디오 컨트롤 바 */
     .split-audio-bar {
       height: 56px;
       background: #ffffff;
@@ -779,9 +778,16 @@
         });
         const data = await response.json();
         if (data && data.success) {
-          appData.scores = data.scores || [];
-          localStorage.setItem('hr_scores', JSON.stringify(appData.scores));
-          renderScores();
+          const newScores = data.scores || [];
+          const oldScoresStr = localStorage.getItem('hr_scores') || '[]';
+          const newScoresStr = JSON.stringify(newScores);
+
+          // 데이터가 완전히 동일하면 불필요한 DOM 재생성을 아예 건너뜀 (초고속 방어)
+          if (oldScoresStr !== newScoresStr) {
+            appData.scores = newScores;
+            localStorage.setItem('hr_scores', newScoresStr);
+            renderScores(); // 기존에 열려있던 폴더 기억 로직이 적용된 렌더러 호출
+          }
         }
       } catch (e) {
         console.log('Scores sync err:', e);
@@ -1088,10 +1094,18 @@
       };
     }
 
-    // 악보 렌더링
+    // 악보 렌더링 (★ 기존 열려있던 폴더 상태 보존 기능 완벽 탑재)
     function renderScores() {
       const container = document.getElementById('scores-container');
       const query = document.getElementById('score-search').value.toLowerCase().trim();
+
+      // 1. 재렌더링 직전, 현재 멤버가 열어둔 곡명을 Set으로 캡처
+      const openSongs = new Set();
+      container.querySelectorAll('.song-accordion.open').forEach(el => {
+        const title = el.querySelector('.song-title-text')?.innerText?.trim();
+        if (title) openSongs.add(title);
+      });
+
       container.innerHTML = '';
 
       if (!appData.scores || appData.scores.length === 0) {
@@ -1145,7 +1159,11 @@
         const isFav = favs.includes(song);
         const accordion = document.createElement('div');
         accordion.className = `song-accordion ${isFav ? 'favorite' : ''}`;
-        if (query.length > 0) accordion.classList.add('open');
+
+        // 2. 검색 중이거나, 사용자가 이전에 열어둔 곡이면 open 상태 그대로 복원!
+        if (query.length > 0 || openSongs.has(song)) {
+          accordion.classList.add('open');
+        }
 
         const songData = groups[song];
         const ytList = parseYoutubeLinks(songData.youtube);
@@ -1269,7 +1287,6 @@
        📱 인앱 분할 뷰어 (상단 PDF + 하단 오디오 바) 제어 로직
        ==================================================== */
     function openSplitViewer(songTitle, partTitle, previewUrl, audioSrc) {
-      // 바깥에서 재생 중이던 오디오 일시정지
       if (activeAudioElement) {
         activeAudioElement.pause();
         if (activePlayButton) activePlayButton.innerHTML = '<i class="fa-solid fa-play"></i>';
@@ -1291,7 +1308,6 @@
         time.innerText = '0:00';
         playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
         
-        // 싱글톤 포인터를 인앱 플레이어로 바인딩
         activeAudioElement = audioPlayer;
         activePlayButton = playBtn;
 
@@ -1345,7 +1361,6 @@
       const modal = document.getElementById('score-split-modal');
       modal.style.display = 'none';
 
-      // 뷰어 종료 시 오디오 및 아이프레임 리셋
       const audioPlayer = document.getElementById('split-audio-player');
       if (audioPlayer) {
         audioPlayer.pause();
