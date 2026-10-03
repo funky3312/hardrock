@@ -69,7 +69,7 @@
     #pwa-install-btn:active { transform: scale(0.95); background: #e4e7eb; }
     #pwa-install-btn i { color: #387d5e; }
 
-    /* 애플 감성 뷰페이저 슬라이더 구조 */
+    /* 슬라이더 구조 */
     #slider-viewport {
       flex: 1;
       position: relative;
@@ -81,7 +81,7 @@
       width: 300%;
       height: 100%;
       transform: translateX(0%);
-      transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1); /* 스르륵 애플 이징 */
+      transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
       will-change: transform;
     }
     .slide-page {
@@ -92,7 +92,7 @@
       -webkit-overflow-scrolling: touch;
     }
 
-    /* 하단 네비게이션 바 (사이즈 확대) */
+    /* 하단 네비게이션 바 */
     nav.tab-bar {
       position: fixed;
       bottom: 0; left: 0; right: 0;
@@ -202,7 +202,7 @@
     .modal-btn.btn-백업 { background-color: var(--btn-backup); }
     .modal-btn.btn-취소 { background-color: #f1f2f6; color: #57606f; margin-top: 4px; }
 
-    /* 공연현황 (슬림 & 콤팩트 & 파트 구분) */
+    /* 공연현황 (슬림 & 콤팩트) */
     .gigs-wrap { max-width: 600px; margin: 0 auto; }
     .gig-member-row {
       display: flex; align-items: center; margin-bottom: 5px; gap: 10px;
@@ -276,7 +276,6 @@
     </button>
   </header>
 
-  <!-- 부드러운 스와이프를 지원하는 슬라이더 뷰포트 -->
   <div id="slider-viewport">
     <div id="slider-track">
       <!-- 0: 출석부 슬라이드 -->
@@ -297,12 +296,15 @@
         <div class="search-box">
           <input type="text" id="score-search" class="search-input" placeholder="🔍 곡명 또는 파트 검색..." oninput="filterScores()">
         </div>
-        <div id="scores-container"></div>
+        <div id="scores-container">
+          <div id="scores-loading" style="text-align:center; padding:30px; color:var(--text-sub);">
+            <i class="fa-solid fa-circle-notch fa-spin"></i> 악보 목록을 불러오는 중입니다...
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- 하단 탭 바 (크기 확대) -->
   <nav class="tab-bar">
     <button class="tab-btn active" onclick="goToTab(0)">
       <i class="fa-solid fa-calendar-check"></i>
@@ -349,12 +351,11 @@
     let appData = { attendance: [], gigs: [], scores: [] };
     let currentEditTarget = null;
     let deferredPrompt = null;
-    let isScoresRendered = false;
+    let isScoresLoaded = false;
 
     let currentTabIndex = 0;
     const tabTitles = ['🎸 HardRock 출석부', '📊 HardRock 공연현황', '🎵 HardRock 악보집'];
 
-    // PWA 서비스 워커
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./service-worker.js').catch(err => console.log('SW Fail:', err));
     }
@@ -397,52 +398,70 @@
     });
 
     window.onload = function() {
-      loadData();
+      loadFastData();
       initSmoothSwipe();
     };
 
-    // 데이터 로드
-    async function loadData() {
+    // 1. 초고속 초기 로드: 출석부와 공연현황만 1초 컷으로 즉시 표시
+    async function loadFastData() {
       try {
-        const response = await fetch(`${GAS_API_URL}?action=getData&_t=${Date.now()}`, {
+        const response = await fetch(`${GAS_API_URL}?action=getQuickData&_t=${Date.now()}`, {
           method: 'GET',
           redirect: 'follow',
           headers: { 'Accept': 'application/json' }
         });
         const data = await response.json();
         
-        if (!data || !data.success) {
-          document.getElementById('loading').innerHTML = '⚠️ 데이터 오류: ' + (data ? data.error : '응답 없음');
-          return;
+        if (data && data.success) {
+          appData.attendance = data.attendance;
+          appData.gigs = data.gigs;
+
+          // 출석부 화면 즉시 노출
+          document.getElementById('loading').style.display = 'none';
+          renderAttendance();
+          renderGigs();
+
+          // 화면이 뜬 직후 백그라운드에서 악보 데이터 천천히 요청
+          loadScoresInBackground();
+        } else {
+          document.getElementById('loading').innerHTML = '⚠️ 로딩 실패: 데이터를 불러올 수 없습니다.';
         }
-
-        appData = data;
-        document.getElementById('loading').style.display = 'none';
-        renderAttendance();
-        renderGigs();
-
-        setTimeout(() => {
-          if (!isScoresRendered) {
-            renderScores();
-            isScoresRendered = true;
-          }
-        }, 150);
-
       } catch (err) {
+        // 네트워크 지연 시 1회 안전 재시도
         setTimeout(async () => {
           try {
-            const res2 = await fetch(`${GAS_API_URL}?action=getData&_t=${Date.now()}`, { method: 'GET', redirect: 'follow' });
+            const res2 = await fetch(`${GAS_API_URL}?action=getQuickData&_t=${Date.now()}`, { method: 'GET', redirect: 'follow' });
             const data2 = await res2.json();
-            appData = data2;
+            appData.attendance = data2.attendance;
+            appData.gigs = data2.gigs;
             document.getElementById('loading').style.display = 'none';
             renderAttendance();
             renderGigs();
-            renderScores();
-            isScoresRendered = true;
+            loadScoresInBackground();
           } catch(e) {
             document.getElementById('loading').innerHTML = '⚠️ 로딩 실패: 네트워크를 확인해 주세요.';
           }
         }, 1200);
+      }
+    }
+
+    // 2. 백그라운드 악보 로더: 출석부가 뜬 후 백엔드에서 드라이브를 천천히 스캔
+    async function loadScoresInBackground() {
+      if (isScoresLoaded) return;
+      try {
+        const response = await fetch(`${GAS_API_URL}?action=getScoresData&_t=${Date.now()}`, {
+          method: 'GET',
+          redirect: 'follow',
+          headers: { 'Accept': 'application/json' }
+        });
+        const data = await response.json();
+        if (data && data.success) {
+          appData.scores = data.scores || [];
+          isScoresLoaded = true;
+          renderScores();
+        }
+      } catch (e) {
+        console.log('Scores background load wait:', e);
       }
     }
 
@@ -451,28 +470,23 @@
       if (index < 0 || index > 2) return;
       currentTabIndex = index;
 
-      // 트랙 가로 이동 (-0%, -33.333%, -66.666%)
       const track = document.getElementById('slider-track');
       track.style.transform = `translateX(-${(index * 33.333333).toFixed(4)}%)`;
 
-      // 탭 버튼 상태 업데이트
       const btns = document.querySelectorAll('.tab-btn');
       btns.forEach((btn, i) => {
         if (i === index) btn.classList.add('active');
         else btn.classList.remove('active');
       });
 
-      // 헤더 타이틀 변경
       document.getElementById('header-title').innerText = tabTitles[index];
 
-      // 악보 탭 진입 시 렌더링 확인
-      if (index === 2 && !isScoresRendered) {
+      // 악보 탭에 들어왔는데 아직 로딩 중이라면 로딩 상태 유지
+      if (index === 2 && isScoresLoaded) {
         renderScores();
-        isScoresRendered = true;
       }
     }
 
-    // 전역 스와이프 제스처 핸들러
     function initSmoothSwipe() {
       let touchStartX = 0;
       let touchStartY = 0;
@@ -500,16 +514,12 @@
         const diffY = touch.clientY - touchStartY;
         const duration = Date.now() - touchStartTime;
 
-        // 스마트폰 가장자리(18px 이내)는 OS 뒤로가기 제스처 영역이므로 제외
         if (touchStartX < 18 || touchStartX > window.innerWidth - 18) return;
 
-        // 450ms 이내 스와이프 동작이면서 가로 이동(45px 이상)이 확실할 때
         if (duration < 450 && Math.abs(diffX) > 45 && Math.abs(diffX) > Math.abs(diffY) * 1.25) {
           if (diffX < 0) {
-            // 왼쪽으로 밀기 -> 다음 탭
             if (currentTabIndex < 2) goToTab(currentTabIndex + 1);
           } else {
-            // 오른쪽으로 밀기 -> 이전 탭
             if (currentTabIndex > 0) goToTab(currentTabIndex - 1);
           }
         }
@@ -519,7 +529,6 @@
       }, { passive: true });
     }
 
-    // 출석부 렌더링
     function renderAttendance() {
       const container = document.getElementById('attendance-container');
       if (!appData.attendance || appData.attendance.length === 0) {
@@ -606,7 +615,6 @@
       }).catch(err => console.log('Update Error:', err));
     }
 
-    // 공연현황: 다중 열 자동 합산 + 파트 구분 여백 + 유동적 바 크기
     function renderGigs() {
       const container = document.getElementById('gigs-container');
       container.innerHTML = '';
@@ -615,12 +623,10 @@
         return;
       }
       
-      // 1. 멤버별 모든 열의 숫자 자동 합산
       const gigStats = appData.gigs.map(row => {
         const name = (row[0] || '').trim();
-        if (!name) return { isSeparator: true }; // 빈칸 행(파트 구분)
+        if (!name) return { isSeparator: true };
 
-        // B열부터 끝 열까지 모든 차수 합산
         let total = 0;
         for (let col = 1; col < row.length; col++) {
           const num = parseFloat(row[col]);
@@ -629,11 +635,9 @@
         return { isSeparator: false, name, score: total };
       });
 
-      // 2. 유동적 100% 게이지 기준값 계산 (가장 높은 멤버 기준, 최소 10)
       const validScores = gigStats.filter(g => !g.isSeparator).map(g => g.score);
       const maxScore = validScores.length > 0 ? Math.max(...validScores, 10) : 10;
 
-      // 3. 콤팩트 렌더링
       let html = '';
       gigStats.forEach(g => {
         if (g.isSeparator) {
@@ -655,11 +659,15 @@
       container.innerHTML = html;
     }
 
-    // 악보 렌더링
     function renderScores() {
       const container = document.getElementById('scores-container');
       const query = document.getElementById('score-search').value.toLowerCase().trim();
       container.innerHTML = '';
+
+      if (!appData.scores || appData.scores.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-sub);">등록된 악보가 없거나 불러오는 중입니다.</div>';
+        return;
+      }
 
       const groups = {};
       appData.scores.forEach(row => {
@@ -673,7 +681,7 @@
 
       const songNames = Object.keys(groups).sort();
       if (songNames.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-sub);">악보가 없거나 검색 결과가 없습니다.</div>';
+        container.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-sub);">검색 결과가 없습니다.</div>';
         return;
       }
 
