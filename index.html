@@ -29,7 +29,6 @@
       flex-direction: column;
       height: 100vh;
       overflow: hidden;
-      touch-action: pan-y; /* 수직 스크롤 유지, 가로 제스처 캐치 */
     }
     header {
       padding: 0 16px;
@@ -68,7 +67,6 @@
     #pwa-install-btn:active { transform: scale(0.95); background: #e4e7eb; }
     #pwa-install-btn i { color: #387d5e; }
 
-    /* 모바일 웹 브라우저 툴바를 고려해 하단 패딩 대폭 확보 (120px) */
     #content { 
       flex: 1; 
       overflow-y: auto; 
@@ -81,7 +79,6 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* 하단 네비게이션 바 */
     nav.tab-bar {
       position: fixed;
       bottom: 0; left: 0; right: 0;
@@ -103,7 +100,6 @@
     .tab-btn.active { color: #2f3542; font-weight: bold; }
     .tab-btn.active i { color: #387d5e; }
 
-    /* 출석부 표 */
     .att-table-wrap {
       background: #ffffff;
       width: 100%;
@@ -164,7 +160,6 @@
     .att-btn.미정 { background-color: var(--btn-wait); }
     .att-btn.백업 { background-color: var(--btn-backup); }
 
-    /* 출석 선택 모달 */
     #att-modal-overlay {
       display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(0, 0, 0, 0.45); z-index: 1000;
@@ -187,7 +182,6 @@
     .modal-btn.btn-백업 { background-color: var(--btn-backup); }
     .modal-btn.btn-취소 { background-color: #f1f2f6; color: #57606f; margin-top: 4px; }
 
-    /* 악보 탭 */
     .search-box { position: sticky; top: 0; z-index: 10; background: var(--bg); padding-bottom: 10px; max-width: 600px; margin: 0 auto; }
     .search-input {
       width: 100%; padding: 10px 14px; border-radius: 8px;
@@ -218,7 +212,6 @@
     .btn-view { background: #4a90e2; color: #fff; }
     .btn-down { background: #f1f2f6; color: #57606f; border: 1px solid var(--border); }
 
-    /* 공연현황 */
     .gigs-wrap { max-width: 600px; margin: 0 auto; }
     .member-row {
       display: flex; align-items: center; margin-bottom: 8px; gap: 10px;
@@ -229,7 +222,6 @@
     .bar-fill { background: #4a90e2; height: 100%; border-radius: 7px; }
     .score-num { width: 38px; text-align: right; font-weight: 700; color: #2f3542; font-size: 0.88rem; }
 
-    /* 악보 뷰어 모달 */
     #score-modal {
       display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(0,0,0,0.7); z-index: 1000; flex-direction: column;
@@ -256,7 +248,7 @@
   <div id="content">
     <div id="loading"><i class="fa-solid fa-circle-notch fa-spin fa-2x"></i><br><br>출석부를 불러오는 중입니다...</div>
 
-    <!-- 1. 출석부 탭 (기본 활성) -->
+    <!-- 1. 출석부 탭 -->
     <div id="tab-attendance" class="tab-content active">
       <div class="att-table-wrap">
         <div id="attendance-container"></div>
@@ -305,7 +297,7 @@
     </div>
   </div>
 
-  <!-- 악보 인앱 뷰어 모달 -->
+  <!-- 악보 모달 -->
   <div id="score-modal">
     <div id="modal-header">
       <span id="modal-title"></span>
@@ -375,7 +367,6 @@
       initSwipe();
     };
 
-    // 1. 데이터 비동기 로드
     async function loadData() {
       try {
         const response = await fetch(`${GAS_API_URL}?action=getData&_t=${Date.now()}`, {
@@ -391,13 +382,10 @@
         }
 
         appData = data;
-        
-        // 출석부 & 공연현황 즉시 렌더링 후 로딩창 닫기
         document.getElementById('loading').style.display = 'none';
         renderAttendance();
         renderGigs();
 
-        // 대용량 악보 데이터는 백그라운드 지연 렌더링
         setTimeout(() => {
           if (!isScoresRendered) {
             renderScores();
@@ -423,7 +411,6 @@
       }
     }
 
-    // 2. 탭 전환 및 상단 타이틀 동기화
     function switchTab(tabId) {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -434,61 +421,67 @@
         document.getElementById('tab-' + tabId).classList.add('active');
       }
 
-      // 상단 헤더 텍스트 변경
       const headerTitle = document.getElementById('header-title');
       if (headerTitle && tabTitles[tabId]) {
         headerTitle.innerText = tabTitles[tabId];
       }
 
-      // 악보 탭 진입 시 아직 렌더링 전이면 렌더링 완료
       if (tabId === 'scores' && !isScoresRendered) {
         renderScores();
         isScoresRendered = true;
       }
     }
 
-    // 3. 좌우 스와이프 제스처 핸들러
+    // PWA 단독 앱 환경 100% 호환 전역 스와이프 핸들러
     function initSwipe() {
       let touchStartX = 0;
       let touchStartY = 0;
-      let touchEndX = 0;
-      let touchEndY = 0;
+      let touchStartTime = 0;
 
-      const contentArea = document.getElementById('content');
+      window.addEventListener('touchstart', (e) => {
+        if (document.getElementById('att-modal-overlay').style.display === 'flex' ||
+            document.getElementById('score-modal').style.display === 'flex' ||
+            e.target.tagName === 'INPUT') {
+          touchStartX = 0;
+          return;
+        }
 
-      contentArea.addEventListener('touchstart', (e) => {
-        touchStartX = e.changedTouches[0].screenX;
-        touchStartY = e.changedTouches[0].screenY;
+        const touch = e.touches[0];
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+        touchStartTime = Date.now();
       }, { passive: true });
 
-      contentArea.addEventListener('touchend', (e) => {
-        touchEndX = e.changedTouches[0].screenX;
-        touchEndY = e.changedTouches[0].screenY;
-        handleSwipeGesture();
-      }, { passive: true });
+      window.addEventListener('touchend', (e) => {
+        if (!touchStartX) return;
 
-      function handleSwipeGesture() {
-        const diffX = touchEndX - touchStartX;
-        const diffY = touchEndY - touchStartY;
+        const touch = e.changedTouches[0];
+        const diffX = touch.clientX - touchStartX;
+        const diffY = touch.clientY - touchStartY;
+        const duration = Date.now() - touchStartTime;
 
-        // 가로 이동 거리가 50px 이상이고, 세로 스크롤보다 가로 스와이프 의도가 명확할 때만 동작
-        if (Math.abs(diffX) > 50 && Math.abs(diffX) > Math.abs(diffY) * 1.5) {
+        // 스마트폰 가장자리(15px 이내)는 OS 뒤로가기 제스처 영역이므로 제외
+        if (touchStartX < 15 || touchStartX > window.innerWidth - 15) return;
+
+        // 빠른 스와이프 동작이면서 가로 이동이 명확할 때 전환
+        if (duration < 500 && Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY) * 1.2) {
           const currentTab = document.querySelector('.tab-content.active').id.replace('tab-', '');
           let currentIndex = tabsOrder.indexOf(currentTab);
 
           if (diffX < 0) {
-            // 오른쪽 -> 왼쪽 스와이프 (다음 탭으로)
             if (currentIndex < tabsOrder.length - 1) {
               switchTab(tabsOrder[currentIndex + 1]);
             }
           } else {
-            // 왼쪽 -> 오른쪽 스와이프 (이전 탭으로)
             if (currentIndex > 0) {
               switchTab(tabsOrder[currentIndex - 1]);
             }
           }
         }
-      }
+
+        touchStartX = 0;
+        touchStartY = 0;
+      }, { passive: true });
     }
 
     function renderAttendance() {
