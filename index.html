@@ -69,7 +69,7 @@
     #pwa-install-btn:active { transform: scale(0.95); background: #e4e7eb; }
     #pwa-install-btn i { color: #387d5e; }
 
-    /* 슬라이더 구조 (하드웨어 가속) */
+    /* 슬라이더 구조 */
     #slider-viewport {
       flex: 1;
       position: relative;
@@ -88,7 +88,7 @@
       width: 33.333333%;
       height: 100%;
       overflow-y: auto;
-      padding: 12px 10px calc(80px + env(safe-area-inset-bottom) + 30px) 10px;
+      padding: 10px 10px calc(75px + env(safe-area-inset-bottom) + 30px) 10px;
       -webkit-overflow-scrolling: touch;
     }
 
@@ -117,7 +117,7 @@
     .tab-btn.active { color: #2f3542; font-weight: 800; transform: translateY(-1px); }
     .tab-btn.active i { color: #387d5e; }
 
-    /* 출석부 표 */
+    /* 출석부 표 스타일 */
     .att-table-wrap {
       background: #ffffff;
       width: 100%;
@@ -202,24 +202,24 @@
     .modal-btn.btn-백업 { background-color: var(--btn-backup); }
     .modal-btn.btn-취소 { background-color: #f1f2f6; color: #57606f; margin-top: 4px; }
 
-    /* 공연현황 (슬림 & 콤팩트) */
+    /* 공연현황 (글자 크기는 살리고 여백만 다이어트) */
     .gigs-wrap { max-width: 600px; margin: 0 auto; }
     .gig-member-row {
-      display: flex; align-items: center; margin-bottom: 5px; gap: 10px;
-      background: #ffffff; padding: 7px 10px; border-radius: 6px; border: 1px solid var(--border);
+      display: flex; align-items: center; margin-bottom: 3px; gap: 10px;
+      background: #ffffff; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border);
     }
     .gig-part-separator {
-      height: 12px; margin: 6px 0;
-      background: #f8f9fa; border-radius: 4px;
+      height: 6px; margin: 4px 0;
+      background: #f1f3f5; border-radius: 3px;
     }
-    .gig-name { width: 56px; font-weight: 700; font-size: 0.82rem; color: #2f3542; white-space: nowrap; }
-    .gig-bar-wrap { flex: 1; background: #eef1f4; height: 10px; border-radius: 5px; overflow: hidden; }
+    .gig-name { width: 60px; font-weight: 700; font-size: 0.88rem; color: #2f3542; white-space: nowrap; }
+    .gig-bar-wrap { flex: 1; background: #eef1f4; height: 8px; border-radius: 4px; overflow: hidden; }
     .gig-bar-fill {
       background: linear-gradient(90deg, #4a90e2, #68b0f7);
-      height: 100%; border-radius: 5px;
+      height: 100%; border-radius: 4px;
       transition: width 0.6s cubic-bezier(0.25, 1, 0.5, 1);
     }
-    .gig-score-num { width: 44px; text-align: right; font-weight: 700; color: #4a90e2; font-size: 0.82rem; }
+    .gig-score-num { width: 44px; text-align: right; font-weight: 800; color: #4a90e2; font-size: 0.88rem; }
 
     /* 악보 탭 */
     .search-box { position: sticky; top: 0; z-index: 10; background: var(--bg); padding-bottom: 10px; max-width: 600px; margin: 0 auto; }
@@ -407,14 +407,12 @@
           renderAttendance();
           renderGigs();
 
-          // ⭐️️ 핵심: 출석부가 뜬 직후 백그라운드에서 악보를 가져와 '미리' 조립해둠!
-          // 사용자가 출석부를 보는 동안 백그라운드 렌더링이 끝나므로 스와이프할 때 렉 0%
+          // 출석부가 뜬 직후 백그라운드에서 악보를 미리 조립해둠
           setTimeout(preloadScoresInBackground, 300);
         } else {
           document.getElementById('loading').innerHTML = '⚠️ 로딩 오류: ' + (data ? data.error : '응답 없음');
         }
       } catch (err) {
-        // 실패 시 예비 통합 로드 1회
         setTimeout(async () => {
           try {
             const res2 = await fetch(`${GAS_API_URL}?action=getData&_t=${Date.now()}`, { method: 'GET', redirect: 'follow' });
@@ -431,7 +429,7 @@
       }
     }
 
-    // 2. 백그라운드 악보 로드 & '사전 조립' 완료
+    // 2. 백그라운드 악보 사전 조립
     async function preloadScoresInBackground() {
       try {
         const response = await fetch(`${GAS_API_URL}?action=getScoresData&_t=${Date.now()}`, {
@@ -442,7 +440,6 @@
         const data = await response.json();
         if (data && data.success) {
           appData.scores = data.scores || [];
-          // 사용자가 넘기기 전에 악보 화면을 미리 100% 그려둠!
           renderScores();
         }
       } catch (e) {
@@ -450,7 +447,7 @@
       }
     }
 
-    // 3. 순수 GPU 슬라이더 이동 (미리 그려져 있으므로 멈칫거림 0%)
+    // 3. 탭 이동
     function goToTab(index) {
       if (index < 0 || index > 2) return;
       currentTabIndex = index;
@@ -595,6 +592,7 @@
       }).catch(err => console.log('Update Error:', err));
     }
 
+    // 공연현황: 이름 크기는 유지하고 여백만 최소화
     function renderGigs() {
       const container = document.getElementById('gigs-container');
       container.innerHTML = '';
