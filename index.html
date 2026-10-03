@@ -80,7 +80,7 @@
       display: flex;
       width: 300%;
       height: 100%;
-      transform: translateX(0%);
+      transform: translate3d(0%, 0, 0);
       transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
       will-change: transform;
     }
@@ -280,7 +280,7 @@
     <div id="slider-track">
       <!-- 0: 출석부 슬라이드 -->
       <div class="slide-page" id="slide-attendance">
-        <div id="loading"><i class="fa-solid fa-circle-notch fa-spin fa-2x"></i><br><br>출석부를 불러오는 중입니다...</div>
+        <div id="loading"><i class="fa-solid fa-circle-notch fa-spin fa-2x"></i><br><br>데이터를 불러오는 중입니다...</div>
         <div class="att-table-wrap">
           <div id="attendance-container"></div>
         </div>
@@ -296,11 +296,7 @@
         <div class="search-box">
           <input type="text" id="score-search" class="search-input" placeholder="🔍 곡명 또는 파트 검색..." oninput="filterScores()">
         </div>
-        <div id="scores-container">
-          <div id="scores-loading" style="text-align:center; padding:30px; color:var(--text-sub);">
-            <i class="fa-solid fa-circle-notch fa-spin"></i> 악보 목록을 불러오는 중입니다...
-          </div>
-        </div>
+        <div id="scores-container"></div>
       </div>
     </div>
   </div>
@@ -351,7 +347,6 @@
     let appData = { attendance: [], gigs: [], scores: [] };
     let currentEditTarget = null;
     let deferredPrompt = null;
-    let isScoresLoaded = false;
 
     let currentTabIndex = 0;
     const tabTitles = ['🎸 HardRock 출석부', '📊 HardRock 공연현황', '🎵 HardRock 악보집'];
@@ -386,14 +381,14 @@
     }
 
     window.onload = function() {
-      loadFastData();
+      loadAllData();
       initSmoothSwipe();
     };
 
-    // 1. 초고속 초기 로드: 출석부와 공연현황을 먼저 화면에 띄움
-    async function loadFastData() {
+    // 1. 처음 한 번에 모든 데이터(출석부+공연+악보) 일괄 로드 및 사전 렌더링
+    async function loadAllData() {
       try {
-        const response = await fetch(`${GAS_API_URL}?action=getQuickData&_t=${Date.now()}`, {
+        const response = await fetch(`${GAS_API_URL}?action=getData&_t=${Date.now()}`, {
           method: 'GET',
           redirect: 'follow',
           headers: { 'Accept': 'application/json' }
@@ -401,20 +396,16 @@
         const data = await response.json();
         
         if (data && data.success) {
-          appData.attendance = data.attendance;
-          appData.gigs = data.gigs;
-
+          appData = data;
           document.getElementById('loading').style.display = 'none';
+          // 3개 탭을 메모리에 미리 100% 렌더링 완료 -> 이후 탭 이동 시 렉 0%
           renderAttendance();
           renderGigs();
-
-          // 300ms 후 백그라운드에서 악보 로드 시작
-          setTimeout(loadScoresInBackground, 300);
+          renderScores();
         } else {
           document.getElementById('loading').innerHTML = '⚠️ 로딩 오류: ' + (data ? data.error : '응답 없음');
         }
       } catch (err) {
-        // 네트워크 지연 시 예비 복구 호출
         setTimeout(async () => {
           try {
             const res2 = await fetch(`${GAS_API_URL}?action=getData&_t=${Date.now()}`, { method: 'GET', redirect: 'follow' });
@@ -424,40 +415,20 @@
             renderAttendance();
             renderGigs();
             renderScores();
-            isScoresLoaded = true;
           } catch(e) {
             document.getElementById('loading').innerHTML = '⚠️ 로딩 실패: 네트워크를 확인해 주세요.';
           }
-        }, 1500);
+        }, 1200);
       }
     }
 
-    // 2. 백그라운드 악보 로더
-    async function loadScoresInBackground() {
-      if (isScoresLoaded) return;
-      try {
-        const response = await fetch(`${GAS_API_URL}?action=getScoresData&_t=${Date.now()}`, {
-          method: 'GET',
-          redirect: 'follow',
-          headers: { 'Accept': 'application/json' }
-        });
-        const data = await response.json();
-        if (data && data.success) {
-          appData.scores = data.scores || [];
-          isScoresLoaded = true;
-          renderScores();
-        }
-      } catch (e) {
-        console.log('Scores loading error:', e);
-      }
-    }
-
+    // 2. 순수 GPU 슬라이더 이동 (자바스크립트 계산 부하 0)
     function goToTab(index) {
       if (index < 0 || index > 2) return;
       currentTabIndex = index;
 
       const track = document.getElementById('slider-track');
-      track.style.transform = `translateX(-${(index * 33.333333).toFixed(4)}%)`;
+      track.style.transform = `translate3d(-${(index * 33.333333).toFixed(4)}%, 0, 0)`;
 
       const btns = document.querySelectorAll('.tab-btn');
       btns.forEach((btn, i) => {
@@ -466,10 +437,6 @@
       });
 
       document.getElementById('header-title').innerText = tabTitles[index];
-
-      if (index === 2 && isScoresLoaded) {
-        renderScores();
-      }
     }
 
     function initSmoothSwipe() {
