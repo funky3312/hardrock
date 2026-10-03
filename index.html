@@ -17,10 +17,10 @@
       --text: #ffffff;
       --text-sub: #a4b0be;
       --border: #2f3542;
-      --btn-ok: #0d7a5f;      /* 참석 딥그린 */
-      --btn-no: #c0262b;      /* 불참 레드 */
-      --btn-wait: #1a73e8;    /* 미정 블루 */
-      --btn-backup: #7b42f6;  /* 백업 퍼플 */
+      --btn-ok: #0d7a5f;      /* 참석 */
+      --btn-no: #c0262b;      /* 불참 */
+      --btn-wait: #1a73e8;    /* 미정 */
+      --btn-backup: #7b42f6;  /* 백업 */
     }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body {
@@ -45,7 +45,6 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    /* 하단 탭 바 */
     nav.tab-bar {
       position: fixed;
       bottom: 0; left: 0; right: 0;
@@ -66,7 +65,7 @@
     .tab-btn i { font-size: 1.2rem; }
     .tab-btn.active { color: var(--accent); font-weight: bold; }
 
-    /* 출석부 100% 균등 분할 테이블 (한눈에 다 보이는 콤팩트 뷰) */
+    /* 출석부 100% 한 화면 꽉 찬 테이블 */
     .att-table-wrap {
       background: #ffffff;
       border-radius: 10px;
@@ -214,19 +213,19 @@
   <div id="content">
     <div id="loading"><i class="fa-solid fa-circle-notch fa-spin fa-2x"></i><br><br>데이터를 불러오는 중입니다...</div>
 
-    <!-- 출석부 탭 -->
+    <!-- 1. 출석부 탭 -->
     <div id="tab-attendance" class="tab-content">
       <div class="att-table-wrap">
         <div id="attendance-container"></div>
       </div>
     </div>
 
-    <!-- 공연현황 탭 -->
+    <!-- 2. 공연현황 탭 -->
     <div id="tab-gigs" class="tab-content">
       <div id="gigs-container"></div>
     </div>
 
-    <!-- 악보 탭 -->
+    <!-- 3. 악보 탭 -->
     <div id="tab-scores" class="tab-content active">
       <div class="search-box">
         <input type="text" id="score-search" class="search-input" placeholder="🔍 곡명 또는 파트 검색..." oninput="filterScores()">
@@ -248,7 +247,7 @@
     </button>
   </nav>
 
-  <!-- 출석 선택 모달 -->
+  <!-- 출석 선택 모달창 -->
   <div id="att-modal-overlay">
     <div class="att-modal-card">
       <div id="modal-user-name" class="modal-target-name">멤버 이름 님</div>
@@ -274,7 +273,6 @@
   </div>
 
   <script>
-    // 전달해주신 배포 URL을 적용했습니다!
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxk46VNnAZtti3FtD2iMVPO9aPIohyoyLTI3cIegGl4jHXN8fyYSMU8QrAX47wpvt6c/exec";
 
     let appData = { attendance: [], gigs: [], scores: [] };
@@ -284,17 +282,30 @@
       loadData();
     };
 
-    // CORS 우회 JSONP 통신
+    // 모바일 완벽 호환 데이터 로더 (Fetch -> JSONP 순차 시도)
     function loadData() {
-      const script = document.createElement('script');
-      script.src = `${GAS_API_URL}?action=getData&callback=handleDataResponse&_t=${new Date().getTime()}`;
-      script.onerror = function() {
-        document.getElementById('loading').innerHTML = '⚠️ 연결 실패: 구글 앱스스크립트 설정을 확인하세요.';
-      };
-      document.body.appendChild(script);
+      fetch(`${GAS_API_URL}?action=getData`, {
+        method: 'GET',
+        redirect: 'follow'
+      })
+      .then(res => res.json())
+      .then(data => renderAll(data))
+      .catch(err => {
+        // Fetch 실패 시 모바일 우회 JSONP 자동 발동
+        const script = document.createElement('script');
+        script.src = `${GAS_API_URL}?action=getData&callback=handleDataResponse&_t=${Date.now()}`;
+        script.onerror = function() {
+          document.getElementById('loading').innerHTML = '⚠️ 로딩 실패: 모바일 캐시를 삭제하거나 새로고침해 주세요.';
+        };
+        document.body.appendChild(script);
+      });
     }
 
     function handleDataResponse(res) {
+      renderAll(res);
+    }
+
+    function renderAll(res) {
       if (!res || !res.success) {
         document.getElementById('loading').innerHTML = '⚠️ 데이터 오류: ' + (res ? res.error : '응답 없음');
         return;
@@ -391,8 +402,9 @@
 
       document.getElementById('status-badge').innerHTML = '<span style="color:#ffa502;">● 저장 중...</span>';
       
+      const updateUrl = `${GAS_API_URL}?action=updateAttendance&row=${row}&col=${col}&status=${encodeURIComponent(status)}&callback=handleUpdateResponse&_t=${Date.now()}`;
       const script = document.createElement('script');
-      script.src = `${GAS_API_URL}?action=updateAttendance&row=${row}&col=${col}&status=${encodeURIComponent(status)}&callback=handleUpdateResponse&_t=${new Date().getTime()}`;
+      script.src = updateUrl;
       document.body.appendChild(script);
     }
 
