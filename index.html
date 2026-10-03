@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
   <meta name="theme-color" content="#ffffff">
   <title>HardRock BAND</title>
   <link rel="manifest" href="manifest.json">
@@ -40,7 +40,7 @@
       justify-content: space-between;
       height: 52px;
       flex-shrink: 0;
-      z-index: 10;
+      z-index: 20;
     }
     header h1 {
       font-size: 1.15rem;
@@ -51,6 +51,27 @@
       gap: 6px;
       letter-spacing: -0.3px;
     }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      font-size: 1.15rem;
+      color: #2f3542;
+      cursor: pointer;
+      padding: 6px 8px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+    }
+    .icon-btn:active { background: #f1f2f6; }
 
     #pwa-install-btn {
       display: inline-flex;
@@ -202,7 +223,7 @@
     .modal-btn.btn-백업 { background-color: var(--btn-backup); }
     .modal-btn.btn-취소 { background-color: #f1f2f6; color: #57606f; margin-top: 4px; }
 
-    /* 공연현황 (글자 크기는 살리고 여백만 다이어트) */
+    /* 공연현황 (슬림 & 콤팩트) */
     .gigs-wrap { max-width: 600px; margin: 0 auto; }
     .gig-member-row {
       display: flex; align-items: center; margin-bottom: 3px; gap: 10px;
@@ -221,48 +242,183 @@
     }
     .gig-score-num { width: 44px; text-align: right; font-weight: 800; color: #4a90e2; font-size: 0.88rem; }
 
-    /* 악보 탭 */
-    .search-box { position: sticky; top: 0; z-index: 10; background: var(--bg); padding-bottom: 10px; max-width: 600px; margin: 0 auto; }
-    .search-input {
-      width: 100%; padding: 10px 14px; border-radius: 8px;
-      border: 1px solid var(--border); background: #f8f9fa;
-      color: #2f3542; font-size: 0.9rem; outline: none;
-    }
-    .song-group {
-      background: #ffffff; border-radius: 10px; max-width: 600px; margin: 0 auto 10px auto;
-      border: 1px solid var(--border); overflow: hidden;
-    }
-    .song-header {
-      padding: 12px 14px; font-weight: 700; font-size: 0.98rem; color: #2f3542;
-      display: flex; justify-content: space-between; align-items: center; background: #f8f9fa;
+    /* 악보 탭: 접이식 폴더(아코디언) UI & 토글 검색 바 */
+    #score-search-bar {
+      display: none;
+      background: #ffffff;
+      padding: 8px 12px;
       border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 15;
+      animation: slideDown 0.18s ease;
     }
-    .file-list { padding: 4px 14px; display: flex; flex-direction: column; }
-    .file-item {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 10px 0; border-bottom: 1px solid #f1f2f6; font-size: 0.88rem; color: #2f3542;
+    @keyframes slideDown {
+      from { transform: translateY(-10px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
     }
-    .file-item:last-child { border-bottom: none; }
-    .action-btns { display: flex; gap: 6px; }
-    .btn {
-      padding: 5px 10px; border-radius: 6px; font-size: 0.78rem;
-      border: none; cursor: pointer; text-decoration: none; font-weight: 600;
-      display: inline-flex; align-items: center; gap: 4px;
+    .search-input-wrap {
+      display: flex;
+      align-items: center;
+      background: #f1f2f6;
+      border-radius: 8px;
+      padding: 0 10px;
+      border: 1px solid var(--border);
     }
-    .btn-view { background: #4a90e2; color: #fff; }
-    .btn-down { background: #f1f2f6; color: #57606f; border: 1px solid var(--border); }
+    .search-input-wrap input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 8px 6px;
+      font-size: 0.88rem;
+      color: #2f3542;
+      outline: none;
+    }
+    .search-input-wrap i.search-icon { color: #747d8c; font-size: 0.85rem; }
+    .search-clear-btn {
+      background: none; border: none; color: #a4b0be; cursor: pointer; padding: 4px; font-size: 0.9rem;
+    }
 
-    /* 악보 뷰어 모달 */
+    .scores-list-wrap { max-width: 600px; margin: 0 auto; }
+    .song-accordion {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 5px;
+      overflow: hidden;
+      transition: box-shadow 0.15s;
+    }
+    .song-header-btn {
+      width: 100%;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #ffffff;
+      border: none;
+      cursor: pointer;
+      text-align: left;
+    }
+    .song-header-btn:active { background: #f8f9fa; }
+    .song-title-text {
+      flex: 1;
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #2f3542;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis; /* 긴 제목 말줄임표 ... */
+      padding-right: 8px;
+    }
+    .song-meta-box {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #a4b0be;
+      font-size: 0.78rem;
+      flex-shrink: 0;
+    }
+    .song-arrow-icon {
+      transition: transform 0.2s ease;
+      font-size: 0.8rem;
+    }
+    .song-accordion.open .song-arrow-icon {
+      transform: rotate(180deg);
+      color: #4a90e2;
+    }
+    .song-accordion.open .song-header-btn {
+      background: #f8f9fa;
+      border-bottom: 1px solid #edf0f2;
+    }
+    .file-accordion-body {
+      display: none;
+      padding: 2px 12px 6px 12px;
+      background: #fafbfc;
+    }
+    .song-accordion.open .file-accordion-body {
+      display: flex;
+      flex-direction: column;
+    }
+    .score-file-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 0;
+      border-bottom: 1px solid #edf0f2;
+      font-size: 0.84rem;
+    }
+    .score-file-row:last-child { border-bottom: none; }
+    .score-part-badge {
+      font-weight: 700;
+      color: #384047;
+      background: #e9ecef;
+      padding: 3px 7px;
+      border-radius: 4px;
+      font-size: 0.76rem;
+    }
+    .score-btns { display: flex; gap: 6px; }
+    .btn-action {
+      padding: 5px 9px;
+      border-radius: 6px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      text-decoration: none;
+    }
+    .btn-action.view { background: #4a90e2; color: #fff; }
+    .btn-action.download { background: #f1f2f6; color: #57606f; border: 1px solid var(--border); }
+
+    /* PDF 뷰어 모달 (핀치 투 줌 완벽 지원) */
     #score-modal {
-      display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.7); z-index: 1000; flex-direction: column;
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #ffffff;
+      z-index: 2000;
+      flex-direction: column;
     }
     #modal-header {
-      background: #ffffff; padding: 12px 16px; display: flex;
-      justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border);
+      background: #ffffff;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      height: 48px;
+      flex-shrink: 0;
     }
-    #modal-title { font-size: 0.9rem; font-weight: bold; color: #2f3542; }
-    #modal-frame { flex: 1; border: none; width: 100%; height: 100%; background: #fff; }
+    #modal-title {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #2f3542;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+      padding-right: 8px;
+    }
+    .modal-close-btn {
+      background: #f1f2f6;
+      border: 1px solid var(--border);
+      color: #2f3542;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    #modal-frame {
+      flex: 1;
+      border: none;
+      width: 100%;
+      height: 100%;
+      background: #f8f9fa;
+      touch-action: auto !important; /* 모바일 제스처 확대축소 완전 허용 */
+    }
 
     #loading { text-align: center; padding: 50px 20px; color: var(--text-sub); }
   </style>
@@ -271,10 +427,25 @@
 
   <header>
     <h1 id="header-title">🎸 HardRock 출석부</h1>
-    <button id="pwa-install-btn" onclick="triggerPwaInstall()">
-      <i class="fa-solid fa-arrow-down-to-bracket"></i> 앱 설치
-    </button>
+    <div class="header-actions">
+      <!-- 악보 탭에서만 활성화되는 돋보기 검색 버튼 -->
+      <button id="score-search-toggle-btn" class="icon-btn" onclick="toggleScoreSearch()" style="display:none;" title="악보 검색">
+        <i class="fa-solid fa-magnifying-glass"></i>
+      </button>
+      <button id="pwa-install-btn" onclick="triggerPwaInstall()">
+        <i class="fa-solid fa-arrow-down-to-bracket"></i> 앱 설치
+      </button>
+    </div>
   </header>
+
+  <!-- 악보 탭 전용 접이식 검색 바 -->
+  <div id="score-search-bar">
+    <div class="search-input-wrap">
+      <i class="fa-solid fa-magnifying-glass search-icon"></i>
+      <input type="text" id="score-search" placeholder="곡명 또는 파트(보컬, 기타...) 검색..." oninput="filterScores()">
+      <button class="search-clear-btn" onclick="clearScoreSearch()"><i class="fa-solid fa-circle-xmark"></i></button>
+    </div>
+  </div>
 
   <div id="slider-viewport">
     <div id="slider-track">
@@ -291,12 +462,9 @@
         <div class="gigs-wrap" id="gigs-container"></div>
       </div>
 
-      <!-- 2: 악보집 슬라이드 -->
+      <!-- 2: 악보집 슬라이드 (폴더형 아코디언) -->
       <div class="slide-page" id="slide-scores">
-        <div class="search-box">
-          <input type="text" id="score-search" class="search-input" placeholder="🔍 곡명 또는 파트 검색..." oninput="filterScores()">
-        </div>
-        <div id="scores-container">
+        <div class="scores-list-wrap" id="scores-container">
           <div id="scores-loading" style="text-align:center; padding:30px; color:var(--text-sub);">
             <i class="fa-solid fa-circle-notch fa-spin"></i> 악보 목록을 준비하는 중입니다...
           </div>
@@ -336,13 +504,13 @@
     </div>
   </div>
 
-  <!-- 악보 인앱 뷰어 모달 -->
+  <!-- 악보 PDF 모달 (확대/축소 지원) -->
   <div id="score-modal">
     <div id="modal-header">
       <span id="modal-title"></span>
-      <button onclick="closeModal()" style="background:#f1f2f6; border:1px solid var(--border); color:#2f3542; padding:5px 12px; border-radius:6px; font-weight:600; cursor:pointer;">닫기</button>
+      <button class="modal-close-btn" onclick="closeModal()">닫기</button>
     </div>
-    <iframe id="modal-frame" src=""></iframe>
+    <iframe id="modal-frame" src="" allow="fullscreen" sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
   </div>
 
   <script>
@@ -389,7 +557,7 @@
       initSmoothSwipe();
     };
 
-    // 1. [초고속] 출석부 & 공연현황 즉시 표출 (1초 컷)
+    // 1. [초고속] 출석부 & 공연현황 즉시 표출
     async function loadFastData() {
       try {
         const response = await fetch(`${GAS_API_URL}?action=getQuickData&_t=${Date.now()}`, {
@@ -407,7 +575,7 @@
           renderAttendance();
           renderGigs();
 
-          // 출석부가 뜬 직후 백그라운드에서 악보를 미리 조립해둠
+          // 출석부가 뜬 후 백그라운드에서 악보 사전 조립
           setTimeout(preloadScoresInBackground, 300);
         } else {
           document.getElementById('loading').innerHTML = '⚠️ 로딩 오류: ' + (data ? data.error : '응답 없음');
@@ -447,7 +615,7 @@
       }
     }
 
-    // 3. 탭 이동
+    // 3. 탭 이동 및 헤더 버튼 동적 전환
     function goToTab(index) {
       if (index < 0 || index > 2) return;
       currentTabIndex = index;
@@ -462,6 +630,34 @@
       });
 
       document.getElementById('header-title').innerText = tabTitles[index];
+
+      // 악보 탭일 때만 돋보기 검색 버튼 표시
+      const searchBtn = document.getElementById('score-search-toggle-btn');
+      const searchBar = document.getElementById('score-search-bar');
+      if (index === 2) {
+        searchBtn.style.display = 'inline-flex';
+      } else {
+        searchBtn.style.display = 'none';
+        searchBar.style.display = 'none'; // 다른 탭 가면 검색창 접기
+      }
+    }
+
+    // 돋보기 검색창 토글
+    function toggleScoreSearch() {
+      const bar = document.getElementById('score-search-bar');
+      const input = document.getElementById('score-search');
+      if (bar.style.display === 'block') {
+        bar.style.display = 'none';
+      } else {
+        bar.style.display = 'block';
+        input.focus();
+      }
+    }
+
+    function clearScoreSearch() {
+      const input = document.getElementById('score-search');
+      input.value = '';
+      filterScores();
     }
 
     function initSmoothSwipe() {
@@ -592,7 +788,6 @@
       }).catch(err => console.log('Update Error:', err));
     }
 
-    // 공연현황: 이름 크기는 유지하고 여백만 최소화
     function renderGigs() {
       const container = document.getElementById('gigs-container');
       container.innerHTML = '';
@@ -637,6 +832,7 @@
       container.innerHTML = html;
     }
 
+    // 악보 렌더링: 노래 제목 아코디언 폴더 구조 + 말줄임표 + 아이콘 제거
     function renderScores() {
       const container = document.getElementById('scores-container');
       const query = document.getElementById('score-search').value.toLowerCase().trim();
@@ -663,41 +859,68 @@
         return;
       }
 
-      songNames.forEach(song => {
-        const groupEl = document.createElement('div');
-        groupEl.className = 'song-group';
-        
+      songNames.forEach((song, idx) => {
+        const accordion = document.createElement('div');
+        accordion.className = 'song-accordion';
+        // 검색 중일 때는 매칭된 곡들을 자동으로 펼쳐서 바로 보여줌
+        if (query.length > 0) accordion.classList.add('open');
+
         let filesHtml = groups[song].map(f => `
-          <div class="file-item">
-            <span style="font-weight:600;">${f.part}</span>
-            <div class="action-btns">
-              <button class="btn btn-view" onclick="openScore('${f.preview}', '${song} - ${f.part}')"><i class="fa-solid fa-eye"></i> 열기</button>
-              <a class="btn btn-down" href="${f.download}" target="_blank"><i class="fa-solid fa-download"></i> 받기</a>
+          <div class="score-file-row">
+            <span class="score-part-badge">${f.part}</span>
+            <div class="score-btns">
+              <button class="btn-action view" onclick="openScore('${f.preview}', '${song} - ${f.part}')">
+                <i class="fa-solid fa-eye"></i> 열기
+              </button>
+              <a class="btn-action download" href="${f.download}" target="_blank">
+                <i class="fa-solid fa-download"></i> 받기
+              </a>
             </div>
           </div>
         `).join('');
 
-        groupEl.innerHTML = `
-          <div class="song-header">
-            <span>🎸 ${song}</span>
-            <span style="font-size:0.8rem; color:var(--text-sub); font-weight:normal;">${groups[song].length}개</span>
+        accordion.innerHTML = `
+          <button class="song-header-btn" onclick="toggleAccordion(this)">
+            <span class="song-title-text">${song}</span>
+            <div class="song-meta-box">
+              <span>${groups[song].length}개</span>
+              <i class="fa-solid fa-chevron-down song-arrow-icon"></i>
+            </div>
+          </button>
+          <div class="file-accordion-body">
+            ${filesHtml}
           </div>
-          <div class="file-list">${filesHtml}</div>
         `;
-        container.appendChild(groupEl);
+        container.appendChild(accordion);
       });
+    }
+
+    // 아코디언 폴더 열기/닫기
+    function toggleAccordion(btn) {
+      const parent = btn.closest('.song-accordion');
+      parent.classList.toggle('open');
     }
 
     function filterScores() { renderScores(); }
 
+    // PDF 뷰어: 모바일 확대/축소(핀치 줌) 및 구글 드라이브 최적화 뷰어 연결
     function openScore(url, title) {
       document.getElementById('modal-title').innerText = title;
-      document.getElementById('modal-frame').src = url;
+      
+      // 모바일 확대/축소가 먹히도록 구글 공식 뷰어 엔진 URL로 감싸서 로드
+      let viewerUrl = url;
+      if (url.includes('drive.google.com')) {
+        viewerUrl = `https://docs.google.com/viewer?embedded=true&url=${encodeURIComponent(url)}`;
+      }
+
+      const frame = document.getElementById('modal-frame');
+      frame.src = viewerUrl;
       document.getElementById('score-modal').style.display = 'flex';
     }
 
     function closeModal() {
-      document.getElementById('modal-frame').src = '';
+      const frame = document.getElementById('modal-frame');
+      frame.src = '';
       document.getElementById('score-modal').style.display = 'none';
     }
   </script>
