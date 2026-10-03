@@ -17,10 +17,10 @@
       --text: #ffffff;
       --text-sub: #a4b0be;
       --border: #2f3542;
-      --btn-ok: #0d7a5f;
-      --btn-no: #c0262b;
-      --btn-wait: #1a73e8;
-      --btn-backup: #7b42f6;
+      --btn-ok: #0d7a5f;      /* 참석 딥그린 */
+      --btn-no: #c0262b;      /* 불참 레드 */
+      --btn-wait: #1a73e8;    /* 미정 블루 */
+      --btn-backup: #7b42f6;  /* 백업 퍼플 */
     }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body {
@@ -45,6 +45,7 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
+    /* 하단 탭 바 */
     nav.tab-bar {
       position: fixed;
       bottom: 0; left: 0; right: 0;
@@ -65,7 +66,7 @@
     .tab-btn i { font-size: 1.2rem; }
     .tab-btn.active { color: var(--accent); font-weight: bold; }
 
-    /* 출석부 100% 균등 분할 테이블 */
+    /* 출석부 100% 균등 분할 테이블 (한눈에 다 보이는 콤팩트 뷰) */
     .att-table-wrap {
       background: #ffffff;
       border-radius: 10px;
@@ -117,7 +118,7 @@
     .att-btn.미정 { background-color: var(--btn-wait); }
     .att-btn.백업 { background-color: var(--btn-backup); }
 
-    /* 출석 선택 모달 */
+    /* 출석 선택 모달창 */
     #att-modal-overlay {
       display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(0, 0, 0, 0.65); z-index: 1000;
@@ -273,7 +274,7 @@
   </div>
 
   <script>
-    // ★★★ 구글 앱스스크립트 배포 주소를 여기에 넣어주세요! ★★★
+    // 전달해주신 배포 URL을 적용했습니다!
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxk46VNnAZtti3FtD2iMVPO9aPIohyoyLTI3cIegGl4jHXN8fyYSMU8QrAX47wpvt6c/exec";
 
     let appData = { attendance: [], gigs: [], scores: [] };
@@ -283,16 +284,17 @@
       loadData();
     };
 
+    // CORS 우회 JSONP 통신
     function loadData() {
-      fetch(`${GAS_API_URL}?action=getData`)
-        .then(res => res.json())
-        .then(res => renderAll(res))
-        .catch(err => {
-          document.getElementById('loading').innerHTML = '⚠️ 로딩 실패: ' + err;
-        });
+      const script = document.createElement('script');
+      script.src = `${GAS_API_URL}?action=getData&callback=handleDataResponse&_t=${new Date().getTime()}`;
+      script.onerror = function() {
+        document.getElementById('loading').innerHTML = '⚠️ 연결 실패: 구글 앱스스크립트 설정을 확인하세요.';
+      };
+      document.body.appendChild(script);
     }
 
-    function renderAll(res) {
+    function handleDataResponse(res) {
       if (!res || !res.success) {
         document.getElementById('loading').innerHTML = '⚠️ 데이터 오류: ' + (res ? res.error : '응답 없음');
         return;
@@ -389,15 +391,13 @@
 
       document.getElementById('status-badge').innerHTML = '<span style="color:#ffa502;">● 저장 중...</span>';
       
-      fetch(`${GAS_API_URL}?action=updateAttendance&row=${row}&col=${col}&status=${encodeURIComponent(status)}`)
-        .then(res => res.json())
-        .then(res => {
-          document.getElementById('status-badge').innerHTML = '<span style="color:#2ed573;">● 온라인</span>';
-        })
-        .catch(err => {
-          alert('저장 실패: ' + err);
-          document.getElementById('status-badge').innerHTML = '<span style="color:#ff4757;">● 저장 실패</span>';
-        });
+      const script = document.createElement('script');
+      script.src = `${GAS_API_URL}?action=updateAttendance&row=${row}&col=${col}&status=${encodeURIComponent(status)}&callback=handleUpdateResponse&_t=${new Date().getTime()}`;
+      document.body.appendChild(script);
+    }
+
+    function handleUpdateResponse(res) {
+      document.getElementById('status-badge').innerHTML = '<span style="color:#2ed573;">● 온라인</span>';
     }
 
     function renderScores() {
