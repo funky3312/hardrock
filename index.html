@@ -15,11 +15,11 @@
       --border: #e4e7eb;
       --header-bg: #f8f9fa;
       
-      /* 이미지의 부드러운 파스텔 톤 색상 */
-      --btn-ok: #387d5e;      /* 차분한 참석 그린 */
-      --btn-no: #b83b33;      /* 차분한 불참 레드 */
-      --btn-wait: #4a90e2;    /* 부드러운 미정 블루 */
-      --btn-backup: #7e57c2;  /* 백업 퍼플 */
+      /* 파스텔톤 버튼 색상 */
+      --btn-ok: #387d5e;      /* 참석 */
+      --btn-no: #b83b33;      /* 불참 */
+      --btn-wait: #4a90e2;    /* 미정 */
+      --btn-backup: #7e57c2;  /* 백업 */
     }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body {
@@ -50,11 +50,30 @@
     }
     header h1 span { font-size: 1.25rem; }
 
+    /* 화이트 테마에 맞춘 단정한 상단 앱 설치 버튼 */
+    #pwa-install-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: #f1f2f6;
+      border: 1px solid #dcdde1;
+      color: #2f3542;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 6px 11px;
+      border-radius: 20px;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      transition: background 0.15s, transform 0.08s;
+    }
+    #pwa-install-btn:active { transform: scale(0.95); background: #e4e7eb; }
+    #pwa-install-btn i { color: #387d5e; }
+
     #content { flex: 1; overflow-y: auto; padding: 10px 8px 75px 8px; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    /* 하단 네비게이션 바 (화이트 톤) */
+    /* 하단 네비게이션 바 */
     nav.tab-bar {
       position: fixed;
       bottom: 0; left: 0; right: 0;
@@ -76,7 +95,7 @@
     .tab-btn.active { color: #2f3542; font-weight: bold; }
     .tab-btn.active i { color: #387d5e; }
 
-    /* 출석부 정돈된 표 스타일 */
+    /* 출석부 정돈된 표 */
     .att-table-wrap {
       background: #ffffff;
       width: 100%;
@@ -102,7 +121,6 @@
       border: 1px solid var(--border);
       padding: 5px 3px;
     }
-    /* 파트 구분 빈 줄 스타일 */
     table.att-table tr.separator-row td {
       border: 1px solid var(--border);
       height: 14px;
@@ -231,13 +249,16 @@
 
   <header>
     <h1><span>🎸</span> HardRock 출석부</h1>
-    <div></div>
+    <!-- 앱 설치 트리거 버튼 (웹 브라우저 접속 시 노출 / 앱 실행 시 숨김) -->
+    <button id="pwa-install-btn" onclick="triggerPwaInstall()">
+      <i class="fa-solid fa-arrow-down-to-bracket"></i> 앱 설치
+    </button>
   </header>
 
   <div id="content">
     <div id="loading"><i class="fa-solid fa-circle-notch fa-spin fa-2x"></i><br><br>출석부를 불러오는 중입니다...</div>
 
-    <!-- 1. 출석부 탭 -->
+    <!-- 1. 출석부 탭 (기본 활성) -->
     <div id="tab-attendance" class="tab-content active">
       <div class="att-table-wrap">
         <div id="attendance-container"></div>
@@ -258,7 +279,6 @@
     </div>
   </div>
 
-  <!-- 하단 탭 바 -->
   <nav class="tab-bar">
     <button class="tab-btn active" onclick="switchTab('attendance')">
       <i class="fa-solid fa-calendar-check"></i> 출석부
@@ -271,7 +291,7 @@
     </button>
   </nav>
 
-  <!-- 출석 선택 모달 -->
+  <!-- 출석 모달 -->
   <div id="att-modal-overlay">
     <div class="att-modal-card">
       <div id="modal-user-name" class="modal-target-name">멤버 이름 님</div>
@@ -301,10 +321,53 @@
 
     let appData = { attendance: [], gigs: [], scores: [] };
     let currentEditTarget = null;
+    let deferredPrompt = null;
 
+    // 서비스 워커 등록
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./service-worker.js').catch(err => console.log('SW Fail:', err));
     }
+
+    // 이미 바탕화면 앱(standalone)으로 실행 중이면 상단 설치 버튼 숨김
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    if (isStandalone) {
+      document.getElementById('pwa-install-btn').style.display = 'none';
+    }
+
+    // 안드로이드 크롬/삼성인터넷 정규 PWA 설치 이벤트 캐치
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      if (!isStandalone) {
+        document.getElementById('pwa-install-btn').style.display = 'inline-flex';
+      }
+    });
+
+    // 앱 설치 버튼 클릭 시 동작
+    function triggerPwaInstall() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            document.getElementById('pwa-install-btn').style.display = 'none';
+          }
+          deferredPrompt = null;
+        });
+      } else {
+        // 아이폰 또는 인앱 브라우저 대응 안내
+        const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+        if (isIOS) {
+          alert("아이폰: 브라우저 하단 공유 버튼(네모 위 화살표) ➔ [홈 화면에 추가]를 눌러주세요!");
+        } else {
+          alert("브라우저 메뉴(⋮ 또는 ≡)를 누르고 [앱 설치]를 선택하시면 전체화면 앱으로 등록됩니다!");
+        }
+      }
+    }
+
+    window.addEventListener('appinstalled', () => {
+      document.getElementById('pwa-install-btn').style.display = 'none';
+      deferredPrompt = null;
+    });
 
     window.onload = function() {
       loadData();
@@ -364,7 +427,6 @@
       const colCount = rows[0].length;
       let html = '<table class="att-table">';
       
-      // 헤더 날짜 렌더링
       html += '<thead><tr>';
       rows[0].forEach((header, colIdx) => {
         html += `<th class="${colIdx === 0 ? 'member-name-cell' : ''}">${header}</th>`;
@@ -374,7 +436,7 @@
       for (let r = 1; r < rows.length; r++) {
         const memberName = (rows[r][0] || '').trim();
         
-        // 이름이 비어 있는 행은 파트 구분용 빈 줄로 처리
+        // 파트 구분용 빈 줄
         if (!memberName) {
           html += `<tr class="separator-row"><td colspan="${colCount}"></td></tr>`;
           continue;
