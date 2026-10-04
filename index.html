@@ -180,7 +180,7 @@
     .tab-btn.active i { color: #387d5e; }
 
     /* ==========================================
-       출석부 표 스타일 (8주 대응 컴팩트 최적화)
+       출석부 표 스타일 (8주 대응 컴팩트 최적화 27px)
        ========================================== */
     .att-table-wrap {
       background: #ffffff;
@@ -389,7 +389,7 @@
       transition: transform 0.15s ease, color 0.15s ease;
     }
     .fav-star-btn.active { color: #fcc419; }
-    .fav-star-btn.active { transform: scale(1.3); }
+    .fav-star-btn:active { transform: scale(1.3); }
 
     .file-accordion-body {
       display: none;
@@ -879,7 +879,7 @@
         if (!startX) return;
 
         const touch = e.changedTouches[0];
-        const diffX = touch.clientX - startX;
+        const diffX = touch.clientX - touchStartX ?? (touch.clientX - startX);
         const diffY = touch.clientY - startY;
         const duration = Date.now() - startTime;
 
@@ -1218,8 +1218,14 @@
 
     function filterScores() { renderScores(); }
 
+    /* ====================================================
+       구글 공식 웹 뷰어 열기 (애플 PWA 창 잔여물 방지 최적화)
+       ==================================================== */
     function openGoogleMedia(url) {
-      window.open(url, '_blank');
+      const win = window.open(url, '_blank', 'noopener,noreferrer');
+      if (win) {
+        win.opener = null;
+      }
     }
   </script>
 </body>
