@@ -401,12 +401,25 @@
       flex-direction: column;
     }
 
-    /* 유튜브 & 메모 영역 */
+    /* 메모 & 유튜브 영역 (메모 최상단 ➔ 유튜브) */
     .song-extra-box {
       margin-bottom: 8px;
       display: flex;
       flex-direction: column;
       gap: 6px;
+    }
+    .song-memo-card {
+      background: #fff9db;
+      border-left: 4px solid #f59f00;
+      padding: 8px 11px;
+      border-radius: 4px;
+      font-size: 0.84rem;
+      font-weight: 500;
+      color: #343a40;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-all;
+      text-align: left;
     }
     .youtube-btn-group {
       display: flex;
@@ -428,20 +441,6 @@
       box-shadow: 0 1px 3px rgba(217, 28, 28, 0.25);
     }
     .youtube-link-btn:active { background: #b01515; transform: scale(0.98); }
-
-    .song-memo-card {
-      background: #fff9db;
-      border-left: 4px solid #f59f00;
-      padding: 8px 11px;
-      border-radius: 4px;
-      font-size: 0.84rem;
-      font-weight: 500;
-      color: #343a40;
-      line-height: 1.5;
-      white-space: pre-wrap;
-      word-break: break-all;
-      text-align: left;
-    }
 
     /* 파트/파일 행: 정석 심플 버튼 */
     .score-file-row {
@@ -825,8 +824,8 @@
     }
 
     /* ====================================================
-       제스처 통합: [방향 잠금(Direction Lock)] 복원
-       - 세로 스크롤 시 가로 스와이프 원천 차단
+       제스처 통합: [방향 잠금(Direction Lock)]
+       - 세로 스크롤 시 가로 스와이프 100% 차단
        ==================================================== */
     function initSmoothGestures() {
       let startX = 0;
@@ -884,20 +883,19 @@
         const activePage = slidePages[currentTabIndex];
         const isAtTop = activePage ? activePage.scrollTop <= 0 : false;
 
-        // [핵심] 처음 8px 움직였을 때 의도(Intent)를 단 1회 판정하여 고정
+        // 처음 8px 움직였을 때 의도(Intent) 판정 후 모드 고정
         if (!gestureIntent) {
           if (Math.abs(diffX) > 8 || Math.abs(diffY) > 8) {
             if (isAtTop && diffY > 8 && Math.abs(diffY) > Math.abs(diffX) * 1.3) {
-              gestureIntent = 'pull'; // 새로고침 모드
+              gestureIntent = 'pull';
             } else if (Math.abs(diffY) >= Math.abs(diffX)) {
-              gestureIntent = 'scroll'; // 일반 세로 스크롤 모드 (가로 전환 절대 금지)
+              gestureIntent = 'scroll';
             } else {
-              gestureIntent = 'swipe'; // 가로 탭 전환 모드
+              gestureIntent = 'swipe';
             }
           }
         }
 
-        // 1. 당겨서 새로고침 모드인 경우에만 인디케이터 처리
         if (gestureIntent === 'pull' && isAtTop && diffY > 0) {
           currentPullDiff = diffY;
           ptrIndicator.style.transition = 'none';
@@ -920,7 +918,6 @@
         const diffX = touch.clientX - startX;
         const duration = Date.now() - startTime;
 
-        // 1. 새로고침 제스처 처리
         if (gestureIntent === 'pull') {
           const effectivePull = currentPullDiff * 0.4;
           if (effectivePull >= pullThreshold) {
@@ -934,8 +931,7 @@
           return;
         }
 
-        // 2. 가로 스와이프 제스처 처리
-        // (gestureIntent가 'swipe'로 명확히 잠긴 경우에만 실행! 세로 스크롤 'scroll'은 100% 무시)
+        // 'swipe' 모드로 명확히 잠긴 경우에만 탭 전환
         if (gestureIntent === 'swipe' && duration < 500 && Math.abs(diffX) > 60) {
           if (diffX < 0) {
             if (currentTabIndex < 2) goToTab(currentTabIndex + 1);
@@ -1110,6 +1106,9 @@
       return /\.(mp3|m4a|wav|aac|flac|ogg)$/i.test(cleanName);
     }
 
+    /* ====================================================
+       악보집 렌더링: [메모 ➔ 유튜브 ➔ 음원파일 ➔ PDF악보] 순서 확립
+       ==================================================== */
     function renderScores() {
       const container = document.getElementById('scores-container');
       const query = document.getElementById('score-search').value.toLowerCase().trim();
@@ -1178,10 +1177,14 @@
         const songData = groups[song];
         const ytList = parseYoutubeLinks(songData.youtube);
 
+        // 1. [상단 영역] 메모 우선 ➔ 유튜브 링크 순차 배치
         let extraHtml = '';
         const memoContent = (songData.memo || '').trim();
-        if (ytList.length > 0 || memoContent) {
+        if (memoContent || ytList.length > 0) {
           extraHtml += '<div class="song-extra-box">';
+          if (memoContent) {
+            extraHtml += `<div class="song-memo-card">${escapeHtml(memoContent)}</div>`;
+          }
           if (ytList.length > 0) {
             extraHtml += '<div class="youtube-btn-group">';
             ytList.forEach(yt => {
@@ -1193,13 +1196,19 @@
             });
             extraHtml += '</div>';
           }
-          if (memoContent) {
-            extraHtml += `<div class="song-memo-card">${escapeHtml(memoContent)}</div>`;
-          }
           extraHtml += '</div>';
         }
 
-        let filesHtml = songData.files.map(f => {
+        // 2. [파일 목록] 음원 파일(MP3/M4A 등) 상단 정렬 ➔ PDF/악보 파일 하단 정렬
+        const sortedFiles = [...songData.files].sort((a, b) => {
+          const aAudio = isAudioFile(a.part);
+          const bAudio = isAudioFile(b.part);
+          if (aAudio && !bAudio) return -1;
+          if (!aAudio && bAudio) return 1;
+          return 0; // 동일 파일군 내에서는 구글 시트 원래 순서 유지
+        });
+
+        let filesHtml = sortedFiles.map(f => {
           const fileIdMatch = (f.preview || f.download || '').match(/[-\w]{25,}/);
           const fileId = f.fileId || (fileIdMatch ? fileIdMatch[0] : '');
           const isAudio = isAudioFile(f.part);
@@ -1253,6 +1262,9 @@
 
     function filterScores() { renderScores(); }
 
+    /* ====================================================
+       구글 공식 웹 뷰어 열기 (아이패드 사파리 분리 팝업)
+       ==================================================== */
     function openGoogleMedia(url) {
       const link = document.createElement('a');
       link.href = url;
