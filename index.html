@@ -824,8 +824,8 @@
     }
 
     /* ====================================================
-       제스처 통합: [방향 잠금(Direction Lock)]
-       - 세로 스크롤 시 가로 스와이프 100% 차단
+       제스처 통합: [방향 잠금 + 황금비율 감도 40px 복원]
+       - 가벼운 손동작도 미스 없이 100% 즉각 탭 전환
        ==================================================== */
     function initSmoothGestures() {
       let startX = 0;
@@ -883,15 +883,15 @@
         const activePage = slidePages[currentTabIndex];
         const isAtTop = activePage ? activePage.scrollTop <= 0 : false;
 
-        // 처음 8px 움직였을 때 의도(Intent) 판정 후 모드 고정
+        // [방향 잠금]: 처음 6px 움직였을 때 의도를 즉시 판정하여 세션 고정
         if (!gestureIntent) {
-          if (Math.abs(diffX) > 8 || Math.abs(diffY) > 8) {
-            if (isAtTop && diffY > 8 && Math.abs(diffY) > Math.abs(diffX) * 1.3) {
+          if (Math.abs(diffX) > 6 || Math.abs(diffY) > 6) {
+            if (isAtTop && diffY > 6 && Math.abs(diffY) > Math.abs(diffX) * 1.3) {
               gestureIntent = 'pull';
             } else if (Math.abs(diffY) >= Math.abs(diffX)) {
-              gestureIntent = 'scroll';
+              gestureIntent = 'scroll'; // 세로 스크롤 시 스와이프 영구 차단
             } else {
-              gestureIntent = 'swipe';
+              gestureIntent = 'swipe';  // 가로 스와이프 확정
             }
           }
         }
@@ -931,8 +931,8 @@
           return;
         }
 
-        // 'swipe' 모드로 명확히 잠긴 경우에만 탭 전환
-        if (gestureIntent === 'swipe' && duration < 500 && Math.abs(diffX) > 60) {
+        // [황금비율 복원]: 거리 40px & 시간 600ms로 가볍게 튕겨도 미스 없이 100% 전환!
+        if (gestureIntent === 'swipe' && duration < 600 && Math.abs(diffX) > 40) {
           if (diffX < 0) {
             if (currentTabIndex < 2) goToTab(currentTabIndex + 1);
           } else {
@@ -1107,7 +1107,7 @@
     }
 
     /* ====================================================
-       악보집 렌더링: [메모 ➔ 유튜브 ➔ 음원파일 ➔ PDF악보] 순서 확립
+       악보집 렌더링: [메모 ➔ 유튜브 ➔ 음원파일 ➔ PDF악보]
        ==================================================== */
     function renderScores() {
       const container = document.getElementById('scores-container');
@@ -1177,7 +1177,7 @@
         const songData = groups[song];
         const ytList = parseYoutubeLinks(songData.youtube);
 
-        // 1. [상단 영역] 메모 우선 ➔ 유튜브 링크 순차 배치
+        // 1. 메모 우선 ➔ 유튜브 링크 순차 배치
         let extraHtml = '';
         const memoContent = (songData.memo || '').trim();
         if (memoContent || ytList.length > 0) {
@@ -1199,13 +1199,13 @@
           extraHtml += '</div>';
         }
 
-        // 2. [파일 목록] 음원 파일(MP3/M4A 등) 상단 정렬 ➔ PDF/악보 파일 하단 정렬
+        // 2. 음원 파일 상단 정렬 ➔ 악보 파일 하단 정렬
         const sortedFiles = [...songData.files].sort((a, b) => {
           const aAudio = isAudioFile(a.part);
           const bAudio = isAudioFile(b.part);
           if (aAudio && !bAudio) return -1;
           if (!aAudio && bAudio) return 1;
-          return 0; // 동일 파일군 내에서는 구글 시트 원래 순서 유지
+          return 0;
         });
 
         let filesHtml = sortedFiles.map(f => {
