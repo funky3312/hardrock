@@ -99,14 +99,14 @@
        ========================================== */
     #ptr-indicator {
       position: absolute;
-      top: 58px;
+      top: 48px;
       left: 50%;
       transform: translate3d(-50%, -60px, 0);
-      width: 36px;
-      height: 36px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
       background: #ffffff;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
       border: 1px solid #e4e7eb;
       display: flex;
       align-items: center;
@@ -114,15 +114,15 @@
       z-index: 50;
       pointer-events: none;
       opacity: 0;
-      transition: transform 0.22s ease, opacity 0.2s ease;
+      transition: transform 0.2s ease, opacity 0.18s ease;
     }
     #ptr-indicator i {
-      font-size: 0.95rem;
+      font-size: 0.88rem;
       color: #387d5e;
       transform-origin: center center;
     }
     #ptr-indicator.refreshing i {
-      animation: ptrSpin 0.75s linear infinite;
+      animation: ptrSpin 0.6s linear infinite;
     }
     @keyframes ptrSpin {
       100% { transform: rotate(360deg); }
@@ -582,7 +582,7 @@
     let currentTabIndex = 0;
     const tabTitles = ['🎸 HardRock 출석부', '📊 HardRock 공연현황', '🎵 HardRock 악보집'];
 
-    // 새로고침 상태 및 2초 강제 종료 타이머 관리
+    // 새로고침 상태 및 단축 타이머 관리 (0.65초)
     let isRefreshing = false;
     let refreshTimeoutId = null;
 
@@ -717,7 +717,7 @@
     }
 
     /* ====================================================
-       🔄 당겨서 새로고침: 회전 애니메이션 + 정확히 2초 후 무조건 퇴장
+       🔄 당겨서 새로고침: 짧은 회전(0.65초) 후 즉시 퇴장
        ==================================================== */
     function resetPtrIndicator() {
       const ptrIndicator = document.getElementById('ptr-indicator');
@@ -728,7 +728,7 @@
         refreshTimeoutId = null;
       }
       
-      ptrIndicator.style.transition = 'transform 0.22s ease, opacity 0.2s ease';
+      ptrIndicator.style.transition = 'transform 0.18s ease, opacity 0.15s ease';
       ptrIndicator.style.transform = 'translate3d(-50%, -60px, 0)';
       ptrIndicator.style.opacity = '0';
       
@@ -736,7 +736,7 @@
         ptrIndicator.classList.remove('refreshing');
         ptrIcon.style.transform = 'rotate(0deg)';
         isRefreshing = false;
-      }, 250);
+      }, 200);
     }
 
     async function startRefreshProcess() {
@@ -745,15 +745,16 @@
 
       const ptrIndicator = document.getElementById('ptr-indicator');
       ptrIndicator.classList.add('refreshing');
-      ptrIndicator.style.transition = 'transform 0.22s ease, opacity 0.2s ease';
-      ptrIndicator.style.transform = 'translate3d(-50%, 14px, 0)';
+      ptrIndicator.style.transition = 'transform 0.18s ease, opacity 0.15s ease';
+      ptrIndicator.style.transform = 'translate3d(-50%, 8px, 0)';
       ptrIndicator.style.opacity = '1';
 
-      // [핵심] 통신 지연이나 실패 여부와 상관없이 2초 후 무조건 위로 퇴장 (절대 멈춰있지 않음)
+      // 상단 글자 가림 최소화를 위해 0.65초 후 즉시 상단 밖으로 퇴장
       refreshTimeoutId = setTimeout(() => {
         resetPtrIndicator();
-      }, 2000);
+      }, 650);
 
+      // 백그라운드에서는 끝까지 최신 데이터 동기화 유지
       try {
         const [quickRes, scoreRes] = await Promise.all([
           fetch(`${GAS_API_URL}?action=getQuickData&_t=${Date.now()}`, { method: 'GET', redirect: 'follow' }),
@@ -778,10 +779,7 @@
           renderScores();
         }
       } catch (e) {
-        console.log('Refresh fallback:', e);
-      } finally {
-        // 데이터 수신이 2초보다 빨리 끝났다면 즉시 부드럽게 닫기
-        resetPtrIndicator();
+        console.log('Silent refresh fallback to cache:', e);
       }
     }
 
@@ -838,7 +836,7 @@
 
       const ptrIndicator = document.getElementById('ptr-indicator');
       const ptrIcon = document.getElementById('ptr-icon');
-      const pullThreshold = 65;
+      const pullThreshold = 60;
 
       const slidePages = [
         document.getElementById('slide-attendance'),
@@ -848,7 +846,7 @@
 
       function cancelPullGesture() {
         if (!isRefreshing) {
-          ptrIndicator.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
+          ptrIndicator.style.transition = 'transform 0.18s ease, opacity 0.15s ease';
           ptrIndicator.style.transform = 'translate3d(-50%, -60px, 0)';
           ptrIndicator.style.opacity = '0';
         }
@@ -888,14 +886,13 @@
           isPulling = true;
           ptrIndicator.style.transition = 'none';
 
-          const pullDistance = Math.min(diffY * 0.42, 85);
+          const pullDistance = Math.min(diffY * 0.4, 75);
           const rotateDeg = (pullDistance / pullThreshold) * 360;
 
           ptrIndicator.style.transform = `translate3d(-50%, ${pullDistance - 50}px, 0)`;
           ptrIndicator.style.opacity = `${Math.min(1, pullDistance / (pullThreshold * 0.75))}`;
           ptrIcon.style.transform = `rotate(${rotateDeg}deg)`;
         } else {
-          // 다시 위로 밀어 올렸을 때 부드럽게 복귀
           if (isPulling) {
             ptrIndicator.style.transition = 'transform 0.15s ease, opacity 0.15s ease';
             ptrIndicator.style.transform = 'translate3d(-50%, -60px, 0)';
@@ -914,7 +911,7 @@
         const duration = Date.now() - startTime;
 
         if (isPulling) {
-          const effectivePull = diffY * 0.42;
+          const effectivePull = diffY * 0.4;
 
           if (effectivePull >= pullThreshold) {
             startRefreshProcess();
@@ -940,7 +937,6 @@
         startY = 0;
       }, { passive: true });
 
-      // [핵심] 터치 정지(홀드), 화면 밖 이탈 등으로 이벤트가 취소될 때 화살표 멈춤 방어
       window.addEventListener('touchcancel', cancelPullGesture, { passive: true });
     }
 
@@ -1102,7 +1098,6 @@
       return /\.(mp3|m4a|wav|aac|flac|ogg)$/i.test(cleanName);
     }
 
-    // 악보 및 음원 렌더링
     function renderScores() {
       const container = document.getElementById('scores-container');
       const query = document.getElementById('score-search').value.toLowerCase().trim();
@@ -1246,9 +1241,6 @@
 
     function filterScores() { renderScores(); }
 
-    /* ====================================================
-       구글 공식 웹 뷰어 열기 (아이패드 사파리 분리 팝업)
-       ==================================================== */
     function openGoogleMedia(url) {
       const link = document.createElement('a');
       link.href = url;
