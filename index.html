@@ -491,7 +491,7 @@
 </head>
 <body>
 
-  <!-- 🔄 순정 원형 화살표 새로고침 인디케이터 -->
+  <!-- 🔄 순정 원형 새로고침(Pull-to-Refresh) 인디케이터 -->
   <div id="ptr-indicator">
     <i class="fa-solid fa-arrow-rotate-right" id="ptr-icon"></i>
   </div>
@@ -582,7 +582,6 @@
     let currentTabIndex = 0;
     const tabTitles = ['🎸 HardRock 출석부', '📊 HardRock 공연현황', '🎵 HardRock 악보집'];
 
-    // 새로고침 상태 및 단축 타이머 관리 (0.65초)
     let isRefreshing = false;
     let refreshTimeoutId = null;
 
@@ -717,7 +716,7 @@
     }
 
     /* ====================================================
-       🔄 당겨서 새로고침: 짧은 회전(0.65초) 후 즉시 퇴장
+       🔄 새로고침 인디케이터 즉시 초기화/퇴장
        ==================================================== */
     function resetPtrIndicator() {
       const ptrIndicator = document.getElementById('ptr-indicator');
@@ -749,12 +748,11 @@
       ptrIndicator.style.transform = 'translate3d(-50%, 8px, 0)';
       ptrIndicator.style.opacity = '1';
 
-      // 상단 글자 가림 최소화를 위해 0.65초 후 즉시 상단 밖으로 퇴장
+      // 0.65초 후 화면에서 무조건 퇴장
       refreshTimeoutId = setTimeout(() => {
         resetPtrIndicator();
       }, 650);
 
-      // 백그라운드에서는 끝까지 최신 데이터 동기화 유지
       try {
         const [quickRes, scoreRes] = await Promise.all([
           fetch(`${GAS_API_URL}?action=getQuickData&_t=${Date.now()}`, { method: 'GET', redirect: 'follow' }),
@@ -786,6 +784,9 @@
     function goToTab(index) {
       if (index < 0 || index > 2) return;
       currentTabIndex = index;
+
+      // 탭 전환 시 인디케이터가 화면에 걸려있지 않도록 즉시 강제 회수
+      resetPtrIndicator();
 
       const track = document.getElementById('slider-track');
       track.style.transform = `translate3d(-${(index * 33.333333).toFixed(4)}%, 0, 0)`;
@@ -826,13 +827,14 @@
     }
 
     /* ====================================================
-       제스처 통합: 자연스러운 당김 회전 + 멈춤/취소(touchcancel) 방어
+       제스처 통합: 3초 이상 홀드 시 잔여 버그 완전 해결
        ==================================================== */
     function initSmoothGestures() {
       let startX = 0;
       let startY = 0;
       let startTime = 0;
       let isPulling = false;
+      let currentPullDiff = 0;
 
       const ptrIndicator = document.getElementById('ptr-indicator');
       const ptrIcon = document.getElementById('ptr-icon');
@@ -851,6 +853,7 @@
           ptrIndicator.style.opacity = '0';
         }
         isPulling = false;
+        currentPullDiff = 0;
         startX = 0;
         startY = 0;
       }
@@ -869,6 +872,7 @@
         startY = touch.clientY;
         startTime = Date.now();
         isPulling = false;
+        currentPullDiff = 0;
       }, { passive: true });
 
       window.addEventListener('touchmove', (e) => {
@@ -884,6 +888,7 @@
         // 세로 당김 판정
         if (isAtTop && diffY > 0 && Math.abs(diffY) > Math.abs(diffX) * 1.2) {
           isPulling = true;
+          currentPullDiff = diffY;
           ptrIndicator.style.transition = 'none';
 
           const pullDistance = Math.min(diffY * 0.4, 75);
@@ -894,10 +899,7 @@
           ptrIcon.style.transform = `rotate(${rotateDeg}deg)`;
         } else {
           if (isPulling) {
-            ptrIndicator.style.transition = 'transform 0.15s ease, opacity 0.15s ease';
-            ptrIndicator.style.transform = 'translate3d(-50%, -60px, 0)';
-            ptrIndicator.style.opacity = '0';
-            isPulling = false;
+            cancelPullGesture();
           }
         }
       }, { passive: true });
@@ -907,25 +909,25 @@
 
         const touch = e.changedTouches[0];
         const diffX = touch.clientX - startX;
-        const diffY = touch.clientY - startY;
         const duration = Date.now() - startTime;
 
+        // [핵심] 몇 초를 멈췄든 상관없이 당김 상태였다면 즉시 처리
         if (isPulling) {
-          const effectivePull = diffY * 0.4;
-
+          const effectivePull = currentPullDiff * 0.4;
           if (effectivePull >= pullThreshold) {
             startRefreshProcess();
           } else {
             cancelPullGesture();
           }
           isPulling = false;
+          currentPullDiff = 0;
           startX = 0;
           startY = 0;
           return;
         }
 
-        // 가로 탭 스와이프 판정
-        if (duration < 600 && Math.abs(diffX) > 35 && Math.abs(diffX) > Math.abs(diffY)) {
+        // 가로 탭 스와이프 판정 (순수 횡이동일 때만)
+        if (duration < 600 && Math.abs(diffX) > 40) {
           if (diffX < 0) {
             if (currentTabIndex < 2) goToTab(currentTabIndex + 1);
           } else {
@@ -937,6 +939,7 @@
         startY = 0;
       }, { passive: true });
 
+      // 3초 이상 꾹 눌러 브라우저 롱프레스/캔슬이 발동되어도 화살표 강제 회수
       window.addEventListener('touchcancel', cancelPullGesture, { passive: true });
     }
 
