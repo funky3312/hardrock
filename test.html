@@ -2,1127 +2,1301 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>HardRock BAND Manager (TEST)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <title>HardRock BAND</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
-      --bg: #0f1115;
-      --card-bg: #181b21;
-      --card-sub: #222630;
-      --accent: #ff4757;
-      --accent-sub: #2ed573;
-      --text-main: #f1f2f6;
-      --text-muted: #8a8f9d;
-      --border: #2c313d;
-      --memo-bg: #2d2613;
-      --memo-border: #ffd32a;
-      --memo-text: #fff3a8;
-      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --bg: #ffffff;
+      --text: #2f3542;
+      --text-sub: #747d8c;
+      --border: #e4e7eb;
+      --header-bg: #f8f9fa;
+      
+      --btn-ok: #387d5e;      /* 참석 */
+      --btn-no: #b83b33;      /* 불참 */
+      --btn-wait: #4a90e2;    /* 미정 */
+      --btn-backup: #7e57c2;  /* 백업 */
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
-      background-color: var(--bg);
-      color: var(--text-main);
+    
+    html, body {
+      height: 100%;
       height: 100dvh;
-      overflow: hidden;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
       display: flex;
       flex-direction: column;
+      overflow: hidden;
+      user-select: none;
     }
-
-    /* 상단 헤더 */
     header {
-      height: 52px;
       padding: 0 16px;
+      background: #ffffff;
+      border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid var(--border);
-      background-color: var(--bg);
-      z-index: 10;
+      height: 52px;
       flex-shrink: 0;
+      z-index: 20;
     }
-    .header-title { font-size: 17px; font-weight: 800; letter-spacing: -0.3px; display: flex; align-items: center; gap: 6px; }
-    .header-badge { font-size: 10px; background: #ff9f43; color: #000; padding: 2px 6px; border-radius: 4px; font-weight: 700; }
-    .header-actions { display: flex; align-items: center; gap: 12px; }
-    .header-btn { background: none; border: none; color: var(--text-muted); font-size: 18px; cursor: pointer; display: flex; align-items: center; }
+    header h1 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #2f3542;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      letter-spacing: -0.3px;
+    }
 
-    /* 악보 검색 바 */
-    #searchBarWrap {
-      display: none;
-      padding: 8px 16px;
-      background: var(--card-bg);
-      border-bottom: 1px solid var(--border);
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-    #scoreSearchInput {
-      width: 100%;
-      height: 36px;
-      background: var(--bg);
-      border: 1px solid var(--border);
+
+    .icon-btn {
+      background: none;
+      border: none;
+      font-size: 1.15rem;
+      color: #2f3542;
+      cursor: pointer;
+      padding: 6px 8px;
       border-radius: 8px;
-      padding: 0 12px;
-      color: #fff;
-      font-size: 14px;
-      outline: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+    }
+    .icon-btn:active { background: #f1f2f6; }
+
+    #pwa-install-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: #f1f2f6;
+      border: 1px solid #dcdde1;
+      color: #2f3542;
+      font-size: 0.76rem;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    #pwa-install-btn:active { transform: scale(0.95); background: #e4e7eb; }
+    #pwa-install-btn i { color: #387d5e; }
+
+    /* ==========================================
+       🔄 순정 원형 새로고침(Pull-to-Refresh) 인디케이터
+       ========================================== */
+    #ptr-indicator {
+      position: absolute;
+      top: 48px;
+      left: 50%;
+      transform: translate3d(-50%, -60px, 0);
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+      border: 1px solid #e4e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      pointer-events: none;
+      opacity: 0;
+      transition: transform 0.2s ease, opacity 0.18s ease;
+    }
+    #ptr-indicator i {
+      font-size: 0.88rem;
+      color: #387d5e;
+      transform-origin: center center;
+    }
+    #ptr-indicator.refreshing i {
+      animation: ptrSpin 0.6s linear infinite;
+    }
+    @keyframes ptrSpin {
+      100% { transform: rotate(360deg); }
     }
 
-    /* 3개 탭 슬라이더 트랙 */
-    .slider-container {
+    /* 슬라이더 구조: 사파리 가로 제스처 우선권 확보 */
+    #slider-viewport {
       flex: 1;
-      width: 100%;
-      overflow: hidden;
       position: relative;
+      overflow: hidden;
+      width: 100%;
+      touch-action: pan-y;
     }
-    .slider-track {
+    #slider-track {
       display: flex;
       width: 300%;
       height: 100%;
-      transform: translate3d(0, 0, 0);
-      transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.4, 1);
+      transform: translate3d(0%, 0, 0);
+      transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
       will-change: transform;
     }
-    .tab-page {
+    
+    .slide-page {
       width: 33.333333%;
       height: 100%;
       overflow-y: auto;
+      padding: 10px 10px calc(80px + env(safe-area-inset-bottom, 20px)) 10px;
       -webkit-overflow-scrolling: touch;
-      padding: 12px 14px calc(65px + var(--safe-bottom)) 14px;
+      overscroll-behavior-y: contain;
     }
 
-    /* 로딩 상태 플레이스홀더 */
-    .loading-box {
+    /* 하단 탭 바 */
+    nav.tab-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: calc(60px + env(safe-area-inset-bottom, 0px));
+      background: #ffffff;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-start;
+      padding-top: 5px;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      z-index: 100;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.04);
+    }
+    .tab-btn {
+      background: none; border: none; color: #a4b0be;
+      display: flex; flex-direction: column; align-items: center;
+      font-size: 0.78rem; gap: 3px; cursor: pointer; flex: 1;
+      height: 50px; justify-content: center;
+      transition: color 0.15s ease, transform 0.1s ease;
+    }
+    .tab-btn i { font-size: 1.35rem; }
+    .tab-btn.active { color: #2f3542; font-weight: 800; transform: translateY(-1px); }
+    .tab-btn.active i { color: #387d5e; }
+
+    /* ==========================================
+       출석부 표 스타일 (8주 대응 컴팩트 최적화 27px)
+       ========================================== */
+    .att-table-wrap {
+      background: #ffffff;
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    table.att-table {
+      width: 100%;
+      table-layout: fixed;
+      border-collapse: collapse;
       text-align: center;
-      padding: 40px 0;
-      color: var(--text-muted);
-      font-size: 13px;
+    }
+    table.att-table th {
+      padding: 6px 1px;
+      font-weight: 600;
+      color: #57606f;
+      font-size: 0.75rem;
+      border: 1px solid var(--border);
+      background-color: var(--header-bg);
+      white-space: nowrap;
+    }
+    table.att-table td {
+      border: 1px solid var(--border);
+      padding: 2.5px 1px;
+    }
+    table.att-table tr.separator-row td {
+      border: 1px solid var(--border);
+      height: 8px;
+      background-color: #fafbfc;
+      padding: 0;
+    }
+    .member-name-cell {
+      font-weight: 700;
+      color: #2f3542;
+      font-size: 0.82rem;
+      text-align: center;
+      white-space: nowrap;
+      background-color: #ffffff;
+      width: 56px;
+    }
+    .att-btn {
+      display: block;
+      width: 100%;
+      height: 27px;
+      line-height: 27px;
+      border-radius: 5px;
+      font-weight: 600;
+      font-size: 0.74rem;
+      color: #ffffff;
+      cursor: pointer;
+      user-select: none;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+      white-space: nowrap;
+      transition: transform 0.08s, opacity 0.08s;
+      padding: 0 1px;
+    }
+    .att-btn:active { transform: scale(0.95); opacity: 0.85; }
+    .att-btn.참석 { background-color: var(--btn-ok); }
+    .att-btn.불참 { background-color: var(--btn-no); }
+    .att-btn.미정 { background-color: var(--btn-wait); }
+    .att-btn.백업 { background-color: var(--btn-backup); }
+
+    /* 출석 모달 */
+    #att-modal-overlay {
+      display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.45); z-index: 1000;
+      align-items: center; justify-content: center; padding: 20px;
+    }
+    .att-modal-card {
+      background: #ffffff; border-radius: 14px; width: 100%; max-width: 290px;
+      padding: 20px 18px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+    .modal-target-name { font-size: 1.15rem; font-weight: 700; color: #2f3542; margin-bottom: 2px; }
+    .modal-target-date { font-size: 0.85rem; font-weight: 500; color: #747d8c; margin-bottom: 16px; }
+    .modal-choice-list { display: flex; flex-direction: column; gap: 8px; }
+    .modal-btn {
+      width: 100%; height: 42px; border: none; border-radius: 6px;
+      font-size: 0.92rem; font-weight: 600; color: #ffffff; cursor: pointer;
+    }
+    .modal-btn.btn-참석 { background-color: var(--btn-ok); }
+    .modal-btn.btn-불참 { background-color: var(--btn-no); }
+    .modal-btn.btn-미정 { background-color: var(--btn-wait); }
+    .modal-btn.btn-백업 { background-color: var(--btn-backup); }
+    .modal-btn.btn-취소 { background-color: #f1f2f6; color: #57606f; margin-top: 4px; }
+
+    /* 공연현황 */
+    .gigs-wrap { max-width: 600px; margin: 0 auto; }
+    .gig-member-row {
+      display: flex; align-items: center; margin-bottom: 3px; gap: 10px;
+      background: #ffffff; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border);
+    }
+    .gig-part-separator {
+      height: 6px; margin: 4px 0;
+      background: #f1f3f5; border-radius: 3px;
+    }
+    .gig-name { width: 60px; font-weight: 700; font-size: 0.88rem; color: #2f3542; white-space: nowrap; }
+    .gig-bar-wrap { flex: 1; background: #eef1f4; height: 8px; border-radius: 4px; overflow: hidden; }
+    .gig-bar-fill {
+      background: linear-gradient(90deg, #4a90e2, #68b0f7);
+      height: 100%; border-radius: 4px;
+      transition: width 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+    .gig-score-num { width: 44px; text-align: right; font-weight: 800; color: #4a90e2; font-size: 0.88rem; }
+
+    /* 악보 탭 검색창 */
+    #score-search-bar {
+      display: none;
+      background: #ffffff;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 15;
+    }
+    .search-input-wrap {
+      display: flex;
+      align-items: center;
+      background: #f1f2f6;
+      border-radius: 8px;
+      padding: 0 10px;
+      border: 1px solid var(--border);
+    }
+    .search-input-wrap input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 8px 6px;
+      font-size: 0.88rem;
+      color: #2f3542;
+      outline: none;
+    }
+    .search-input-wrap i.search-icon { color: #747d8c; font-size: 0.85rem; }
+    .search-clear-btn {
+      background: none; border: none; color: #a4b0be; cursor: pointer; padding: 4px; font-size: 0.9rem;
     }
 
-    /* 1. 출석부 테이블 */
-    .table-card {
-      background: var(--card-bg);
+    /* ==========================================
+       악보집 아코디언 (열림 상태 시인성/영역감 강화)
+       ========================================== */
+    .scores-list-wrap { max-width: 600px; margin: 0 auto; }
+    
+    .song-accordion {
+      background: #ffffff;
       border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow-x: auto;
-    }
-    table { width: 100%; border-collapse: collapse; white-space: nowrap; font-size: 13px; }
-    th, td { padding: 10px 8px; text-align: center; border-bottom: 1px solid var(--border); }
-    th { background: var(--card-sub); font-weight: 600; color: var(--text-muted); font-size: 12px; }
-    td:first-child, th:first-child { position: sticky; left: 0; background: var(--card-bg); z-index: 2; border-right: 1px solid var(--border); }
-    th:first-child { background: var(--card-sub); }
-    .status-cell { font-weight: 700; cursor: pointer; border-radius: 6px; }
-    .st-참석 { color: #2ed573; }
-    .st-불참 { color: #ff4757; }
-    .st-미정 { color: #747d8c; }
-    .st-백업 { color: #ffa502; }
-    .row-sep td { background: var(--bg); height: 8px; padding: 0; border: none; }
-
-    /* 2. 공연현황 차트 */
-    .gig-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px;
-      margin-bottom: 10px;
-    }
-    .gig-row { display: flex; align-items: center; margin-bottom: 8px; font-size: 13px; }
-    .gig-name { width: 65px; font-weight: 600; }
-    .gig-bar-wrap { flex: 1; background: var(--card-sub); height: 16px; border-radius: 8px; overflow: hidden; margin: 0 10px; }
-    .gig-bar-fill { height: 100%; background: linear-gradient(90deg, #ff6b81, var(--accent)); border-radius: 8px; transition: width 0.4s ease; }
-    .gig-cnt { width: 30px; text-align: right; font-weight: 700; color: var(--accent); }
-
-    /* 3. 악보집 아코디언 트리 */
-    .song-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      margin-bottom: 10px;
+      border-radius: 8px;
+      margin-bottom: 6px;
       overflow: hidden;
-      transition: border-color 0.15s ease;
+      transition: border 0.18s ease, box-shadow 0.18s ease, margin 0.18s ease;
     }
-    .song-header {
-      padding: 14px;
+    
+    .song-accordion.open {
+      border: 1.5px solid #387d5e;
+      box-shadow: 0 3px 12px rgba(56, 125, 94, 0.12);
+      margin-bottom: 12px;
+      margin-top: 4px;
+    }
+    .song-accordion.favorite {
+      border-color: #ffd43b;
+    }
+    .song-accordion.favorite.open {
+      border: 1.5px solid #fcc419;
+      box-shadow: 0 3px 12px rgba(252, 196, 25, 0.16);
+    }
+
+    .song-header-btn {
+      width: 100%;
+      padding: 11px 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      background: #ffffff;
+      border: none;
       cursor: pointer;
-      user-select: none;
+      text-align: left;
     }
-    .song-title-wrap {
+    .song-header-btn:active { background: #f8f9fa; }
+    .song-accordion.open .song-header-btn {
+      background: #f4f8f6;
+      border-bottom: 1px solid #e1ebe5;
+    }
+
+    .song-title-text {
       flex: 1;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .song-title {
-      font-size: 14px;
+      font-size: 0.92rem;
       font-weight: 700;
+      color: #2f3542;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      padding-right: 12px;
     }
-    .star-btn {
+    
+    .fav-star-btn {
       background: none;
       border: none;
-      font-size: 18px;
-      color: #57606f;
+      padding: 4px 6px;
       cursor: pointer;
-      padding: 4px;
+      color: #ced4da;
+      font-size: 1.15rem;
       display: flex;
       align-items: center;
       justify-content: center;
+      flex-shrink: 0;
+      transition: transform 0.15s ease, color 0.15s ease;
     }
-    .star-btn.active { color: #f1c40f; }
+    .fav-star-btn.active { color: #fcc419; }
+    .fav-star-btn.active { transform: scale(1.3); }
 
-    /* 곡 아코디언 바디 */
-    .song-content {
+    .file-accordion-body {
       display: none;
-      padding: 12px 14px 14px 14px;
-      border-top: 1px solid var(--border);
-      background: #14171d;
+      padding: 10px;
+      background: #fafbfc;
     }
-    .song-content.open { display: block; }
-
-    /* 곡 내부 하위 탭 */
-    .sub-tabs {
+    .song-accordion.open .file-accordion-body {
       display: flex;
-      background: #0b0d11;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 3px;
-      margin-bottom: 12px;
-      gap: 4px;
-    }
-    .sub-tab-btn {
-      flex: 1;
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      font-size: 12px;
-      font-weight: 700;
-      padding: 6px 0;
-      border-radius: 6px;
-      cursor: pointer;
-      text-align: center;
-      transition: all 0.2s ease;
-    }
-    .sub-tab-btn.active {
-      background: var(--card-sub);
-      color: #fff;
+      flex-direction: column;
     }
 
-    .sub-panel { display: none; }
-    .sub-panel.active { display: block; }
-
-    /* 리더 공식 포스트잇 메모 */
-    .song-memo-box {
-      background: var(--memo-bg);
-      border-left: 3px solid var(--memo-border);
-      padding: 8px 10px;
+    /* 메모 & 유튜브 & 업로드 영역 */
+    .song-extra-box {
+      margin-bottom: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .song-memo-card {
+      background: #fff9db;
+      border-left: 4px solid #f59f00;
+      padding: 8px 11px;
       border-radius: 4px;
-      font-size: 12px;
-      line-height: 1.45;
-      color: var(--memo-text);
+      font-size: 0.84rem;
+      font-weight: 500;
+      color: #343a40;
+      line-height: 1.5;
       white-space: pre-wrap;
-      word-break: break-word;
-      margin-bottom: 10px;
+      word-break: break-all;
+      text-align: left;
     }
-
-    /* 영상 링크 및 공유 버튼 라인 */
-    .yt-btn-group {
+    .youtube-btn-group {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
-      margin-bottom: 12px;
     }
-    .btn-yt {
+    .youtube-link-btn {
       display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      background: #e84118;
-      color: #fff;
-      font-size: 11px;
-      font-weight: 700;
-      padding: 5px 9px;
-      border-radius: 6px;
-      text-decoration: none;
-    }
-    .btn-action-outline {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      background: var(--card-sub);
-      color: #dcdde1;
-      border: 1px solid #485460;
-      font-size: 11px;
-      font-weight: 700;
-      padding: 5px 9px;
-      border-radius: 6px;
-      text-decoration: none;
-      cursor: pointer;
-    }
-    .btn-action-outline:active { background: #353b48; }
-
-    /* 파트별 악보 파일 목록 */
-    .file-list { display: flex; flex-direction: column; gap: 6px; }
-    .file-item {
-      display: flex;
-      align-items: center;
-      padding: 9px 12px;
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text-main);
-      text-decoration: none;
-      font-size: 12px;
-      font-weight: 600;
-      word-break: break-all;
-    }
-    .file-item.mp3 {
-      background: #142820;
-      border-color: #1e4b38;
-      color: #a8e6cf;
-    }
-    .file-icon { margin-right: 8px; font-size: 14px; flex-shrink: 0; }
-
-    /* 밴드노트 피드 & 작성 */
-    .note-compose-bar {
-      margin-bottom: 12px;
-    }
-    .btn-open-compose {
-      width: 100%;
-      background: var(--card-sub);
-      border: 1px dashed #57606f;
-      color: #dcdde1;
-      padding: 10px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex;
       align-items: center;
       justify-content: center;
+      gap: 5px;
+      background: #d91c1c;
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 6px 11px;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px rgba(217, 28, 28, 0.25);
+    }
+    .youtube-link-btn:active { background: #b01515; transform: scale(0.98); }
+
+    /* + 악보공유 버튼 (드라이브 블루 톤) */
+    .upload-share-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      background: #2b5c8f;
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 6px 11px;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px rgba(43, 92, 143, 0.25);
+      cursor: pointer;
+    }
+    .upload-share-btn:active { background: #1f4369; transform: scale(0.98); }
+
+    /* 파트/파일 행: 정석 심플 버튼 */
+    .score-file-row {
+      display: flex;
+      align-items: center;
+      padding: 11px 14px;
+      margin-bottom: 5px;
+      background: #f1f3f5;
+      border-radius: 6px;
+      border: 1px solid #e9ecef;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.12s ease, transform 0.08s ease;
+    }
+    .score-file-row:last-child { margin-bottom: 0; }
+    .score-file-row:active {
+      background: #e4e7eb;
+      transform: scale(0.99);
+    }
+
+    /* 음원 파일 전용 (헤드폰 & 그린 톤) */
+    .score-file-row.audio-type {
+      background: #eef7f2;
+      border-color: #d1e7dd;
+    }
+    .score-file-row.audio-type:active {
+      background: #dcf1e6;
+    }
+    
+    .score-part-title {
+      flex: 1;
+      font-weight: 700;
+      color: #2f3542;
+      font-size: 0.85rem;
+      line-height: 1.35;
+      word-break: break-all;
+      display: flex;
+      align-items: center;
       gap: 6px;
     }
-    .note-card-list { display: flex; flex-direction: column; gap: 8px; }
-    .note-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px 12px;
-      font-size: 12px;
-    }
-    .note-card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 6px;
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-    .note-part-badge {
-      background: #2f3542;
-      color: #f1f2f6;
-      font-weight: 700;
-      padding: 2px 6px;
-      border-radius: 4px;
-    }
-    .note-text {
-      line-height: 1.45;
-      color: #e4e7eb;
-      white-space: pre-wrap;
-      word-break: break-word;
-      margin-bottom: 6px;
-    }
-    .note-yt-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      color: #ff6b81;
-      text-decoration: none;
-      font-weight: 700;
-      font-size: 11px;
-    }
-    .note-empty {
-      text-align: center;
-      color: var(--text-muted);
-      font-size: 12px;
-      padding: 16px 0;
+    .score-file-row.audio-type .score-part-title {
+      color: #1b5e20;
     }
 
-    /* 하단 탭 내비게이션 */
-    nav {
-      height: calc(52px + var(--safe-bottom));
-      padding-bottom: var(--safe-bottom);
-      background: var(--bg);
-      border-top: 1px solid var(--border);
-      display: flex;
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      z-index: 20;
-    }
-    .nav-btn {
-      flex: 1;
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 3px;
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .nav-btn.active { color: var(--accent); }
-    .nav-icon { font-size: 17px; }
-
-    /* 바텀시트 모달 */
-    .modal-backdrop {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(2px);
-      z-index: 100;
-      align-items: flex-end;
-    }
-    .modal-backdrop.active { display: flex; }
-    .modal-sheet {
-      width: 100%;
-      background: #1a1e26;
-      border-top: 1px solid var(--border);
-      border-radius: 16px 16px 0 0;
-      padding: 18px 18px calc(20px + var(--safe-bottom)) 18px;
-      max-height: 85dvh;
-      overflow-y: auto;
-    }
-    .modal-title { font-size: 15px; font-weight: 700; margin-bottom: 14px; display: flex; justify-content: space-between; }
-    .modal-close { background: none; border: none; color: var(--text-muted); font-size: 18px; cursor: pointer; }
-
-    /* 칩 선택 버튼 그룹 */
-    .chip-group { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
-    .chip-btn {
-      background: var(--card-sub);
-      border: 1px solid var(--border);
-      color: var(--text-muted);
-      padding: 6px 12px;
-      border-radius: 16px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .chip-btn.selected {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #fff;
-    }
-
-    /* 모달 인풋 필드 */
-    .input-field {
-      width: 100%;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px 12px;
-      color: #fff;
-      font-size: 13px;
-      margin-bottom: 10px;
-      outline: none;
-    }
-    .input-textarea {
-      width: 100%;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px 12px;
-      color: #fff;
-      font-size: 13px;
-      margin-bottom: 12px;
-      height: 70px;
-      resize: none;
-      outline: none;
-    }
-    .btn-submit-full {
-      width: 100%;
-      height: 42px;
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    /* 토스트 알림 */
-    #toast {
-      position: fixed;
-      bottom: calc(70px + var(--safe-bottom));
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(30, 34, 45, 0.95);
-      border: 1px solid var(--border);
-      color: #fff;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 600;
-      z-index: 200;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.2s ease;
-    }
-    #toast.show { opacity: 1; }
+    #loading { text-align: center; padding: 50px 20px; color: var(--text-sub); }
   </style>
 </head>
 <body>
 
-  <!-- 헤더 -->
+  <!-- 🔄 순정 원형 새로고침(Pull-to-Refresh) 인디케이터 -->
+  <div id="ptr-indicator">
+    <i class="fa-solid fa-arrow-rotate-right" id="ptr-icon"></i>
+  </div>
+
   <header>
-    <div class="header-title">
-      HardRock BAND <span class="header-badge">TEST</span>
-    </div>
+    <h1 id="header-title">🎸 HardRock 출석부</h1>
     <div class="header-actions">
-      <button class="header-btn" id="btnToggleSearch" title="검색">🔍</button>
-      <button class="header-btn" id="btnSync" title="새로고침">🔄</button>
+      <button id="score-search-toggle-btn" class="icon-btn" onclick="toggleScoreSearch()" style="display:none;" title="악보 검색">
+        <i class="fa-solid fa-magnifying-glass"></i>
+      </button>
+      <button id="pwa-install-btn" onclick="triggerPwaInstall()">
+        <i class="fa-solid fa-arrow-down-to-bracket"></i> 앱 설치
+      </button>
     </div>
   </header>
 
-  <!-- 악보 검색 바 (토글) -->
-  <div id="searchBarWrap">
-    <input type="text" id="scoreSearchInput" placeholder="곡명 또는 파일명 검색...">
-  </div>
-
-  <!-- 3개 탭 슬라이더 트랙 -->
-  <div class="slider-container" id="sliderContainer">
-    <div class="slider-track" id="sliderTrack">
-
-      <!-- 탭 0: 출석부 -->
-      <section class="tab-page" id="pageAttendance">
-        <div class="table-card">
-          <table id="attendanceTable">
-            <tbody id="attendanceTbody">
-              <tr><td class="loading-box">출석부 데이터를 불러오는 중...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- 탭 1: 공연현황 -->
-      <section class="tab-page" id="pageGigs">
-        <div id="gigListContainer">
-          <div class="loading-box">공연 현황 데이터를 불러오는 중...</div>
-        </div>
-      </section>
-
-      <!-- 탭 2: 악보집 -->
-      <section class="tab-page" id="pageScores">
-        <div id="scoreListContainer">
-          <div class="loading-box">악보 데이터를 불러오는 중...</div>
-        </div>
-      </section>
-
+  <div id="score-search-bar">
+    <div class="search-input-wrap">
+      <i class="fa-solid fa-magnifying-glass search-icon"></i>
+      <input type="text" id="score-search" placeholder="곡명 또는 파트 검색..." oninput="filterScores()">
+      <button class="search-clear-btn" onclick="clearScoreSearch()"><i class="fa-solid fa-circle-xmark"></i></button>
     </div>
   </div>
 
-  <!-- 하단 내비게이션 바 -->
-  <nav>
-    <button class="nav-btn active" data-tab="0">
-      <span class="nav-icon">📅</span>
+  <div id="slider-viewport">
+    <div id="slider-track">
+      <!-- 0: 출석부 슬라이드 -->
+      <div class="slide-page" id="slide-attendance">
+        <div id="loading"><i class="fa-solid fa-circle-notch fa-spin fa-2x"></i><br><br>출석부를 불러오는 중입니다...</div>
+        <div class="att-table-wrap">
+          <div id="attendance-container"></div>
+        </div>
+      </div>
+
+      <!-- 1: 공연현황 슬라이드 -->
+      <div class="slide-page" id="slide-gigs">
+        <div class="gigs-wrap" id="gigs-container"></div>
+      </div>
+
+      <!-- 2: 악보집 슬라이드 -->
+      <div class="slide-page" id="slide-scores">
+        <div class="scores-list-wrap" id="scores-container">
+          <div id="scores-loading" style="text-align:center; padding:30px; color:var(--text-sub);">
+            <i class="fa-solid fa-circle-notch fa-spin"></i> 악보 목록을 준비하는 중입니다...
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="tab-bar">
+    <button class="tab-btn active" onclick="goToTab(0)">
+      <i class="fa-solid fa-calendar-check"></i>
       <span>출석부</span>
     </button>
-    <button class="nav-btn" data-tab="1">
-      <span class="nav-icon">📊</span>
+    <button class="tab-btn" onclick="goToTab(1)">
+      <i class="fa-solid fa-chart-column"></i>
       <span>공연현황</span>
     </button>
-    <button class="nav-btn" data-tab="2">
-      <span class="nav-icon">🎼</span>
-      <span>악보집</span>
+    <button class="tab-btn" onclick="goToTab(2)">
+      <i class="fa-solid fa-music"></i>
+      <span>악보</span>
     </button>
   </nav>
 
-  <!-- 출석 상태 변경 모달 -->
-  <div class="modal-backdrop" id="attendanceModal">
-    <div class="modal-sheet">
-      <div class="modal-title">
-        <span id="modalTargetLabel">출석 체크</span>
-        <button class="modal-close" onclick="closeModal()">✕</button>
-      </div>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-        <button class="btn-action-outline" style="height:44px; justify-content:center; color:#2ed573; font-size:14px;" onclick="selectStatus('참석')">참석</button>
-        <button class="btn-action-outline" style="height:44px; justify-content:center; color:#ff4757; font-size:14px;" onclick="selectStatus('불참')">불참</button>
-        <button class="btn-action-outline" style="height:44px; justify-content:center; color:#747d8c; font-size:14px;" onclick="selectStatus('미정')">미정</button>
-        <button class="btn-action-outline" style="height:44px; justify-content:center; color:#ffa502; font-size:14px;" onclick="selectStatus('백업')">백업</button>
+  <!-- 출석 모달 -->
+  <div id="att-modal-overlay">
+    <div class="att-modal-card">
+      <div id="modal-user-name" class="modal-target-name">멤버 이름 님</div>
+      <div id="modal-date-text" class="modal-target-date">00/00 출석 여부</div>
+      
+      <div class="modal-choice-list">
+        <button class="modal-btn btn-참석" onclick="selectStatus('참석')">참석</button>
+        <button class="modal-btn btn-불참" onclick="selectStatus('불참')">불참</button>
+        <button class="modal-btn btn-미정" onclick="selectStatus('미정')">미정</button>
+        <button class="modal-btn btn-백업" onclick="selectStatus('백업')">백업</button>
+        <button class="modal-btn btn-취소" onclick="closeAttModal()">취소</button>
       </div>
     </div>
   </div>
-
-  <!-- 밴드노트/추천 등록 모달 -->
-  <div class="modal-backdrop" id="noteModal">
-    <div class="modal-sheet">
-      <div class="modal-title">
-        <span id="noteModalSongTitle">곡 의견/추천 등록</span>
-        <button class="modal-close" onclick="closeNoteModal()">✕</button>
-      </div>
-
-      <div class="chip-group" id="partChipGroup">
-        <button class="chip-btn selected" data-part="전체">전체</button>
-        <button class="chip-btn" data-part="보컬">보컬</button>
-        <button class="chip-btn" data-part="기타">기타</button>
-        <button class="chip-btn" data-part="베이스">베이스</button>
-        <button class="chip-btn" data-part="드럼">드럼</button>
-        <button class="chip-btn" data-part="건반">건반</button>
-      </div>
-
-      <input type="text" id="noteAuthorInput" class="input-field" placeholder="작성자 이름 (자동 저장)">
-      <textarea id="noteContentInput" class="input-textarea" placeholder="합주 꿀팁, 의견, 카피 주의사항 등"></textarea>
-      <input type="url" id="noteYtUrlInput" class="input-field" placeholder="추천 유튜브 링크 (선택 사항)">
-
-      <button class="btn-submit-full" id="btnSaveNote">🚀 등록하기</button>
-    </div>
-  </div>
-
-  <!-- 토스트 -->
-  <div id="toast"></div>
 
   <script>
-    // ==========================================
-    // 0. 테스트 페이지 서비스 워커 등록 해제 (캐시 꼬임 원천 차단)
-    // ==========================================
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(regs => {
-        regs.forEach(reg => {
-          // test.html 환경에서는 서비스 워커 제어를 우회
-          console.log("[TEST] Active service worker detected");
-        });
-      });
-    }
-
-    // ==========================================
-    // 1. 전역 설정 & API 엔드포인트
-    // ==========================================
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbxk46VNnAZtti3FtD2iMVPO9aPIohyoyLTI3cIegGl4jHXN8fyYSMU8QrAX47wpvt6c/exec";
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxk46VNnAZtti3FtD2iMVPO9aPIohyoyLTI3cIegGl4jHXN8fyYSMU8QrAX47wpvt6c/exec";
+    // 📂 멤버 공유용 구글 드라이브 폴더 URL
     const SHARED_DRIVE_FOLDER_URL = "https://drive.google.com/drive/folders/12HAjdM1ecyJs6S77a3MYc8x9erKhQtZe?usp=drive_link";
 
+    let appData = { attendance: [], gigs: [], scores: [] };
+    let currentEditTarget = null;
+    let deferredPrompt = null;
     let currentTabIndex = 0;
-    let attendanceData = null;
-    let gigsData = null;
-    let scoresData = [];
-    let bandNotesData = [];
-    let favoriteSongs = new Set();
-    let currentEditCell = null;
-    let currentTargetSong = "";
-    let selectedNotePart = "전체";
+    const tabTitles = ['🎸 HardRock 출석부', '📊 HardRock 공연현황', '🎵 HardRock 악보집'];
 
-    // ==========================================
-    // 2. 초기 기동
-    // ==========================================
-    document.addEventListener("DOMContentLoaded", () => {
-      loadLocalCache();
-      initSlider();
-      initEvents();
-      fetchQuickData();
-      fetchScoresData();
-    });
+    let isRefreshing = false;
+    let refreshTimeoutId = null;
 
-    function showToast(msg) {
-      const t = document.getElementById("toast");
-      t.innerText = msg;
-      t.classList.add("show");
-      setTimeout(() => t.classList.remove("show"), 2000);
-    }
-
-    function loadLocalCache() {
+    function getFavorites() {
       try {
-        const att = localStorage.getItem("hr_attendance");
-        const gig = localStorage.getItem("hr_gigs");
-        const sco = localStorage.getItem("hr_scores");
-        const fav = localStorage.getItem("hr_favorite_songs");
-        const nts = localStorage.getItem("hr_band_notes_test");
-        const author = localStorage.getItem("hr_saved_author");
-
-        if (att) { attendanceData = JSON.parse(att); renderAttendance(); }
-        if (gig) { gigsData = JSON.parse(gig); renderGigs(); }
-        if (fav) { favoriteSongs = new Set(JSON.parse(fav)); }
-        if (sco) { scoresData = JSON.parse(sco); renderScores(); }
-        if (nts) { bandNotesData = JSON.parse(nts); renderScores(); }
-        if (author) { document.getElementById("noteAuthorInput").value = author; }
+        return JSON.parse(localStorage.getItem('hr_favorite_songs') || '[]');
       } catch (e) {
-        console.warn("캐시 로드 실패:", e);
+        return [];
       }
     }
 
-    // ==========================================
-    // 3. 3개 탭 슬라이더 컨트롤
-    // ==========================================
-    function initSlider() {
-      const track = document.getElementById("sliderTrack");
-      const navBtns = document.querySelectorAll(".nav-btn");
-
-      window.switchTab = function(idx) {
-        currentTabIndex = idx;
-        track.style.transform = `translate3d(-${idx * 33.333333}%, 0, 0)`;
-        navBtns.forEach((btn, i) => {
-          btn.classList.toggle("active", i === idx);
-        });
-      };
-
-      navBtns.forEach(btn => {
-        btn.addEventListener("click", () => {
-          switchTab(parseInt(btn.dataset.tab, 10));
-        });
-      });
+    function toggleFavorite(songName, event) {
+      if (event) event.stopPropagation();
+      
+      let favs = getFavorites();
+      const idx = favs.indexOf(songName);
+      if (idx > -1) {
+        favs.splice(idx, 1);
+      } else {
+        favs.push(songName);
+      }
+      localStorage.setItem('hr_favorite_songs', JSON.stringify(favs));
+      renderScores();
     }
 
-    // ==========================================
-    // 4. 출석부 렌더링 & 모달
-    // ==========================================
-    function renderAttendance() {
-      if (!attendanceData || !attendanceData.rows) return;
-      const tbody = document.getElementById("attendanceTbody");
-      tbody.innerHTML = "";
+    window.addEventListener('popstate', (e) => {
+      const modal = document.getElementById('att-modal-overlay');
+      if (modal && modal.style.display === 'flex') {
+        closeAttModal(false);
+      }
+    });
 
-      const trHead = document.createElement("tr");
-      attendanceData.headers.forEach(h => {
-        const th = document.createElement("th");
-        th.innerText = h;
-        trHead.appendChild(th);
-      });
-      tbody.appendChild(trHead);
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
+    }
 
-      attendanceData.rows.forEach((row, rIdx) => {
-        const tr = document.createElement("tr");
-        const name = row[0];
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    if (isStandalone) {
+      document.getElementById('pwa-install-btn').style.display = 'none';
+    }
 
-        if (!name || name.trim() === "") {
-          tr.className = "row-sep";
-          const td = document.createElement("td");
-          td.colSpan = attendanceData.headers.length;
-          tr.appendChild(td);
-        } else {
-          row.forEach((val, cIdx) => {
-            const td = document.createElement("td");
-            td.innerText = val || (cIdx > 0 ? "미정" : "");
-            if (cIdx > 0) {
-              td.className = `status-cell st-${val || '미정'}`;
-              td.onclick = () => openAttendanceModal(rIdx, cIdx, name, attendanceData.headers[cIdx]);
-            }
-            tr.appendChild(td);
-          });
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      if (!isStandalone) {
+        document.getElementById('pwa-install-btn').style.display = 'inline-flex';
+      }
+    });
+
+    function triggerPwaInstall() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+      }
+    }
+
+    window.onload = function() {
+      restoreFromCache();
+      loadFastData();
+      initSmoothGestures();
+    };
+
+    function restoreFromCache() {
+      try {
+        const cachedAtt = localStorage.getItem('hr_attendance');
+        const cachedGigs = localStorage.getItem('hr_gigs');
+        const cachedScores = localStorage.getItem('hr_scores');
+
+        if (cachedAtt && cachedGigs) {
+          appData.attendance = JSON.parse(cachedAtt);
+          appData.gigs = JSON.parse(cachedGigs);
+          document.getElementById('loading').style.display = 'none';
+          renderAttendance();
+          renderGigs();
         }
-        tbody.appendChild(tr);
+        if (cachedScores) {
+          appData.scores = JSON.parse(cachedScores);
+          renderScores();
+        }
+      } catch (e) {
+        console.log('Cache restore err:', e);
+      }
+    }
+
+    async function loadFastData() {
+      try {
+        const response = await fetch(`${GAS_API_URL}?action=getQuickData&_t=${Date.now()}`, {
+          method: 'GET',
+          redirect: 'follow',
+          headers: { 'Accept': 'application/json' }
+        });
+        const data = await response.json();
+        
+        if (data && data.success) {
+          appData.attendance = data.attendance;
+          appData.gigs = data.gigs;
+
+          localStorage.setItem('hr_attendance', JSON.stringify(data.attendance));
+          localStorage.setItem('hr_gigs', JSON.stringify(data.gigs));
+
+          document.getElementById('loading').style.display = 'none';
+          renderAttendance();
+          renderGigs();
+
+          setTimeout(preloadScoresInBackground, 300);
+        }
+      } catch (err) {}
+    }
+
+    async function preloadScoresInBackground() {
+      try {
+        const response = await fetch(`${GAS_API_URL}?action=getScoresData&_t=${Date.now()}`, {
+          method: 'GET',
+          redirect: 'follow',
+          headers: { 'Accept': 'application/json' }
+        });
+        const data = await response.json();
+        if (data && data.success) {
+          const newScores = data.scores || [];
+          const oldScoresStr = localStorage.getItem('hr_scores') || '[]';
+          const newScoresStr = JSON.stringify(newScores);
+
+          if (oldScoresStr !== newScoresStr) {
+            appData.scores = newScores;
+            localStorage.setItem('hr_scores', newScoresStr);
+            renderScores();
+          }
+        }
+      } catch (e) {
+        console.log('Scores sync err:', e);
+      }
+    }
+
+    /* ====================================================
+       🔄 새로고침 인디케이터 즉시 초기화/퇴장
+       ==================================================== */
+    function resetPtrIndicator() {
+      const ptrIndicator = document.getElementById('ptr-indicator');
+      const ptrIcon = document.getElementById('ptr-icon');
+      
+      if (refreshTimeoutId) {
+        clearTimeout(refreshTimeoutId);
+        refreshTimeoutId = null;
+      }
+      
+      ptrIndicator.style.transition = 'transform 0.18s ease, opacity 0.15s ease';
+      ptrIndicator.style.transform = 'translate3d(-50%, -60px, 0)';
+      ptrIndicator.style.opacity = '0';
+      
+      setTimeout(() => {
+        ptrIndicator.classList.remove('refreshing');
+        ptrIcon.style.transform = 'rotate(0deg)';
+        isRefreshing = false;
+      }, 200);
+    }
+
+    async function startRefreshProcess() {
+      if (isRefreshing) return;
+      isRefreshing = true;
+
+      const ptrIndicator = document.getElementById('ptr-indicator');
+      ptrIndicator.classList.add('refreshing');
+      ptrIndicator.style.transition = 'transform 0.18s ease, opacity 0.15s ease';
+      ptrIndicator.style.transform = 'translate3d(-50%, 8px, 0)';
+      ptrIndicator.style.opacity = '1';
+
+      refreshTimeoutId = setTimeout(() => {
+        resetPtrIndicator();
+      }, 650);
+
+      try {
+        const [quickRes, scoreRes] = await Promise.all([
+          fetch(`${GAS_API_URL}?action=getQuickData&_t=${Date.now()}`, { method: 'GET', redirect: 'follow' }),
+          fetch(`${GAS_API_URL}?action=getScoresData&_t=${Date.now()}`, { method: 'GET', redirect: 'follow' })
+        ]);
+
+        const quickData = await quickRes.json();
+        const scoreData = await scoreRes.json();
+
+        if (quickData && quickData.success) {
+          appData.attendance = quickData.attendance;
+          appData.gigs = quickData.gigs;
+          localStorage.setItem('hr_attendance', JSON.stringify(quickData.attendance));
+          localStorage.setItem('hr_gigs', JSON.stringify(quickData.gigs));
+          renderAttendance();
+          renderGigs();
+        }
+
+        if (scoreData && scoreData.success) {
+          appData.scores = scoreData.scores || [];
+          localStorage.setItem('hr_scores', JSON.stringify(appData.scores));
+          renderScores();
+        }
+      } catch (e) {
+        console.log('Silent refresh fallback to cache:', e);
+      }
+    }
+
+    function goToTab(index) {
+      if (index < 0 || index > 2) return;
+      currentTabIndex = index;
+
+      resetPtrIndicator();
+
+      const track = document.getElementById('slider-track');
+      track.style.transform = `translate3d(-${(index * 33.333333).toFixed(4)}%, 0, 0)`;
+
+      const btns = document.querySelectorAll('.tab-btn');
+      btns.forEach((btn, i) => {
+        if (i === index) btn.classList.add('active');
+        else btn.classList.remove('active');
       });
+
+      document.getElementById('header-title').innerText = tabTitles[index];
+
+      const searchBtn = document.getElementById('score-search-toggle-btn');
+      const searchBar = document.getElementById('score-search-bar');
+      if (index === 2) {
+        searchBtn.style.display = 'inline-flex';
+      } else {
+        searchBtn.style.display = 'none';
+        searchBar.style.display = 'none';
+      }
     }
 
-    function openAttendanceModal(row, col, name, date) {
-      currentEditCell = { row, col };
-      document.getElementById("modalTargetLabel").innerText = `${name} (${date})`;
-      document.getElementById("attendanceModal").classList.add("active");
-      history.pushState({ modal: "attendance" }, "");
+    function toggleScoreSearch() {
+      const bar = document.getElementById('score-search-bar');
+      const input = document.getElementById('score-search');
+      if (bar.style.display === 'block') {
+        bar.style.display = 'none';
+      } else {
+        bar.style.display = 'block';
+        input.focus();
+      }
     }
 
-    function closeModal() {
-      document.getElementById("attendanceModal").classList.remove("active");
-      currentEditCell = null;
+    function clearScoreSearch() {
+      const input = document.getElementById('score-search');
+      input.value = '';
+      filterScores();
+    }
+
+    /* ====================================================
+       제스처 통합: [방향 잠금 + 황금비율 감도 40px 복원]
+       ==================================================== */
+    function initSmoothGestures() {
+      let startX = 0;
+      let startY = 0;
+      let startTime = 0;
+      let gestureIntent = null;
+      let currentPullDiff = 0;
+
+      const ptrIndicator = document.getElementById('ptr-indicator');
+      const ptrIcon = document.getElementById('ptr-icon');
+      const pullThreshold = 60;
+
+      const slidePages = [
+        document.getElementById('slide-attendance'),
+        document.getElementById('slide-gigs'),
+        document.getElementById('slide-scores')
+      ];
+
+      function cancelPullGesture() {
+        if (!isRefreshing) {
+          ptrIndicator.style.transition = 'transform 0.18s ease, opacity 0.15s ease';
+          ptrIndicator.style.transform = 'translate3d(-50%, -60px, 0)';
+          ptrIndicator.style.opacity = '0';
+        }
+        gestureIntent = null;
+        currentPullDiff = 0;
+        startX = 0;
+        startY = 0;
+      }
+
+      window.addEventListener('touchstart', (e) => {
+        if (isRefreshing ||
+            document.getElementById('att-modal-overlay').style.display === 'flex' ||
+            e.target.tagName === 'INPUT') {
+          startX = 0;
+          startY = 0;
+          return;
+        }
+
+        const touch = e.touches[0];
+        startX = touch.clientX;
+        startY = touch.clientY;
+        startTime = Date.now();
+        gestureIntent = null;
+        currentPullDiff = 0;
+      }, { passive: true });
+
+      window.addEventListener('touchmove', (e) => {
+        if (!startX || isRefreshing) return;
+
+        const touch = e.touches[0];
+        const diffX = touch.clientX - startX;
+        const diffY = touch.clientY - startY;
+
+        const activePage = slidePages[currentTabIndex];
+        const isAtTop = activePage ? activePage.scrollTop <= 0 : false;
+
+        if (!gestureIntent) {
+          if (Math.abs(diffX) > 6 || Math.abs(diffY) > 6) {
+            if (isAtTop && diffY > 6 && Math.abs(diffY) > Math.abs(diffX) * 1.3) {
+              gestureIntent = 'pull';
+            } else if (Math.abs(diffY) >= Math.abs(diffX)) {
+              gestureIntent = 'scroll';
+            } else {
+              gestureIntent = 'swipe';
+            }
+          }
+        }
+
+        if (gestureIntent === 'pull' && isAtTop && diffY > 0) {
+          currentPullDiff = diffY;
+          ptrIndicator.style.transition = 'none';
+
+          const pullDistance = Math.min(diffY * 0.4, 75);
+          const rotateDeg = (pullDistance / pullThreshold) * 360;
+
+          ptrIndicator.style.transform = `translate3d(-50%, ${pullDistance - 50}px, 0)`;
+          ptrIndicator.style.opacity = `${Math.min(1, pullDistance / (pullThreshold * 0.75))}`;
+          ptrIcon.style.transform = `rotate(${rotateDeg}deg)`;
+        } else if (gestureIntent === 'pull' && diffY <= 0) {
+          cancelPullGesture();
+        }
+      }, { passive: true });
+
+      window.addEventListener('touchend', (e) => {
+        if (!startX || isRefreshing) return;
+
+        const touch = e.changedTouches[0];
+        const diffX = touch.clientX - startX;
+        const duration = Date.now() - startTime;
+
+        if (gestureIntent === 'pull') {
+          const effectivePull = currentPullDiff * 0.4;
+          if (effectivePull >= pullThreshold) {
+            startRefreshProcess();
+          } else {
+            cancelPullGesture();
+          }
+          gestureIntent = null;
+          startX = 0;
+          startY = 0;
+          return;
+        }
+
+        if (gestureIntent === 'swipe' && duration < 600 && Math.abs(diffX) > 40) {
+          if (diffX < 0) {
+            if (currentTabIndex < 2) goToTab(currentTabIndex + 1);
+          } else {
+            if (currentTabIndex > 0) goToTab(currentTabIndex - 1);
+          }
+        }
+
+        gestureIntent = null;
+        startX = 0;
+        startY = 0;
+      }, { passive: true });
+
+      window.addEventListener('touchcancel', cancelPullGesture, { passive: true });
+    }
+
+    function renderAttendance() {
+      const container = document.getElementById('attendance-container');
+      if (!appData.attendance || appData.attendance.length === 0) return;
+
+      const rows = appData.attendance;
+      const colCount = rows[0].length;
+      let html = '<table class="att-table">';
+      
+      html += '<thead><tr>';
+      rows[0].forEach((header, colIdx) => {
+        html += `<th class="${colIdx === 0 ? 'member-name-cell' : ''}">${header}</th>`;
+      });
+      html += '</tr></thead><tbody>';
+
+      for (let r = 1; r < rows.length; r++) {
+        const memberName = (rows[r][0] || '').trim();
+        
+        if (!memberName) {
+          html += `<tr class="separator-row"><td colspan="${colCount}"></td></tr>`;
+          continue;
+        }
+
+        html += '<tr>';
+        for (let c = 0; c < rows[r].length; c++) {
+          const val = (rows[r][c] || '').trim();
+          if (c === 0) {
+            html += `<td class="member-name-cell">${val}</td>`;
+          } else {
+            const dateHeader = rows[0][c] || '';
+            const rowCoord = r + 1;
+            const colCoord = c + 1;
+            const statusClass = normalizeStatus(val);
+            const displayText = val === '' ? '미정' : val;
+
+            html += `<td>
+              <span class="att-btn ${statusClass}" id="cell_${rowCoord}_${colCoord}"
+                    onclick="openAttModal(${rowCoord}, ${colCoord}, '${memberName}', '${dateHeader}')">
+                ${displayText}
+              </span>
+            </td>`;
+          }
+        }
+        html += '</tr>';
+      }
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    function normalizeStatus(val) {
+      if (val === '참석' || val === 'O') return '참석';
+      if (val === '불참' || val === 'X') return '불참';
+      if (val === '백업') return '백업';
+      return '미정';
+    }
+
+    function openAttModal(row, col, name, date) {
+      currentEditTarget = { row, col, name, date };
+      document.getElementById('modal-user-name').innerText = `${name} 님`;
+      document.getElementById('modal-date-text').innerText = `${date} 출석 여부`;
+      document.getElementById('att-modal-overlay').style.display = 'flex';
+      history.pushState({ modalOpen: true }, '');
+    }
+
+    function closeAttModal(needHistoryBack = true) {
+      document.getElementById('att-modal-overlay').style.display = 'none';
+      currentEditTarget = null;
+      if (needHistoryBack && window.history.state && window.history.state.modalOpen) {
+        history.back();
+      }
     }
 
     function selectStatus(status) {
-      if (!currentEditCell) return;
-      const { row, col } = currentEditCell;
-      attendanceData.rows[row][col] = status;
-      localStorage.setItem("hr_attendance", JSON.stringify(attendanceData));
-      renderAttendance();
-      closeModal();
-      showToast(`출석 저장: ${status}`);
+      if (!currentEditTarget) return;
 
-      fetch(`${GAS_URL}?action=updateAttendance&row=${row + 2}&col=${col + 1}&status=${encodeURIComponent(status)}`, { method: "POST" })
-        .catch(err => console.error("출석 저장 에러:", err));
-    }
+      const { row, col } = currentEditTarget;
+      const cell = document.getElementById(`cell_${row}_${col}`);
+      
+      cell.innerText = status;
+      cell.className = `att-btn ${status}`;
+      closeAttModal();
 
-    // ==========================================
-    // 5. 공연현황 렌더링
-    // ==========================================
-    function renderGigs() {
-      if (!gigsData || !gigsData.rows) return;
-      const container = document.getElementById("gigListContainer");
-      container.innerHTML = "";
-
-      let maxCount = 1;
-      gigsData.rows.forEach(r => {
-        const cnt = parseInt(r.count, 10) || 0;
-        if (cnt > maxCount) maxCount = cnt;
-      });
-
-      const card = document.createElement("div");
-      card.className = "gig-card";
-
-      gigsData.rows.forEach(r => {
-        if (!r.name || r.name.trim() === "") return;
-        const cnt = parseInt(r.count, 10) || 0;
-        const pct = Math.round((cnt / maxCount) * 100);
-
-        const row = document.createElement("div");
-        row.className = "gig-row";
-        row.innerHTML = `
-          <div class="gig-name">${r.name}</div>
-          <div class="gig-bar-wrap">
-            <div class="gig-bar-fill" style="width: ${pct}%"></div>
-          </div>
-          <div class="gig-cnt">${cnt}</div>
-        `;
-        card.appendChild(row);
-      });
-      container.appendChild(card);
-    }
-
-    // ==========================================
-    // 6. 악보집 & 밴드노트 아코디언 트리
-    // ==========================================
-    function renderScores() {
-      if (!scoresData || scoresData.length === 0) return;
-      const container = document.getElementById("scoreListContainer");
-      const keyword = document.getElementById("scoreSearchInput").value.trim().toLowerCase();
-      container.innerHTML = "";
-
-      const songMap = new Map();
-      scoresData.forEach(item => {
-        const song = item.song || "미분류";
-        if (!songMap.has(song)) {
-          songMap.set(song, {
-            songName: song,
-            memo: item.memo || "",
-            youtube: item.youtube || "",
-            files: []
-          });
-        }
-        if (item.fileName) {
-          songMap.get(song).files.push({
-            name: item.fileName,
-            viewUrl: item.viewUrl || `https://drive.google.com/file/d/${item.fileId}/preview`,
-            isAudio: item.fileName.toLowerCase().endsWith(".mp3")
-          });
-        }
-      });
-
-      let songs = Array.from(songMap.values());
-      songs.sort((a, b) => {
-        const favA = favoriteSongs.has(a.songName) ? 1 : 0;
-        const favB = favoriteSongs.has(b.songName) ? 1 : 0;
-        if (favA !== favB) return favB - favA;
-        return a.songName.localeCompare(b.songName, "ko");
-      });
-
-      if (keyword) {
-        songs = songs.filter(s => {
-          if (s.songName.toLowerCase().includes(keyword)) return true;
-          return s.files.some(f => f.name.toLowerCase().includes(keyword));
-        });
+      if (appData.attendance && appData.attendance[row - 1]) {
+        appData.attendance[row - 1][col - 1] = status;
+        localStorage.setItem('hr_attendance', JSON.stringify(appData.attendance));
       }
 
-      songs.forEach(songObj => {
-        const isFav = favoriteSongs.has(songObj.songName);
-        const card = document.createElement("div");
-        card.className = "song-card";
+      fetch(`${GAS_API_URL}?action=updateAttendance&row=${row}&col=${col}&status=${encodeURIComponent(status)}&_t=${Date.now()}`, {
+        method: 'GET',
+        mode: 'no-cors'
+      }).catch(err => console.log('Update Error:', err));
+    }
 
-        const songNotes = bandNotesData.filter(n => n.song === songObj.songName);
+    function renderGigs() {
+      const container = document.getElementById('gigs-container');
+      container.innerHTML = '';
+      if (!appData.gigs || appData.gigs.length === 0) return;
+      
+      const gigStats = appData.gigs.map(row => {
+        const name = (row[0] || '').trim();
+        if (!name) return { isSeparator: true };
 
-        const header = document.createElement("div");
-        header.className = "song-header";
-        header.innerHTML = `
-          <div class="song-title-wrap">
-            <span class="song-title">${escapeHtml(songObj.songName)}</span>
-          </div>
-          <button class="star-btn ${isFav ? 'active' : ''}" title="즐겨찾기">⭐</button>
-        `;
+        let total = 0;
+        for (let col = 1; col < row.length; col++) {
+          const num = parseFloat(row[col]);
+          if (!isNaN(num)) total += num;
+        }
+        return { isSeparator: false, name, score: total };
+      });
 
-        const starBtn = header.querySelector(".star-btn");
-        starBtn.onclick = (e) => {
-          e.stopPropagation();
-          if (favoriteSongs.has(songObj.songName)) {
-            favoriteSongs.delete(songObj.songName);
-          } else {
-            favoriteSongs.add(songObj.songName);
+      const validScores = gigStats.filter(g => !g.isSeparator).map(g => g.score);
+      const maxScore = validScores.length > 0 ? Math.max(...validScores, 10) : 10;
+
+      let html = '';
+      gigStats.forEach(g => {
+        if (g.isSeparator) {
+          html += `<div class="gig-part-separator"></div>`;
+        } else {
+          const percent = Math.min(100, Math.round((g.score / maxScore) * 100));
+          html += `
+            <div class="gig-member-row">
+              <div class="gig-name">${g.name}</div>
+              <div class="gig-bar-wrap">
+                <div class="gig-bar-fill" style="width: ${percent}%;"></div>
+              </div>
+              <div class="gig-score-num">${g.score}회</div>
+            </div>
+          `;
+        }
+      });
+
+      container.innerHTML = html;
+    }
+
+    function parseYoutubeLinks(rawText) {
+      if (!rawText) return [];
+      const lines = rawText.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+      const results = [];
+      
+      lines.forEach((line, idx) => {
+        const match = line.match(/(https?:\/\/[^\s]+)/i);
+        if (match) {
+          const url = match[1];
+          let label = line.replace(url, '').trim();
+          label = label.replace(/[\[\]]/g, '').trim();
+          if (!label) {
+            label = lines.length > 1 ? `영상 ${idx + 1}` : '참고 영상';
           }
-          localStorage.setItem("hr_favorite_songs", JSON.stringify(Array.from(favoriteSongs)));
-          renderScores();
-        };
+          results.push({ label, url });
+        }
+      });
+      return results;
+    }
 
-        const content = document.createElement("div");
-        content.className = "song-content";
+    function isAudioFile(filename) {
+      const cleanName = (filename || '').trim().toLowerCase();
+      return /\.(mp3|m4a|wav|aac|flac|ogg)$/i.test(cleanName);
+    }
 
-        const subTabs = document.createElement("div");
-        subTabs.className = "sub-tabs";
-        subTabs.innerHTML = `
-          <button class="sub-tab-btn active" data-target="panel-files-${cardId(songObj.songName)}">📄 자료 / 악보</button>
-          <button class="sub-tab-btn" data-target="panel-notes-${cardId(songObj.songName)}">💬 밴드노트 (${songNotes.length})</button>
-        `;
+    /* ====================================================
+       악보집 렌더링: [메모 ➔ 유튜브 + 공유버튼 ➔ 음원 ➔ 악보]
+       ==================================================== */
+    function renderScores() {
+      const container = document.getElementById('scores-container');
+      const query = document.getElementById('score-search').value.toLowerCase().trim();
 
-        // 1번 패널: 자료/악보
-        const panelFiles = document.createElement("div");
-        panelFiles.className = "sub-panel active";
-        panelFiles.id = `panel-files-${cardId(songObj.songName)}`;
+      const openSongs = new Set();
+      container.querySelectorAll('.song-accordion.open').forEach(el => {
+        const title = el.querySelector('.song-title-text')?.innerText?.trim();
+        if (title) openSongs.add(title);
+      });
 
-        if (songObj.memo && songObj.memo.trim() !== "") {
-          const memoBox = document.createElement("div");
-          memoBox.className = "song-memo-box";
-          memoBox.innerText = songObj.memo;
-          panelFiles.appendChild(memoBox);
+      container.innerHTML = '';
+
+      if (!appData.scores || appData.scores.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-sub);">등록된 악보가 없습니다.</div>';
+        return;
+      }
+
+      const groups = {};
+      appData.scores.forEach(row => {
+        const song = (row[0] || '').trim();
+        const part = (row[1] || '').trim();
+        const preview = (row[2] || '').trim();
+        const download = (row[3] || '').trim();
+        const youtube = (row[4] || '').trim();
+        const memo = (row[5] || '').trim();
+        const fileId = (row[6] || '').trim();
+
+        if (!song) return;
+        if (query && !song.toLowerCase().includes(query) && !part.toLowerCase().includes(query)) return;
+        
+        if (!groups[song]) {
+          groups[song] = { files: [], youtube: '', memo: '' };
+        }
+        
+        if (part || preview || download) {
+          groups[song].files.push({ part, preview, download, fileId });
+        }
+        if (youtube && !groups[song].youtube) groups[song].youtube = youtube;
+        if (memo && !groups[song].memo) groups[song].memo = memo;
+      });
+
+      const favs = getFavorites();
+
+      const songNames = Object.keys(groups).sort((a, b) => {
+        const aFav = favs.includes(a);
+        const bFav = favs.includes(b);
+        if (aFav && !bFav) return -1;
+        if (!aFav && bFav) return 1;
+        return a.localeCompare(b);
+      });
+
+      if (songNames.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-sub);">검색 결과가 없습니다.</div>';
+        return;
+      }
+
+      songNames.forEach((song) => {
+        const isFav = favs.includes(song);
+        const accordion = document.createElement('div');
+        accordion.className = `song-accordion ${isFav ? 'favorite' : ''}`;
+
+        if (query.length > 0 || openSongs.has(song)) {
+          accordion.classList.add('open');
         }
 
-        const btnGroup = document.createElement("div");
-        btnGroup.className = "yt-btn-group";
+        const songData = groups[song];
+        const ytList = parseYoutubeLinks(songData.youtube);
 
-        if (songObj.youtube) {
-          const ytLines = songObj.youtube.split("\n");
-          ytLines.forEach(line => {
-            const m = line.match(/\[(.*?)\]\s*(https?:\/\/[^\s]+)/);
-            if (m) {
-              const a = document.createElement("a");
-              a.className = "btn-yt";
-              a.href = m[2];
-              a.target = "_blank";
-              a.rel = "noopener noreferrer";
-              a.innerHTML = `▶ ${escapeHtml(m[1])}`;
-              btnGroup.appendChild(a);
-            }
+        // 1. 메모 우선 ➔ 유튜브 링크 & [+ 악보공유] 버튼
+        let extraHtml = '';
+        const memoContent = (songData.memo || '').trim();
+        
+        // 메모 또는 (유튜브 / 공유버튼) 영역 구성
+        extraHtml += '<div class="song-extra-box">';
+        if (memoContent) {
+          extraHtml += `<div class="song-memo-card">${escapeHtml(memoContent)}</div>`;
+        }
+        
+        extraHtml += '<div class="youtube-btn-group">';
+        if (ytList.length > 0) {
+          ytList.forEach(yt => {
+            extraHtml += `
+              <a class="youtube-link-btn" href="${yt.url}" target="_blank" rel="noopener noreferrer">
+                <i class="fa-brands fa-youtube"></i> ${escapeHtml(yt.label)}
+              </a>
+            `;
           });
         }
-
-        const btnRecommend = document.createElement("button");
-        btnRecommend.className = "btn-action-outline";
-        btnRecommend.innerHTML = `+ 추천`;
-        btnRecommend.onclick = () => openNoteModal(songObj.songName);
-        btnGroup.appendChild(btnRecommend);
-
-        const btnShare = document.createElement("a");
-        btnShare.className = "btn-action-outline";
-        btnShare.href = SHARED_DRIVE_FOLDER_URL;
-        btnShare.target = "_blank";
-        btnShare.rel = "noopener noreferrer";
-        btnShare.innerHTML = `📥 공유`;
-        btnGroup.appendChild(btnShare);
-
-        panelFiles.appendChild(btnGroup);
-
-        const fileList = document.createElement("div");
-        fileList.className = "file-list";
-        songObj.files.forEach(f => {
-          const a = document.createElement("a");
-          a.className = `file-item ${f.isAudio ? 'mp3' : ''}`;
-          a.href = f.viewUrl;
-          a.target = "_blank";
-          a.rel = "noopener noreferrer";
-          a.innerHTML = `<span class="file-icon">${f.isAudio ? '🎧' : '📄'}</span><span>${escapeHtml(f.name)}</span>`;
-          fileList.appendChild(a);
-        });
-        panelFiles.appendChild(fileList);
-
-        // 2번 패널: 밴드노트 피드
-        const panelNotes = document.createElement("div");
-        panelNotes.className = "sub-panel";
-        panelNotes.id = `panel-notes-${cardId(songObj.songName)}`;
-
-        panelNotes.innerHTML = `
-          <div class="note-compose-bar">
-            <button class="btn-open-compose" onclick="openNoteModal('${escapeJs(songObj.songName)}')">
-              ✏️ 의견 / 꿀팁 / 링크 남기기
-            </button>
-          </div>
-          <div class="note-card-list">
-            ${songNotes.length === 0 ? '<div class="note-empty">등록된 메모나 추천이 없습니다.<br>첫 의견을 남겨보세요!</div>' : ''}
-            ${songNotes.map(n => `
-              <div class="note-card">
-                <div class="note-card-header">
-                  <span class="note-part-badge">[${escapeHtml(n.part \vert{}\vert{} '전체')}] ${escapeHtml(n.author || '익명')}</span>
-                  <span>${escapeHtml(n.date || '')}</span>
-                </div>
-                ${n.content ? `<div class="note-text">${escapeHtml(n.content)}</div>` : ''}
-                ${n.ytUrl ? `<a href="${encodeURI(n.ytUrl)}" target="_blank" rel="noopener noreferrer" class="note-yt-link">🔗 유튜브 영상 바로보기 ▶</a>` : ''}
-              </div>
-            `).join('')}
+        // 👉 유튜브 아이콘 바로 우측에 [+ 악보공유] 버튼 추가
+        extraHtml += `
+          <div class="upload-share-btn" onclick="openGoogleMedia('${SHARED_DRIVE_FOLDER_URL}')" title="개인 소장 악보/음원 공유 폴더로 업로드">
+            <i class="fa-solid fa-cloud-arrow-up"></i> + 악보공유
           </div>
         `;
+        extraHtml += '</div>';
+        extraHtml += '</div>';
 
-        subTabs.querySelectorAll(".sub-tab-btn").forEach(btn => {
-          btn.onclick = (e) => {
-            e.stopPropagation();
-            subTabs.querySelectorAll(".sub-tab-btn").forEach(b => b.classList.remove("active"));
-            btn.classList.add("active");
-
-            panelFiles.classList.toggle("active", btn.dataset.target.includes("files"));
-            panelNotes.classList.toggle("active", btn.dataset.target.includes("notes"));
-          };
+        // 2. 음원 파일 상단 정렬 ➔ 악보 파일 하단 정렬
+        const sortedFiles = [...songData.files].sort((a, b) => {
+          const aAudio = isAudioFile(a.part);
+          const bAudio = isAudioFile(b.part);
+          if (aAudio && !bAudio) return -1;
+          if (!aAudio && bAudio) return 1;
+          return 0;
         });
 
-        header.onclick = () => {
-          content.classList.toggle("open");
-        };
+        let filesHtml = sortedFiles.map(f => {
+          const fileIdMatch = (f.preview || f.download || '').match(/[-\w]{25,}/);
+          const fileId = f.fileId || (fileIdMatch ? fileIdMatch[0] : '');
+          const isAudio = isAudioFile(f.part);
+          
+          const cleanViewUrl = fileId 
+            ? `https://drive.google.com/file/d/${fileId}/preview` 
+            : f.preview;
 
-        content.appendChild(subTabs);
-        content.appendChild(panelFiles);
-        content.appendChild(panelNotes);
+          const iconHtml = isAudio 
+            ? '<i class="fa-solid fa-headphones" style="font-size:0.85rem; margin-right:4px;"></i>' 
+            : '';
 
-        card.appendChild(header);
-        card.appendChild(content);
-        container.appendChild(card);
+          return `
+            <div class="score-file-row ${isAudio ? 'audio-type' : ''}" 
+                 onclick="openGoogleMedia('${cleanViewUrl}')" 
+                 title="${escapeHtml(f.part)} 열기">
+              <span class="score-part-title">${iconHtml}${escapeHtml(f.part || '파일')}</span>
+            </div>
+          `;
+        }).join('');
+
+        accordion.innerHTML = `
+          <button class="song-header-btn" onclick="toggleAccordion(this)">
+            <span class="song-title-text">${song}</span>
+            <span class="fav-star-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${escapeHtml(song)}', event)" title="즐겨찾기">
+              <i class="${isFav ? 'fa-solid' : 'fa-regular'} fa-star"></i>
+            </span>
+          </button>
+          <div class="file-accordion-body">
+            ${extraHtml}
+            ${filesHtml}
+          </div>
+        `;
+        container.appendChild(accordion);
       });
     }
 
-    function cardId(str) {
-      return encodeURIComponent(str).replace(/%/g, "");
-    }
-    function escapeJs(str) {
-      return (str || "").replace(/'/g, "\\'");
-    }
     function escapeHtml(str) {
-      return (str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
     }
 
-    // ==========================================
-    // 7. 밴드노트 / 추천 모달 동작
-    // ==========================================
-    function openNoteModal(songName) {
-      currentTargetSong = songName;
-      document.getElementById("noteModalSongTitle").innerText = `🎸 [${songName}] 의견/추천`;
-      document.getElementById("noteContentInput").value = "";
-      document.getElementById("noteYtUrlInput").value = "";
-      document.getElementById("noteModal").classList.add("active");
-      history.pushState({ modal: "note" }, "");
+    function toggleAccordion(btn) {
+      const parent = btn.closest('.song-accordion');
+      parent.classList.toggle('open');
     }
 
-    function closeNoteModal() {
-      document.getElementById("noteModal").classList.remove("active");
-    }
+    function filterScores() { renderScores(); }
 
-    document.querySelectorAll("#partChipGroup .chip-btn").forEach(chip => {
-      chip.addEventListener("click", () => {
-        document.querySelectorAll("#partChipGroup .chip-btn").forEach(c => c.classList.remove("selected"));
-        chip.classList.add("selected");
-        selectedNotePart = chip.dataset.part;
-      });
-    });
-
-    document.getElementById("btnSaveNote").addEventListener("click", () => {
-      const author = document.getElementById("noteAuthorInput").value.trim();
-      const content = document.getElementById("noteContentInput").value.trim();
-      const ytUrl = document.getElementById("noteYtUrlInput").value.trim();
-
-      if (!author) { alert("작성자 이름을 입력해 주세요."); return; }
-      if (!content && !ytUrl) { alert("의견 메모 또는 유튜브 링크 중 하나는 입력해 주세요."); return; }
-
-      localStorage.setItem("hr_saved_author", author);
-
-      const now = new Date();
-      const dateStr = `${now.getMonth() + 1}.${now.getDate()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-
-      const newNote = {
-        song: currentTargetSong,
-        part: selectedNotePart,
-        author: author,
-        content: content,
-        ytUrl: ytUrl,
-        date: dateStr
-      };
-
-      bandNotesData.unshift(newNote);
-      localStorage.setItem("hr_band_notes_test", JSON.stringify(bandNotesData));
-      renderScores();
-      closeNoteModal();
-      showToast("밴드노트가 등록되었습니다!");
-
-      const params = new URLSearchParams({
-        action: "addBandNoteTest",
-        song: newNote.song,
-        part: newNote.part,
-        author: newNote.author,
-        content: newNote.content,
-        ytUrl: newNote.ytUrl
-      });
-      fetch(`${GAS_URL}?${params.toString()}`, { method: "POST" })
-        .catch(err => console.error("노트 백엔드 저장 실패:", err));
-    });
-
-    // ==========================================
-    // 8. 안드로이드 백버튼 대응 & 검색 바 토글
-    // ==========================================
-    function initEvents() {
-      window.addEventListener("popstate", (e) => {
-        const attModal = document.getElementById("attendanceModal");
-        const notModal = document.getElementById("noteModal");
-        if (attModal.classList.contains("active")) closeModal();
-        if (notModal.classList.contains("active")) closeNoteModal();
-      });
-
-      const searchWrap = document.getElementById("searchBarWrap");
-      const searchInput = document.getElementById("scoreSearchInput");
-      document.getElementById("btnToggleSearch").addEventListener("click", () => {
-        const isHidden = searchWrap.style.display === "none" || !searchWrap.style.display;
-        searchWrap.style.display = isHidden ? "block" : "none";
-        if (isHidden) {
-          switchTab(2);
-          searchInput.focus();
-        } else {
-          searchInput.value = "";
-          renderScores();
-        }
-      });
-
-      searchInput.addEventListener("input", () => renderScores());
-
-      document.getElementById("btnSync").addEventListener("click", () => {
-        showToast("최신 데이터를 동기화합니다...");
-        fetchQuickData(true);
-        fetchScoresData(true);
-      });
-    }
-
-    // ==========================================
-    // 9. 백엔드 통신 로직 (리다이렉트 대응)
-    // ==========================================
-    function fetchQuickData(force = false) {
-      fetch(`${GAS_URL}?action=getQuickData`, { redirect: 'follow' })
-        .then(res => res.json())
-        .then(res => {
-          if (res.attendance) {
-            attendanceData = res.attendance;
-            localStorage.setItem("hr_attendance", JSON.stringify(attendanceData));
-            renderAttendance();
-          }
-          if (res.gigs) {
-            gigsData = res.gigs;
-            localStorage.setItem("hr_gigs", JSON.stringify(gigsData));
-            renderGigs();
-          }
-        })
-        .catch(err => {
-          console.error("QuickData 수신 에러:", err);
-          document.getElementById("attendanceTbody").innerHTML = '<tr><td class="loading-box" style="color:#ff4757">데이터 연결 실패. 상단 새로고침을 눌러주세요.</td></tr>';
-        });
-    }
-
-    function fetchScoresData(force = false) {
-      fetch(`${GAS_URL}?action=getScoresData`, { redirect: 'follow' })
-        .then(res => res.json())
-        .then(res => {
-          if (res.scores) {
-            scoresData = res.scores;
-            localStorage.setItem("hr_scores", JSON.stringify(scoresData));
-          }
-          if (res.bandNotes) {
-            bandNotesData = res.bandNotes;
-            localStorage.setItem("hr_band_notes_test", JSON.stringify(bandNotesData));
-          }
-          renderScores();
-        })
-        .catch(err => {
-          console.error("ScoresData 수신 에러:", err);
-          document.getElementById("scoreListContainer").innerHTML = '<div class="loading-box" style="color:#ff4757">악보 데이터 연결 실패. 상단 새로고침을 눌러주세요.</div>';
-        });
+    /* ====================================================
+       구글 공식 웹 뷰어 / 공유 폴더 열기 (외부 창/앱 링크)
+       ==================================================== */
+    function openGoogleMedia(url) {
+      const link = document.createElement('a');
+      link.href = url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   </script>
 </body>
