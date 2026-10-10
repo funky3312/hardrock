@@ -128,7 +128,7 @@
       100% { transform: rotate(360deg); }
     }
 
-    /* 슬라이더 구조: 사파리 가로 제스처 우선권 확보 */
+    /* 슬라이더 구조 */
     #slider-viewport {
       flex: 1;
       position: relative;
@@ -181,7 +181,7 @@
     .tab-btn.active i { color: #387d5e; }
 
     /* ==========================================
-       출석부 표 스타일 (8주 대응 컴팩트 최적화 27px)
+       출석부 표 스타일 (컴팩트 최적화 27px)
        ========================================== */
     .att-table-wrap {
       background: #ffffff;
@@ -319,9 +319,7 @@
       background: none; border: none; color: #a4b0be; cursor: pointer; padding: 4px; font-size: 0.9rem;
     }
 
-    /* ==========================================
-       악보집 아코디언 (열림 상태 시인성/영역감 강화)
-       ========================================== */
+    /* 악보집 아코디언 */
     .scores-list-wrap { max-width: 600px; margin: 0 auto; }
     
     .song-accordion {
@@ -401,7 +399,7 @@
       flex-direction: column;
     }
 
-    /* 메모 & 유튜브 & 업로드 영역 */
+    /* 메모 & 유튜브 & 인앱 업로드 영역 */
     .song-extra-box {
       margin-bottom: 8px;
       display: flex;
@@ -442,7 +440,7 @@
     }
     .youtube-link-btn:active { background: #b01515; transform: scale(0.98); }
 
-    /* + 악보공유 버튼 (드라이브 블루 톤) */
+    /* + 악보공유 버튼 (원터치 인앱 업로드) */
     .upload-share-btn {
       display: inline-flex;
       align-items: center;
@@ -450,7 +448,7 @@
       gap: 5px;
       background: #2b5c8f;
       color: #ffffff;
-      text-decoration: none;
+      border: none;
       font-size: 0.78rem;
       font-weight: 700;
       padding: 6px 11px;
@@ -460,7 +458,6 @@
     }
     .upload-share-btn:active { background: #1f4369; transform: scale(0.98); }
 
-    /* 파트/파일 행: 정석 심플 버튼 */
     .score-file-row {
       display: flex;
       align-items: center;
@@ -474,19 +471,13 @@
       transition: background 0.12s ease, transform 0.08s ease;
     }
     .score-file-row:last-child { margin-bottom: 0; }
-    .score-file-row:active {
-      background: #e4e7eb;
-      transform: scale(0.99);
-    }
+    .score-file-row:active { background: #e4e7eb; transform: scale(0.99); }
 
-    /* 음원 파일 전용 (헤드폰 & 그린 톤) */
     .score-file-row.audio-type {
       background: #eef7f2;
       border-color: #d1e7dd;
     }
-    .score-file-row.audio-type:active {
-      background: #dcf1e6;
-    }
+    .score-file-row.audio-type:active { background: #dcf1e6; }
     
     .score-part-title {
       flex: 1;
@@ -499,11 +490,48 @@
       align-items: center;
       gap: 6px;
     }
-    .score-file-row.audio-type .score-part-title {
-      color: #1b5e20;
-    }
+    .score-file-row.audio-type .score-part-title { color: #1b5e20; }
 
     #loading { text-align: center; padding: 50px 20px; color: var(--text-sub); }
+
+    /* ==========================================
+       🚀 인앱 파일 업로드 전용 로딩 오버레이 모달
+       ========================================== */
+    #upload-loading-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.65);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .upload-loading-card {
+      background: #ffffff;
+      border-radius: 14px;
+      width: 100%;
+      max-width: 300px;
+      padding: 26px 20px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    }
+    .upload-loading-card i {
+      color: #2b5c8f;
+      margin-bottom: 14px;
+    }
+    .upload-target-song-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #2f3542;
+      margin-bottom: 6px;
+      word-break: break-all;
+    }
+    .upload-status-msg {
+      font-size: 0.84rem;
+      color: #747d8c;
+      line-height: 1.5;
+    }
   </style>
 </head>
 <body>
@@ -590,10 +618,22 @@
     </div>
   </div>
 
+  <!-- 🚀 파일 선택용 히든 input (네이티브 탐색기 호출) -->
+  <input type="file" id="score-file-hidden-input" style="display:none;" onchange="onScoreFileSelected(event)">
+
+  <!-- 🚀 업로드 진행 중 로딩 오버레이 모달 -->
+  <div id="upload-loading-overlay">
+    <div class="upload-loading-card">
+      <i class="fa-solid fa-circle-notch fa-spin fa-3x"></i>
+      <div id="upload-target-song-title" class="upload-target-song-title">곡명</div>
+      <div class="upload-status-msg" id="upload-status-text">
+        파일을 공유 폴더로 전송 중입니다...<br>잠시만 기다려주세요.
+      </div>
+    </div>
+  </div>
+
   <script>
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxk46VNnAZtti3FtD2iMVPO9aPIohyoyLTI3cIegGl4jHXN8fyYSMU8QrAX47wpvt6c/exec";
-    // 📂 멤버 공유용 구글 드라이브 폴더 URL
-    const SHARED_DRIVE_FOLDER_URL = "https://drive.google.com/drive/folders/12HAjdM1ecyJs6S77a3MYc8x9erKhQtZe?usp=drive_link";
 
     let appData = { attendance: [], gigs: [], scores: [] };
     let currentEditTarget = null;
@@ -603,6 +643,9 @@
 
     let isRefreshing = false;
     let refreshTimeoutId = null;
+
+    // 인앱 업로드 대상 곡명 상태 관리
+    let currentUploadSongName = '';
 
     function getFavorites() {
       try {
@@ -614,14 +657,10 @@
 
     function toggleFavorite(songName, event) {
       if (event) event.stopPropagation();
-      
       let favs = getFavorites();
       const idx = favs.indexOf(songName);
-      if (idx > -1) {
-        favs.splice(idx, 1);
-      } else {
-        favs.push(songName);
-      }
+      if (idx > -1) favs.splice(idx, 1);
+      else favs.push(songName);
       localStorage.setItem('hr_favorite_songs', JSON.stringify(favs));
       renderScores();
     }
@@ -685,6 +724,28 @@
       }
     }
 
+    function normalizeBackendData(data) {
+      let attendanceRows = [];
+      let gigsRows = [];
+
+      if (!data) return { attendance: [], gigs: [] };
+
+      if (Array.isArray(data.attendance)) {
+        attendanceRows = data.attendance;
+      } else if (data.attendance && data.attendance.rows) {
+        const headers = data.attendance.headers || [];
+        attendanceRows = [headers, ...data.attendance.rows];
+      }
+
+      if (Array.isArray(data.gigs)) {
+        gigsRows = data.gigs;
+      } else if (data.gigs && data.gigs.rows) {
+        gigsRows = data.gigs.rows;
+      }
+
+      return { attendance: attendanceRows, gigs: gigsRows };
+    }
+
     async function loadFastData() {
       try {
         const response = await fetch(`${GAS_API_URL}?action=getQuickData&_t=${Date.now()}`, {
@@ -694,12 +755,13 @@
         });
         const data = await response.json();
         
-        if (data && data.success) {
-          appData.attendance = data.attendance;
-          appData.gigs = data.gigs;
+        if (data && (data.success || data.status === "success" || data.attendance)) {
+          const parsed = normalizeBackendData(data);
+          appData.attendance = parsed.attendance;
+          appData.gigs = parsed.gigs;
 
-          localStorage.setItem('hr_attendance', JSON.stringify(data.attendance));
-          localStorage.setItem('hr_gigs', JSON.stringify(data.gigs));
+          localStorage.setItem('hr_attendance', JSON.stringify(appData.attendance));
+          localStorage.setItem('hr_gigs', JSON.stringify(appData.gigs));
 
           document.getElementById('loading').style.display = 'none';
           renderAttendance();
@@ -707,7 +769,9 @@
 
           setTimeout(preloadScoresInBackground, 300);
         }
-      } catch (err) {}
+      } catch (err) {
+        console.log('Load err:', err);
+      }
     }
 
     async function preloadScoresInBackground() {
@@ -718,7 +782,7 @@
           headers: { 'Accept': 'application/json' }
         });
         const data = await response.json();
-        if (data && data.success) {
+        if (data && (data.success || data.status === "success" || data.scores)) {
           const newScores = data.scores || [];
           const oldScoresStr = localStorage.getItem('hr_scores') || '[]';
           const newScoresStr = JSON.stringify(newScores);
@@ -734,9 +798,6 @@
       }
     }
 
-    /* ====================================================
-       🔄 새로고침 인디케이터 즉시 초기화/퇴장
-       ==================================================== */
     function resetPtrIndicator() {
       const ptrIndicator = document.getElementById('ptr-indicator');
       const ptrIcon = document.getElementById('ptr-icon');
@@ -780,22 +841,23 @@
         const quickData = await quickRes.json();
         const scoreData = await scoreRes.json();
 
-        if (quickData && quickData.success) {
-          appData.attendance = quickData.attendance;
-          appData.gigs = quickData.gigs;
-          localStorage.setItem('hr_attendance', JSON.stringify(quickData.attendance));
-          localStorage.setItem('hr_gigs', JSON.stringify(quickData.gigs));
+        if (quickData && (quickData.success || quickData.status === "success" || quickData.attendance)) {
+          const parsed = normalizeBackendData(quickData);
+          appData.attendance = parsed.attendance;
+          appData.gigs = parsed.gigs;
+          localStorage.setItem('hr_attendance', JSON.stringify(appData.attendance));
+          localStorage.setItem('hr_gigs', JSON.stringify(appData.gigs));
           renderAttendance();
           renderGigs();
         }
 
-        if (scoreData && scoreData.success) {
+        if (scoreData && (scoreData.success || scoreData.status === "success" || scoreData.scores)) {
           appData.scores = scoreData.scores || [];
           localStorage.setItem('hr_scores', JSON.stringify(appData.scores));
           renderScores();
         }
       } catch (e) {
-        console.log('Silent refresh fallback to cache:', e);
+        console.log('Refresh fallback:', e);
       }
     }
 
@@ -843,9 +905,6 @@
       filterScores();
     }
 
-    /* ====================================================
-       제스처 통합: [방향 잠금 + 황금비율 감도 40px 복원]
-       ==================================================== */
     function initSmoothGestures() {
       let startX = 0;
       let startY = 0;
@@ -878,6 +937,7 @@
       window.addEventListener('touchstart', (e) => {
         if (isRefreshing ||
             document.getElementById('att-modal-overlay').style.display === 'flex' ||
+            document.getElementById('upload-loading-overlay').style.display === 'flex' ||
             e.target.tagName === 'INPUT') {
           startX = 0;
           startY = 0;
@@ -1062,17 +1122,27 @@
       container.innerHTML = '';
       if (!appData.gigs || appData.gigs.length === 0) return;
       
-      const gigStats = appData.gigs.map(row => {
-        const name = (row[0] || '').trim();
-        if (!name) return { isSeparator: true };
+      let gigStats = [];
 
-        let total = 0;
-        for (let col = 1; col < row.length; col++) {
-          const num = parseFloat(row[col]);
-          if (!isNaN(num)) total += num;
-        }
-        return { isSeparator: false, name, score: total };
-      });
+      if (typeof appData.gigs[0] === 'object' && !Array.isArray(appData.gigs[0])) {
+        gigStats = appData.gigs.map(g => ({
+          isSeparator: !g.name || g.name === '',
+          name: g.name || '',
+          score: g.count || 0
+        }));
+      } else {
+        gigStats = appData.gigs.map(row => {
+          const name = (row[0] || '').trim();
+          if (!name) return { isSeparator: true };
+
+          let total = 0;
+          for (let col = 1; col < row.length; col++) {
+            const num = parseFloat(row[col]);
+            if (!isNaN(num)) total += num;
+          }
+          return { isSeparator: false, name, score: total };
+        });
+      }
 
       const validScores = gigStats.filter(g => !g.isSeparator).map(g => g.score);
       const maxScore = validScores.length > 0 ? Math.max(...validScores, 10) : 10;
@@ -1123,9 +1193,6 @@
       return /\.(mp3|m4a|wav|aac|flac|ogg)$/i.test(cleanName);
     }
 
-    /* ====================================================
-       악보집 렌더링: [메모 ➔ 유튜브 + 공유버튼 ➔ 음원 ➔ 악보]
-       ==================================================== */
     function renderScores() {
       const container = document.getElementById('scores-container');
       const query = document.getElementById('score-search').value.toLowerCase().trim();
@@ -1145,13 +1212,25 @@
 
       const groups = {};
       appData.scores.forEach(row => {
-        const song = (row[0] || '').trim();
-        const part = (row[1] || '').trim();
-        const preview = (row[2] || '').trim();
-        const download = (row[3] || '').trim();
-        const youtube = (row[4] || '').trim();
-        const memo = (row[5] || '').trim();
-        const fileId = (row[6] || '').trim();
+        let song = '', part = '', preview = '', download = '', youtube = '', memo = '', fileId = '';
+        
+        if (Array.isArray(row)) {
+          song = (row[0] || '').trim();
+          part = (row[1] || '').trim();
+          preview = (row[2] || '').trim();
+          download = (row[3] || '').trim();
+          youtube = (row[4] || '').trim();
+          memo = (row[5] || '').trim();
+          fileId = (row[6] || '').trim();
+        } else if (typeof row === 'object') {
+          song = (row.song || '').trim();
+          part = (row.fileName || row.part || '').trim();
+          preview = (row.viewUrl || row.preview || '').trim();
+          download = (row.downloadUrl || row.download || '').trim();
+          youtube = (row.youtube || '').trim();
+          memo = (row.memo || '').trim();
+          fileId = (row.fileId || '').trim();
+        }
 
         if (!song) return;
         if (query && !song.toLowerCase().includes(query) && !part.toLowerCase().includes(query)) return;
@@ -1194,11 +1273,9 @@
         const songData = groups[song];
         const ytList = parseYoutubeLinks(songData.youtube);
 
-        // 1. 메모 우선 ➔ 유튜브 링크 & [+ 악보공유] 버튼
         let extraHtml = '';
         const memoContent = (songData.memo || '').trim();
         
-        // 메모 또는 (유튜브 / 공유버튼) 영역 구성
         extraHtml += '<div class="song-extra-box">';
         if (memoContent) {
           extraHtml += `<div class="song-memo-card">${escapeHtml(memoContent)}</div>`;
@@ -1214,16 +1291,16 @@
             `;
           });
         }
-        // 👉 유튜브 아이콘 바로 우측에 [+ 악보공유] 버튼 추가
+        
+        // 🚀 인앱 파일 선택기 호출 버튼 (+ 악보공유)
         extraHtml += `
-          <div class="upload-share-btn" onclick="openGoogleMedia('${SHARED_DRIVE_FOLDER_URL}')" title="개인 소장 악보/음원 공유 폴더로 업로드">
+          <button class="upload-share-btn" onclick="openFilePickerForSong('${escapeHtml(song)}')" title="이 곡의 개인 소장 악보/음원 공유하기">
             <i class="fa-solid fa-cloud-arrow-up"></i> + 악보공유
-          </div>
+          </button>
         `;
         extraHtml += '</div>';
         extraHtml += '</div>';
 
-        // 2. 음원 파일 상단 정렬 ➔ 악보 파일 하단 정렬
         const sortedFiles = [...songData.files].sort((a, b) => {
           const aAudio = isAudioFile(a.part);
           const bAudio = isAudioFile(b.part);
@@ -1286,9 +1363,6 @@
 
     function filterScores() { renderScores(); }
 
-    /* ====================================================
-       구글 공식 웹 뷰어 / 공유 폴더 열기 (외부 창/앱 링크)
-       ==================================================== */
     function openGoogleMedia(url) {
       const link = document.createElement('a');
       link.href = url;
@@ -1297,6 +1371,85 @@
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+    }
+
+    /* ====================================================
+       🚀 [인앱 파일 업로드 엔진]
+       - 구글 로그인 없이 네이티브 탐색기로 선택 후 관리자 권한 전송
+       ==================================================== */
+    function openFilePickerForSong(songName) {
+      currentUploadSongName = songName;
+      const fileInput = document.getElementById('score-file-hidden-input');
+      fileInput.value = ''; // 이전 선택 파일 리셋
+      fileInput.click();    // 스마트폰 / PC 네이티브 파일 선택창 오픈
+    }
+
+    async function onScoreFileSelected(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      // 파일 크기 제한 (GAS 수신 안정권 25MB 이하 권장)
+      const maxSizeBytes = 25 * 1024 * 1024;
+      if (file.size > maxSizeBytes) {
+        alert("파일 용량이 너무 큽니다. 25MB 이하의 파일만 업로드할 수 있습니다.");
+        return;
+      }
+
+      const songName = currentUploadSongName || "미지정 곡";
+      const overlay = document.getElementById('upload-loading-overlay');
+      const songTitleEl = document.getElementById('upload-target-song-title');
+      const statusTextEl = document.getElementById('upload-status-text');
+
+      songTitleEl.innerText = songName;
+      statusTextEl.innerHTML = `선택한 파일: <strong>${escapeHtml(file.name)}</strong><br>공유 폴더로 안전하게 전송 중입니다...`;
+      overlay.style.display = 'flex';
+
+      try {
+        // 파일을 Base64 문자열로 비동기 변환
+        const base64Data = await readFileAsBase64(file);
+
+        // GAS 백엔드로 POST 전송 (CORS 프리플라이트 없는 심플 POST)
+        const payload = {
+          action: "uploadScoreFile",
+          songName: songName,
+          fileName: file.name,
+          mimeType: file.type || "application/octet-stream",
+          fileBase64: base64Data
+        };
+
+        const response = await fetch(GAS_API_URL, {
+          method: "POST",
+          body: JSON.stringify(payload)
+        });
+
+        const resData = await response.json();
+
+        overlay.style.display = 'none';
+
+        if (resData && (resData.status === "success" || resData.success)) {
+          alert(`✅ 업로드 완료!\n\n'${file.name}' 파일이 공유 폴더로 안전하게 전송되었습니다.\n관리자 확인 후 정식 악보로 등록됩니다.`);
+        } else {
+          alert(`⚠️ 업로드 실패: ${resData.message || "서버 응답 오류"}`);
+        }
+      } catch (err) {
+        overlay.style.display = 'none';
+        console.error("Upload Error:", err);
+        alert("업로드 처리 중 통신 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+      }
+    }
+
+    function readFileAsBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result;
+          // data:*/*;base64, 뒷부분 순수 Base64 데이터만 추출
+          const base64 = result.split(',')[1];
+          resolve(base64);
+        };
+        reader.onerror = error => reject(error);
+        reader.readAsDataURL(file);
+      });
     }
   </script>
 </body>
