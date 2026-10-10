@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
   <meta name="theme-color" content="#ffffff">
   <title>HardRock BAND (TEST)</title>
+  <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
@@ -75,6 +76,23 @@
       transition: background 0.15s;
     }
     .icon-btn:active { background: #f1f2f6; }
+
+    #pwa-install-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: #f1f2f6;
+      border: 1px solid #dcdde1;
+      color: #2f3542;
+      font-size: 0.76rem;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    #pwa-install-btn:active { transform: scale(0.95); background: #e4e7eb; }
+    #pwa-install-btn i { color: #387d5e; }
 
     /* 새로고침 인디케이터 */
     #ptr-indicator {
@@ -212,16 +230,30 @@
     .file-accordion-body { display: none; padding: 10px; background: #fafbfc; }
     .song-accordion.open .file-accordion-body { display: flex; flex-direction: column; }
 
-    /* 공식 메모 & 유튜브 버튼 */
+    /* 공식 메모 & 상단 액션 버튼 그룹 */
     .song-extra-box { margin-bottom: 8px; display: flex; flex-direction: column; gap: 6px; }
     .song-memo-card { background: #fff9db; border-left: 4px solid #f59f00; padding: 8px 11px; border-radius: 4px; font-size: 0.84rem; font-weight: 500; color: #343a40; line-height: 1.5; white-space: pre-wrap; word-break: break-all; text-align: left; }
-    .youtube-btn-group { display: flex; flex-wrap: wrap; gap: 6px; }
+    .youtube-btn-group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
     .youtube-link-btn { display: inline-flex; align-items: center; justify-content: center; gap: 5px; background: #d91c1c; color: #ffffff; text-decoration: none; font-size: 0.78rem; font-weight: 700; padding: 6px 11px; border-radius: 6px; box-shadow: 0 1px 3px rgba(217, 28, 28, 0.25); }
     .youtube-link-btn:active { background: #b01515; transform: scale(0.98); }
 
+    /* 악보공유 버튼 (+ 제거) */
     .upload-share-btn { display: inline-flex; align-items: center; justify-content: center; gap: 5px; background: #2b5c8f; color: #ffffff; border: none; font-size: 0.78rem; font-weight: 700; padding: 6px 10px; border-radius: 6px; box-shadow: 0 1px 3px rgba(43, 92, 143, 0.25); cursor: pointer; }
     .upload-share-btn:active { background: #1f4369; transform: scale(0.98); }
 
+    /* 💬 팁공유 상단 버튼 */
+    .tip-hub-open-btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+      background: #475569; color: #ffffff; border: none; font-size: 0.78rem; font-weight: 700;
+      padding: 6px 10px; border-radius: 6px; box-shadow: 0 1px 3px rgba(71, 85, 105, 0.25); cursor: pointer;
+    }
+    .tip-hub-open-btn:active { background: #334155; transform: scale(0.98); }
+    .tip-hub-badge {
+      background: #ffffff; color: #475569; border-radius: 10px;
+      padding: 0 5px; font-size: 0.70rem; font-weight: 800; margin-left: 2px;
+    }
+
+    /* 악보 파일 목록 행 */
     .score-file-row { display: flex; align-items: center; padding: 11px 14px; margin-bottom: 5px; background: #f1f3f5; border-radius: 6px; border: 1px solid #e9ecef; cursor: pointer; user-select: none; }
     .score-file-row:last-child { margin-bottom: 0; }
     .score-file-row:active { background: #e4e7eb; transform: scale(0.99); }
@@ -230,90 +262,157 @@
     .score-part-title { flex: 1; font-weight: 700; color: #2f3542; font-size: 0.85rem; line-height: 1.35; word-break: break-all; display: flex; align-items: center; gap: 6px; }
     .score-file-row.audio-type .score-part-title { color: #1b5e20; }
 
-    /* ==========================================
-       💬 밴드 노트 (곡별 멤버 팁/추천영상 영역)
-       ========================================== */
-    .band-notes-section {
-      margin-top: 12px;
-      padding-top: 10px;
-      border-top: 1px dashed var(--border);
+    /* ====================================================
+       💬 팁공유 바텀시트 전용 창 (88dvh Bottom Sheet)
+       ==================================================== */
+    #tip-sheet-overlay {
+      display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.55); z-index: 1500;
+      align-items: flex-end; justify-content: center;
+    }
+    .tip-sheet-card {
+      background: #ffffff;
+      width: 100%;
+      max-width: 520px;
+      height: 88dvh;
+      border-radius: 18px 18px 0 0;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      box-shadow: 0 -8px 30px rgba(0,0,0,0.22);
+      animation: tipSheetSlideUp 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+      overflow: hidden;
     }
-    .band-notes-header {
+    @keyframes tipSheetSlideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    /* 시트 헤더 */
+    .tip-sheet-header {
+      padding: 12px 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 2px;
+      border-bottom: 1px solid var(--border);
+      background: #ffffff;
+      flex-shrink: 0;
     }
-    .band-notes-title {
-      font-size: 0.82rem;
+    .tip-sheet-header-title {
+      font-size: 1.02rem;
+      font-weight: 800;
+      color: #2f3542;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 82%;
+    }
+    .tip-sheet-close-btn {
+      background: none; border: none; font-size: 1.25rem; color: #747d8c; cursor: pointer; padding: 4px;
+    }
+
+    /* 📹 상단 추천영상 고정 쉘프 바 */
+    .tip-shelf-section {
+      background: #f8f9fa;
+      padding: 8px 14px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .tip-shelf-label {
+      font-size: 0.72rem;
       font-weight: 800;
       color: #57606f;
       display: flex;
       align-items: center;
       gap: 5px;
     }
-    .add-note-open-btn {
-      background: #f1f2f6;
-      border: 1px solid #dcdde1;
-      color: #2f3542;
-      font-size: 0.74rem;
-      font-weight: 700;
-      padding: 4px 9px;
-      border-radius: 14px;
-      cursor: pointer;
+    .tip-shelf-scroll {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .tip-shelf-scroll::-webkit-scrollbar { display: none; }
+    .shelf-yt-btn {
+      flex-shrink: 0;
       display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: 5px;
+      background: #d91c1c;
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 0.74rem;
+      font-weight: 700;
+      padding: 5px 9px;
+      border-radius: 6px;
+      box-shadow: 0 1px 2px rgba(217, 28, 28, 0.2);
     }
-    .add-note-open-btn:active { background: #e4e7eb; transform: scale(0.96); }
+    .shelf-yt-btn:active { background: #b01515; }
+    .shelf-empty-hint { font-size: 0.74rem; color: #a4b0be; }
 
-    .note-card {
+    /* 타임라인 피드 스크롤 영역 */
+    .tip-timeline-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      background: #fafbfc;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* 타임라인 카드 */
+    .tip-timeline-card {
       background: #ffffff;
       border: 1px solid #e9ecef;
       border-radius: 8px;
-      padding: 9px 11px;
+      padding: 10px 12px;
       display: flex;
       flex-direction: column;
       gap: 5px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
     }
-    .note-card-meta {
+    .tip-card-top {
       display: flex;
       align-items: center;
       justify-content: space-between;
       font-size: 0.76rem;
     }
-    .note-author-info {
-      font-weight: 700;
+    .tip-author-box {
+      font-weight: 800;
       color: #2f3542;
       display: flex;
       align-items: center;
       gap: 4px;
     }
-    .note-part-badge {
+    .tip-part-tag {
       background: #eef2f7;
       color: #387d5e;
       padding: 1px 6px;
-      border-radius: 10px;
-      font-size: 0.70rem;
+      border-radius: 8px;
+      font-size: 0.69rem;
       font-weight: 800;
     }
-    .note-date { color: #a4b0be; font-size: 0.70rem; }
-    .note-content {
-      font-size: 0.82rem;
+    .tip-time { color: #a4b0be; font-size: 0.70rem; }
+    .tip-text {
+      font-size: 0.83rem;
       color: #343a40;
-      line-height: 1.45;
+      line-height: 1.48;
       white-space: pre-wrap;
       word-break: break-all;
     }
-    .note-yt-btn {
+    .tip-inline-yt-btn {
       align-self: flex-start;
       display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: 5px;
       background: #fdf2f2;
       color: #d91c1c;
       border: 1px solid #f8d7da;
@@ -322,50 +421,130 @@
       font-size: 0.74rem;
       font-weight: 700;
       text-decoration: none;
-      margin-top: 2px;
+      margin-top: 3px;
     }
-    .note-yt-btn:active { background: #f8d7da; }
-    .no-notes-msg {
-      font-size: 0.78rem;
-      color: #a4b0be;
-      text-align: center;
-      padding: 8px 0;
+    .tip-inline-yt-btn:active { background: #f8d7da; }
+
+    /* 하단 입력 폼 (고정) */
+    .tip-sheet-footer {
+      background: #ffffff;
+      border-top: 1px solid var(--border);
+      padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px)) 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .tip-form-row1 {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .tip-author-field {
+      width: 90px;
+      border: 1px solid #dcdde1;
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-size: 0.80rem;
+      color: #2f3542;
+      background: #f8f9fa;
+      outline: none;
+    }
+    .tip-part-chips {
+      display: flex;
+      gap: 3px;
+      overflow-x: auto;
+      flex: 1;
+    }
+    .tip-part-chips::-webkit-scrollbar { display: none; }
+    .tip-chip {
+      padding: 4px 7px;
+      font-size: 0.70rem;
+      font-weight: 700;
+      border-radius: 12px;
+      background: #f1f2f6;
+      border: 1px solid #dcdde1;
+      color: #57606f;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .tip-chip.active { background: #387d5e; color: #ffffff; border-color: #387d5e; }
+
+    .tip-form-row2 {
+      display: flex;
+      gap: 6px;
+    }
+    .tip-text-area {
+      flex: 1;
+      border: 1px solid #dcdde1;
+      border-radius: 6px;
+      padding: 7px 9px;
+      font-size: 0.83rem;
+      color: #2f3542;
+      background: #fafbfc;
+      outline: none;
+      resize: none;
+      height: 38px;
+      line-height: 1.35;
+    }
+    .tip-send-btn {
+      width: 60px;
+      border: none;
+      border-radius: 6px;
+      background: #387d5e;
+      color: #ffffff;
+      font-size: 0.82rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .tip-send-btn:active { background: #2f684e; }
+    .tip-link-input {
+      width: 100%;
+      border: 1px solid #e4e7eb;
+      border-radius: 5px;
+      padding: 4px 8px;
+      font-size: 0.74rem;
+      color: #57606f;
+      outline: none;
+      background: #f8f9fa;
     }
 
-    /* 공통 모달 오버레이 */
-    .app-modal-overlay {
+    /* 기타 기본 모달 & 로딩 */
+    #att-modal-overlay {
       display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.55); z-index: 1000;
+      background: rgba(0, 0, 0, 0.45); z-index: 1000;
       align-items: center; justify-content: center; padding: 20px;
     }
-    .app-modal-card {
-      background: #ffffff; border-radius: 14px; width: 100%; max-width: 320px;
-      padding: 20px 18px; text-align: left; box-shadow: 0 10px 25px rgba(0,0,0,0.18);
+    .att-modal-card {
+      background: #ffffff; border-radius: 14px; width: 100%; max-width: 290px;
+      padding: 20px 18px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.15);
     }
-    .modal-head-title { font-size: 1.05rem; font-weight: 800; color: #2f3542; margin-bottom: 14px; text-align: center; }
-    
-    /* 밴드노트 입력 폼 스타일 */
-    .form-group { margin-bottom: 12px; }
-    .form-group label { display: block; font-size: 0.76rem; font-weight: 700; color: #57606f; margin-bottom: 4px; }
-    .form-input {
-      width: 100%; border: 1px solid #dcdde1; border-radius: 6px; padding: 8px 10px;
-      font-size: 0.85rem; color: #2f3542; outline: none; background: #fafbfc;
+    .modal-target-name { font-size: 1.15rem; font-weight: 700; color: #2f3542; margin-bottom: 2px; }
+    .modal-target-date { font-size: 0.85rem; font-weight: 500; color: #747d8c; margin-bottom: 16px; }
+    .modal-choice-list { display: flex; flex-direction: column; gap: 8px; }
+    .modal-btn {
+      width: 100%; height: 42px; border: none; border-radius: 6px;
+      font-size: 0.92rem; font-weight: 600; color: #ffffff; cursor: pointer;
     }
-    .form-input:focus { border-color: #387d5e; background: #ffffff; }
-    .part-chip-group { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
-    .part-chip {
-      background: #f1f2f6; border: 1px solid #dcdde1; border-radius: 15px;
-      padding: 4px 10px; font-size: 0.74rem; font-weight: 700; color: #57606f; cursor: pointer;
-    }
-    .part-chip.active { background: #387d5e; color: #ffffff; border-color: #387d5e; }
-    .modal-btn-row { display: flex; gap: 8px; margin-top: 16px; }
-    .modal-action-btn { flex: 1; height: 40px; border-radius: 6px; font-size: 0.88rem; font-weight: 700; border: none; cursor: pointer; }
-    .modal-action-btn.submit { background: #387d5e; color: #ffffff; }
-    .modal-action-btn.cancel { background: #f1f2f6; color: #57606f; }
+    .modal-btn.btn-참석 { background-color: var(--btn-ok); }
+    .modal-btn.btn-불참 { background-color: var(--btn-no); }
+    .modal-btn.btn-미정 { background-color: var(--btn-wait); }
+    .modal-btn.btn-백업 { background-color: var(--btn-backup); }
+    .modal-btn.btn-취소 { background-color: #f1f2f6; color: #57606f; margin-top: 4px; }
 
     #loading { text-align: center; padding: 50px 20px; color: var(--text-sub); }
-    #upload-loading-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.65); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
-    .upload-loading-card { background: #ffffff; border-radius: 14px; width: 100%; max-width: 300px; padding: 26px 20px; text-align: center; }
+    #upload-loading-overlay {
+      display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.65); z-index: 2000; align-items: center; justify-content: center; padding: 20px;
+    }
+    .upload-loading-card {
+      background: #ffffff; border-radius: 14px; width: 100%; max-width: 300px;
+      padding: 26px 20px; text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -378,6 +557,9 @@
     <div class="header-actions">
       <button id="score-search-toggle-btn" class="icon-btn" onclick="toggleScoreSearch()" style="display:none;" title="악보 검색">
         <i class="fa-solid fa-magnifying-glass"></i>
+      </button>
+      <button id="pwa-install-btn" onclick="triggerPwaInstall()">
+        <i class="fa-solid fa-arrow-down-to-bracket"></i> 앱 설치
       </button>
     </div>
   </header>
@@ -421,55 +603,64 @@
   </nav>
 
   <!-- 출석 모달 -->
-  <div id="att-modal-overlay" class="app-modal-overlay">
-    <div class="app-modal-card" style="text-align:center;">
-      <div id="modal-user-name" style="font-size:1.15rem; font-weight:700; color:#2f3542; margin-bottom:2px;">멤버 이름 님</div>
-      <div id="modal-date-text" style="font-size:0.85rem; font-weight:500; color:#747d8c; margin-bottom:16px;">00/00 출석 여부</div>
-      <div style="display:flex; flex-direction:column; gap:8px;">
-        <button class="att-btn 참석" style="height:42px; font-size:0.92rem;" onclick="selectStatus('참석')">참석</button>
-        <button class="att-btn 불참" style="height:42px; font-size:0.92rem;" onclick="selectStatus('불참')">불참</button>
-        <button class="att-btn 미정" style="height:42px; font-size:0.92rem;" onclick="selectStatus('미정')">미정</button>
-        <button class="att-btn 백업" style="height:42px; font-size:0.92rem;" onclick="selectStatus('백업')">백업</button>
-        <button class="modal-action-btn cancel" onclick="closeAttModal()">취소</button>
+  <div id="att-modal-overlay">
+    <div class="att-modal-card">
+      <div id="modal-user-name" class="modal-target-name">멤버 이름 님</div>
+      <div id="modal-date-text" class="modal-target-date">00/00 출석 여부</div>
+      <div class="modal-choice-list">
+        <button class="modal-btn btn-참석" onclick="selectStatus('참석')">참석</button>
+        <button class="modal-btn btn-불참" onclick="selectStatus('불참')">불참</button>
+        <button class="modal-btn btn-미정" onclick="selectStatus('미정')">미정</button>
+        <button class="modal-btn btn-백업" onclick="selectStatus('백업')">백업</button>
+        <button class="modal-btn btn-취소" onclick="closeAttModal()">취소</button>
       </div>
     </div>
   </div>
 
-  <!-- 💬 밴드노트 작성 모달 -->
-  <div id="note-modal-overlay" class="app-modal-overlay">
-    <div class="app-modal-card">
-      <div class="modal-head-title" id="note-modal-song-title">곡명 밴드노트</div>
-      
-      <div class="form-group">
-        <label>작성자 이름 (기억됨)</label>
-        <input type="text" id="note-author-input" class="form-input" placeholder="이름을 입력하세요">
+  <!-- 💬 팁공유 전용 바텀시트 모달 (88dvh) -->
+  <div id="tip-sheet-overlay" onclick="onTipOverlayClick(event)">
+    <div class="tip-sheet-card" onclick="event.stopPropagation()">
+      <div class="tip-sheet-header">
+        <div class="tip-sheet-header-title" id="sheet-song-title">
+          <i class="fa-regular fa-comment-dots" style="color:#387d5e;"></i>
+          <span>곡명 밴드노트</span>
+        </div>
+        <button class="tip-sheet-close-btn" onclick="closeTipSheet()"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
-      <div class="form-group">
-        <label>파트 선택</label>
-        <div class="part-chip-group">
-          <span class="part-chip active" onclick="selectPartChip(this, '전체')">전체</span>
-          <span class="part-chip" onclick="selectPartChip(this, '보컬')">보컬</span>
-          <span class="part-chip" onclick="selectPartChip(this, '기타')">기타</span>
-          <span class="part-chip" onclick="selectPartChip(this, '베이스')">베이스</span>
-          <span class="part-chip" onclick="selectPartChip(this, '드럼')">드럼</span>
-          <span class="part-chip" onclick="selectPartChip(this, '건반')">건반</span>
+      <!-- 📹 추천영상 상단 고정 쉘프 -->
+      <div class="tip-shelf-section">
+        <div class="tip-shelf-label">
+          <i class="fa-brands fa-youtube" style="color:#d91c1c;"></i> 추천 커버영상 모아보기
+        </div>
+        <div class="tip-shelf-scroll" id="sheet-shelf-scroll">
+          <!-- 추천 1, 추천 2 칩 자동 렌더링 -->
         </div>
       </div>
 
-      <div class="form-group">
-        <label>팁 / 메모 내용</label>
-        <textarea id="note-content-input" class="form-input" rows="3" placeholder="카피 팁이나 연습 메모를 적어주세요"></textarea>
+      <!-- 타임라인 스크롤 영역 -->
+      <div class="tip-timeline-scroll" id="sheet-timeline-feed">
+        <!-- 대화 카드 자동 렌더링 -->
       </div>
 
-      <div class="form-group">
-        <label>추천 유튜브 링크 (선택)</label>
-        <input type="url" id="note-yt-input" class="form-input" placeholder="https://youtube.com/...">
-      </div>
-
-      <div class="modal-btn-row">
-        <button class="modal-action-btn cancel" onclick="closeNoteModal()">취소</button>
-        <button class="modal-action-btn submit" id="note-submit-btn" onclick="submitBandNote()">등록하기</button>
+      <!-- 하단 입력 폼 -->
+      <div class="tip-sheet-footer">
+        <div class="tip-form-row1">
+          <input type="text" id="sheet-author-input" class="tip-author-field" placeholder="작성자(기억됨)">
+          <div class="tip-part-chips">
+            <span class="tip-chip active" onclick="selectSheetChip(this, '전체')">전체</span>
+            <span class="tip-chip" onclick="selectSheetChip(this, '보컬')">보컬</span>
+            <span class="tip-chip" onclick="selectSheetChip(this, '기타')">기타</span>
+            <span class="tip-chip" onclick="selectSheetChip(this, '베이스')">베이스</span>
+            <span class="tip-chip" onclick="selectSheetChip(this, '드럼')">드럼</span>
+            <span class="tip-chip" onclick="selectSheetChip(this, '건반')">건반</span>
+          </div>
+        </div>
+        <div class="tip-form-row2">
+          <textarea id="sheet-content-input" class="tip-text-area" placeholder="팁이나 피드백을 남겨주세요..."></textarea>
+          <button class="tip-send-btn" id="sheet-send-btn" onclick="submitSheetNote()">등록</button>
+        </div>
+        <input type="url" id="sheet-yt-input" class="tip-link-input" placeholder="추천 유튜브 영상 링크 (선택)">
       </div>
     </div>
   </div>
@@ -491,14 +682,17 @@
 
     let appData = { attendance: [], gigs: [], scores: [], bandNotes: [] };
     let currentEditTarget = null;
-    let currentTargetSongForNote = '';
-    let selectedNotePart = '전체';
+    let deferredPrompt = null;
     let currentTabIndex = 0;
     const tabTitles = ['🎸 HardRock 출석부', '📊 HardRock 공연현황', '🎵 HardRock 악보집'];
 
     let isRefreshing = false;
     let refreshTimeoutId = null;
     let currentUploadSongName = '';
+
+    // 팁공유 시트 제어 변수
+    let currentActiveSheetSong = '';
+    let selectedSheetPart = '전체';
 
     function getFavorites() {
       try { return JSON.parse(localStorage.getItem('hr_favorite_songs') || '[]'); } catch (e) { return []; }
@@ -516,10 +710,34 @@
 
     window.addEventListener('popstate', (e) => {
       const attModal = document.getElementById('att-modal-overlay');
-      const noteModal = document.getElementById('note-modal-overlay');
+      const tipSheet = document.getElementById('tip-sheet-overlay');
       if (attModal && attModal.style.display === 'flex') closeAttModal(false);
-      if (noteModal && noteModal.style.display === 'flex') closeNoteModal(false);
+      if (tipSheet && tipSheet.style.display === 'flex') closeTipSheet(false);
     });
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
+    }
+
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    if (isStandalone) {
+      document.getElementById('pwa-install-btn').style.display = 'none';
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      if (!isStandalone) {
+        document.getElementById('pwa-install-btn').style.display = 'inline-flex';
+      }
+    });
+
+    function triggerPwaInstall() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+      }
+    }
 
     window.onload = function() {
       restoreFromCache();
@@ -709,7 +927,10 @@
       }
 
       window.addEventListener('touchstart', (e) => {
-        if (isRefreshing || document.querySelector('.app-modal-overlay[style*="display: flex"]') || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        if (isRefreshing ||
+            document.getElementById('att-modal-overlay').style.display === 'flex' ||
+            document.getElementById('tip-sheet-overlay').style.display === 'flex' ||
+            e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
           startX = 0; startY = 0; return;
         }
         const touch = e.touches[0];
@@ -831,13 +1052,13 @@
       document.getElementById('modal-user-name').innerText = `${name} 님`;
       document.getElementById('modal-date-text').innerText = `${date} 출석 여부`;
       document.getElementById('att-modal-overlay').style.display = 'flex';
-      history.pushState({ modalOpen: true }, '');
+      history.pushState({ attModalOpen: true }, '');
     }
 
     function closeAttModal(needHistoryBack = true) {
       document.getElementById('att-modal-overlay').style.display = 'none';
       currentEditTarget = null;
-      if (needHistoryBack && window.history.state && window.history.state.modalOpen) history.back();
+      if (needHistoryBack && window.history.state && window.history.state.attModalOpen) history.back();
     }
 
     function selectStatus(status) {
@@ -974,6 +1195,9 @@
         const songData = groups[song];
         const ytList = parseYoutubeLinks(songData.youtube);
 
+        // 해당 곡의 밴드노트 개수 집계
+        const songNotesCount = (appData.bandNotes || []).filter(n => n.song === song).length;
+
         let extraHtml = '';
         const memoContent = (songData.memo || '').trim();
         extraHtml += '<div class="song-extra-box">';
@@ -985,13 +1209,23 @@
             extraHtml += `<a class="youtube-link-btn" href="${yt.url}" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-youtube"></i> ${escapeHtml(yt.label)}</a>`;
           });
         }
+        
+        // 🚀 악보공유 버튼 (+ 제거)
         extraHtml += `
           <button class="upload-share-btn" onclick="openFilePickerForSong('${escapeHtml(song)}')" title="악보/음원 공유">
             <i class="fa-solid fa-cloud-arrow-up"></i> 악보공유
           </button>`;
+
+        // 💬 신규 상단 팁공유 버튼 (개수 뱃지 포함)
+        extraHtml += `
+          <button class="tip-hub-open-btn" onclick="openTipSheet('${escapeHtml(song)}')" title="밴드 팁 & 추천영상 열기">
+            <i class="fa-regular fa-comment-dots"></i> 팁공유
+            ${songNotesCount > 0 ? `<span class="tip-hub-badge">${songNotesCount}</span>` : ''}
+          </button>`;
+
         extraHtml += '</div></div>';
 
-        // 악보 및 음원 파일 정렬
+        // 악보 및 음원 파일 정렬 (본문에서 깔끔하게 유지)
         const sortedFiles = [...songData.files].sort((a, b) => {
           const aAudio = isAudioFile(a.part), bAudio = isAudioFile(b.part);
           if (aAudio && !bAudio) return -1;
@@ -1011,43 +1245,6 @@
             </div>`;
         }).join('');
 
-        // 💬 밴드노트 목록 구성
-        const songNotes = (appData.bandNotes || []).filter(n => n.song === song);
-        let notesListHtml = '';
-        if (songNotes.length === 0) {
-          notesListHtml = '<div class="no-notes-msg">아직 남겨진 팁이 없습니다. 첫 팁을 공유해 보세요!</div>';
-        } else {
-          songNotes.forEach(note => {
-            const ytBtn = note.ytUrl ? `
-              <a href="${note.ytUrl}" class="note-yt-btn" target="_blank" rel="noopener noreferrer">
-                <i class="fa-brands fa-youtube"></i> 추천영상
-              </a>` : '';
-            notesListHtml += `
-              <div class="note-card">
-                <div class="note-card-meta">
-                  <div class="note-author-info">
-                    <span class="note-part-badge">${escapeHtml(note.part)}</span>
-                    <span>${escapeHtml(note.author)}</span>
-                  </div>
-                  <span class="note-date">${escapeHtml(note.date)}</span>
-                </div>
-                <div class="note-content">${escapeHtml(note.content)}</div>
-                ${ytBtn}
-              </div>`;
-          });
-        }
-
-        const bandNotesSectionHtml = `
-          <div class="band-notes-section">
-            <div class="band-notes-header">
-              <span class="band-notes-title"><i class="fa-regular fa-comment-dots"></i> 밴드 노트</span>
-              <button class="add-note-open-btn" onclick="openNoteModal('${escapeHtml(song)}')">
-                <i class="fa-solid fa-pen"></i> 팁 남기기
-              </button>
-            </div>
-            <div class="band-notes-list">${notesListHtml}</div>
-          </div>`;
-
         accordion.innerHTML = `
           <button class="song-header-btn" onclick="toggleAccordion(this)">
             <span class="song-title-text">${song}</span>
@@ -1058,7 +1255,6 @@
           <div class="file-accordion-body">
             ${extraHtml}
             ${filesHtml}
-            ${bandNotesSectionHtml}
           </div>`;
         container.appendChild(accordion);
       });
@@ -1131,62 +1327,143 @@
     }
 
     /* ====================================================
-       💬 밴드노트 작성/등록 제어 로직
+       💬 팁공유 전용 바텀시트 (88dvh) 렌더링 & 제어 엔진
        ==================================================== */
-    function openNoteModal(songName) {
-      currentTargetSongForNote = songName;
-      document.getElementById('note-modal-song-title').innerText = `[${songName}] 팁 남기기`;
-      
-      // 저장된 사용자 이름 자동 복원
-      const savedAuthor = localStorage.getItem('hr_user_name') || '';
-      document.getElementById('note-author-input').value = savedAuthor;
-      document.getElementById('note-content-input').value = '';
-      document.getElementById('note-yt-input').value = '';
+    function openTipSheet(songName) {
+      currentActiveSheetSong = songName;
+      document.getElementById('sheet-song-title').innerHTML = `
+        <i class="fa-regular fa-comment-dots" style="color:#387d5e;"></i>
+        <span>[${escapeHtml(songName)}] 밴드노트</span>
+      `;
 
-      // 파트 기본값: '전체'
-      selectedNotePart = '전체';
-      document.querySelectorAll('.part-chip').forEach(c => {
-        c.classList.toggle('active', c.innerText === '전체');
-      });
+      // 작성자 자동 복원
+      const savedUser = localStorage.getItem('hr_user_name') || '';
+      document.getElementById('sheet-author-input').value = savedUser;
+      document.getElementById('sheet-content-input').value = '';
+      document.getElementById('sheet-yt-input').value = '';
 
-      document.getElementById('note-modal-overlay').style.display = 'flex';
-      history.pushState({ noteModalOpen: true }, '');
+      // 기본 파트: 전체
+      selectedSheetPart = '전체';
+      document.querySelectorAll('.tip-chip').forEach(c => c.classList.toggle('active', c.innerText === '전체'));
+
+      // 시트 콘텐츠 조립 (추천 1, 2 넘버링 및 타임라인)
+      renderTipSheetBody();
+
+      // 바텀시트 표출 & 안드로이드 뒤로가기 등록
+      document.getElementById('tip-sheet-overlay').style.display = 'flex';
+      history.pushState({ tipSheetOpen: true }, '');
     }
 
-    function closeNoteModal(needHistoryBack = true) {
-      document.getElementById('note-modal-overlay').style.display = 'none';
-      if (needHistoryBack && window.history.state && window.history.state.noteModalOpen) history.back();
+    function closeTipSheet(needHistoryBack = true) {
+      document.getElementById('tip-sheet-overlay').style.display = 'none';
+      currentActiveSheetSong = '';
+      if (needHistoryBack && window.history.state && window.history.state.tipSheetOpen) history.back();
     }
 
-    function selectPartChip(el, part) {
-      selectedNotePart = part;
-      document.querySelectorAll('.part-chip').forEach(c => c.classList.remove('active'));
+    function onTipOverlayClick(e) {
+      if (e.target.id === 'tip-sheet-overlay') closeTipSheet();
+    }
+
+    function selectSheetChip(el, part) {
+      selectedSheetPart = part;
+      document.querySelectorAll('.tip-chip').forEach(c => c.classList.remove('active'));
       el.classList.add('active');
     }
 
-    async function submitBandNote() {
-      const author = document.getElementById('note-author-input').value.trim();
-      const content = document.getElementById('note-content-input').value.trim();
-      const ytUrl = document.getElementById('note-yt-input').value.trim();
+    function renderTipSheetBody() {
+      const allNotes = appData.bandNotes || [];
+      // 해당 곡의 밴드노트 추출 (시간 오름차순: 등록 순서대로 번호 부여)
+      const songNotesAsc = allNotes.filter(n => n.song === currentActiveSheetSong).slice().reverse();
+
+      const shelfContainer = document.getElementById('sheet-shelf-scroll');
+      const timelineContainer = document.getElementById('sheet-timeline-feed');
+
+      let recoIndex = 0;
+      let shelfHtml = '';
+      const recoMap = new Map(); // 각 노트별 추천영상 번호 매핑
+
+      // 1) 추천 영상 번호 인덱싱 (추천 1, 추천 2...)
+      songNotesAsc.forEach(note => {
+        if (note.ytUrl && note.ytUrl.trim() !== '') {
+          recoIndex++;
+          const recoTitle = `추천 ${recoIndex}: ${note.author}(${note.part})`;
+          recoMap.set(note, recoIndex);
+          shelfHtml += `
+            <a href="${note.ytUrl.trim()}" class="shelf-yt-btn" target="_blank" rel="noopener noreferrer">
+              <i class="fa-brands fa-youtube"></i> 추천 ${recoIndex} (${escapeHtml(note.part)})
+            </a>
+          `;
+        }
+      });
+
+      if (recoIndex === 0) {
+        shelfContainer.innerHTML = '<span class="shelf-empty-hint">등록된 추천 영상 링크가 아직 없습니다.</span>';
+      } else {
+        shelfContainer.innerHTML = shelfHtml;
+      }
+
+      // 2) 타임라인 렌더링 (최신순 표출을 위해 다시 역순)
+      const songNotesDesc = songNotesAsc.slice().reverse();
+
+      if (songNotesDesc.length === 0) {
+        timelineContainer.innerHTML = `
+          <div style="text-align:center; padding:35px 15px; color:#a4b0be; font-size:0.83rem;">
+            아직 남겨진 피드백이 없습니다.<br>곡에 대한 카피 팁이나 첫 커버 영상을 추천해 보세요!
+          </div>
+        `;
+        return;
+      }
+
+      let timelineHtml = '';
+      songNotesDesc.forEach(note => {
+        const recoNum = recoMap.get(note);
+        const ytBtnHtml = note.ytUrl ? `
+          <a href="${note.ytUrl.trim()}" class="tip-inline-yt-btn" target="_blank" rel="noopener noreferrer">
+            <i class="fa-brands fa-youtube"></i> ▶ 추천 ${recoNum} 영상 열기
+          </a>
+        ` : '';
+
+        timelineHtml += `
+          <div class="tip-timeline-card">
+            <div class="tip-card-top">
+              <div class="tip-author-box">
+                <span class="tip-part-tag">${escapeHtml(note.part || '전체')}</span>
+                <span>${escapeHtml(note.author)}</span>
+              </div>
+              <span class="tip-time">${escapeHtml(note.date || '')}</span>
+            </div>
+            <div class="tip-text">${escapeHtml(note.content)}</div>
+            ${ytBtnHtml}
+          </div>
+        `;
+      });
+
+      timelineContainer.innerHTML = timelineHtml;
+    }
+
+    async function submitSheetNote() {
+      const author = document.getElementById('sheet-author-input').value.trim();
+      const content = document.getElementById('sheet-content-input').value.trim();
+      const ytUrl = document.getElementById('sheet-yt-input').value.trim();
 
       if (!author) { alert('작성자 이름을 입력해 주세요.'); return; }
       if (!content) { alert('팁 또는 메모 내용을 입력해 주세요.'); return; }
 
-      // 이름 로컬 저장 (다음부터 자동 입력)
+      // 사용자 이름 영구 로컬 저장
       localStorage.setItem('hr_user_name', author);
 
-      const submitBtn = document.getElementById('note-submit-btn');
-      submitBtn.innerText = '등록 중...';
-      submitBtn.disabled = true;
+      const sendBtn = document.getElementById('sheet-send-btn');
+      sendBtn.innerText = '...';
+      sendBtn.disabled = true;
 
       const now = new Date();
       const dateStr = `${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-      // 낙관적 UI 즉시 반영 (0초 지연)
+      // 낙관적 UI 즉시 반영 (0초 체감)
       const newNote = {
         date: dateStr,
-        song: currentTargetSongForNote,
-        part: selectedNotePart,
+        song: currentActiveSheetSong,
+        part: selectedSheetPart,
         author: author,
         content: content,
         ytUrl: ytUrl
@@ -1194,18 +1471,22 @@
 
       appData.bandNotes = [newNote, ...(appData.bandNotes || [])];
       localStorage.setItem('hr_band_notes', JSON.stringify(appData.bandNotes));
-      renderScores();
-      closeNoteModal();
 
-      submitBtn.innerText = '등록하기';
-      submitBtn.disabled = false;
+      // 폼 초기화 및 시트 화면 재렌더링
+      document.getElementById('sheet-content-input').value = '';
+      document.getElementById('sheet-yt-input').value = '';
+      renderTipSheetBody();
+      renderScores(); // 본문 뱃지 숫자 갱신
 
-      // 백그라운드 전송
+      sendBtn.innerText = '등록';
+      sendBtn.disabled = false;
+
+      // 백그라운드 GAS 시트 비동기 전송
       try {
         const payload = {
           action: "addBandNoteTest",
-          song: currentTargetSongForNote,
-          part: selectedNotePart,
+          song: currentActiveSheetSong,
+          part: selectedSheetPart,
           author: author,
           content: content,
           ytUrl: ytUrl
