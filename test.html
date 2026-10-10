@@ -373,7 +373,7 @@
     .nav-btn.active { color: var(--accent); }
     .nav-icon { font-size: 17px; }
 
-    /* 바텀시트 모달 (공통) */
+    /* 바텀시트 모달 */
     .modal-backdrop {
       display: none;
       position: fixed;
@@ -582,14 +582,14 @@
     // ==========================================
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxk46VNnAZtti3FtD2iMVPO9aPIohyoyLTI3cIegGl4jHXN8fyYSMU8QrAX47wpvt6c/exec";
     
-    // 리더님의 구글 드라이브 '공유함' 폴더 링크 (준비 시 교체)
-    const SHARED_DRIVE_FOLDER_URL = "https://drive.google.com/";
+    // 리더님의 구글 드라이브 '공유 폴더' 링크 연동 완료
+    const SHARED_DRIVE_FOLDER_URL = "https://drive.google.com/drive/folders/12HAjdM1ecyJs6S77a3MYc8x9erKhQtZe?usp=drive_link";
 
     let currentTabIndex = 0;
     let attendanceData = null;
     let gigsData = null;
     let scoresData = [];
-    let bandNotesData = []; // [{ song, part, author, content, ytUrl, date }]
+    let bandNotesData = [];
     let favoriteSongs = new Set();
     let currentEditCell = null;
     let currentTargetSong = "";
@@ -663,7 +663,6 @@
       const tbody = document.getElementById("attendanceTbody");
       tbody.innerHTML = "";
 
-      // 날짜 헤더
       const trHead = document.createElement("tr");
       attendanceData.headers.forEach(h => {
         const th = document.createElement("th");
@@ -672,7 +671,6 @@
       });
       tbody.appendChild(trHead);
 
-      // 멤버 행
       attendanceData.rows.forEach((row, rIdx) => {
         const tr = document.createElement("tr");
         const name = row[0];
@@ -718,7 +716,6 @@
       closeModal();
       showToast(`출석 저장: ${status}`);
 
-      // 백엔드 비동기 저장
       fetch(`${GAS_URL}?action=updateAttendance&row=${row + 2}&col=${col + 1}&status=${encodeURIComponent(status)}`, { method: "POST" })
         .catch(err => console.error("출석 저장 에러:", err));
     }
@@ -789,7 +786,7 @@
         }
       });
 
-      // 2) 정렬: 즐겨찾기 우선 ➔ 가나다순
+      // 2) 정렬: 즐겨찾기 우선 ➔ 한글/알파벳 가나다순
       let songs = Array.from(songMap.values());
       songs.sort((a, b) => {
         const favA = favoriteSongs.has(a.songName) ? 1 : 0;
@@ -812,7 +809,6 @@
         const card = document.createElement("div");
         card.className = "song-card";
 
-        // 해당 곡의 밴드노트 목록
         const songNotes = bandNotesData.filter(n => n.song === songObj.songName);
 
         // 헤더
@@ -863,7 +859,7 @@
           panelFiles.appendChild(memoBox);
         }
 
-        // 유튜브 버튼 & 공유 버튼 라인
+        // 유튜브 버튼 & 추천/공유 버튼 라인
         const btnGroup = document.createElement("div");
         btnGroup.className = "yt-btn-group";
 
@@ -891,7 +887,7 @@
         btnRecommend.onclick = () => openNoteModal(songObj.songName);
         btnGroup.appendChild(btnRecommend);
 
-        // 📥공유 버튼 (드라이브 공유함 바로가기)
+        // 📥공유 버튼 (지정된 공유 폴더 다이렉트 이동)
         const btnShare = document.createElement("a");
         btnShare.className = "btn-action-outline";
         btnShare.href = SHARED_DRIVE_FOLDER_URL;
@@ -902,7 +898,7 @@
 
         panelFiles.appendChild(btnGroup);
 
-        // 파일 목록
+        // 악보 및 음원 파일 목록
         const fileList = document.createElement("div");
         fileList.className = "file-list";
         songObj.files.forEach(f => {
@@ -942,7 +938,7 @@
           </div>
         `;
 
-        // 서브 탭 전환 로직
+        // 서브 탭 전환
         subTabs.querySelectorAll(".sub-tab-btn").forEach(btn => {
           btn.onclick = (e) => {
             e.stopPropagation();
@@ -954,7 +950,7 @@
           };
         });
 
-        // 아코디언 토글
+        // 아코디언 열기/닫기
         header.onclick = () => {
           content.classList.toggle("open");
         };
@@ -995,7 +991,6 @@
       document.getElementById("noteModal").classList.remove("active");
     }
 
-    // 파트 칩 선택
     document.querySelectorAll("#partChipGroup .chip-btn").forEach(chip => {
       chip.addEventListener("click", () => {
         document.querySelectorAll("#partChipGroup .chip-btn").forEach(c => c.classList.remove("selected"));
@@ -1004,7 +999,6 @@
       });
     });
 
-    // 밴드노트 등록 버튼
     document.getElementById("btnSaveNote").addEventListener("click", () => {
       const author = document.getElementById("noteAuthorInput").value.trim();
       const content = document.getElementById("noteContentInput").value.trim();
@@ -1013,7 +1007,6 @@
       if (!author) { alert("작성자 이름을 입력해 주세요."); return; }
       if (!content && !ytUrl) { alert("의견 메모 또는 유튜브 링크 중 하나는 입력해 주세요."); return; }
 
-      // 작성자 이름 로컬 저장
       localStorage.setItem("hr_saved_author", author);
 
       const now = new Date();
@@ -1028,14 +1021,14 @@
         date: dateStr
       };
 
-      // 1) 로컬 캐시에 즉시 누적 (0초 반응)
+      // 로컬 즉시 반영 (0초 반응성)
       bandNotesData.unshift(newNote);
       localStorage.setItem("hr_band_notes_test", JSON.stringify(bandNotesData));
       renderScores();
       closeNoteModal();
       showToast("밴드노트가 등록되었습니다!");
 
-      // 2) GAS 백엔드 전송 (시트 연동 테스트 API)
+      // GAS 백엔드 비동기 전송
       const params = new URLSearchParams({
         action: "addBandNoteTest",
         song: newNote.song,
@@ -1059,14 +1052,13 @@
         if (notModal.classList.contains("active")) closeNoteModal();
       });
 
-      // 검색 토글
       const searchWrap = document.getElementById("searchBarWrap");
       const searchInput = document.getElementById("scoreSearchInput");
       document.getElementById("btnToggleSearch").addEventListener("click", () => {
         const isHidden = searchWrap.style.display === "none" || !searchWrap.style.display;
         searchWrap.style.display = isHidden ? "block" : "none";
         if (isHidden) {
-          switchTab(2); // 악보 탭으로 자동 이동
+          switchTab(2);
           searchInput.focus();
         } else {
           searchInput.value = "";
@@ -1076,7 +1068,6 @@
 
       searchInput.addEventListener("input", () => renderScores());
 
-      // 새로고침 버튼
       document.getElementById("btnSync").addEventListener("click", () => {
         showToast("최신 데이터를 동기화합니다...");
         fetchQuickData(true);
