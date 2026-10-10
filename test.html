@@ -199,10 +199,12 @@
       padding: 6px 1px;
       font-weight: 600;
       color: #57606f;
-      font-size: 0.75rem;
+      font-size: 0.73rem;
       border: 1px solid var(--border);
       background-color: var(--header-bg);
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     table.att-table td {
       border: 1px solid var(--border);
@@ -440,7 +442,7 @@
     }
     .youtube-link-btn:active { background: #b01515; transform: scale(0.98); }
 
-    /* + 악보공유 버튼 (원터치 인앱 업로드) */
+    /* 악보공유 버튼 (+ 제거, 컴팩트 여백) */
     .upload-share-btn {
       display: inline-flex;
       align-items: center;
@@ -451,7 +453,7 @@
       border: none;
       font-size: 0.78rem;
       font-weight: 700;
-      padding: 6px 11px;
+      padding: 6px 10px;
       border-radius: 6px;
       box-shadow: 0 1px 3px rgba(43, 92, 143, 0.25);
       cursor: pointer;
@@ -494,9 +496,7 @@
 
     #loading { text-align: center; padding: 50px 20px; color: var(--text-sub); }
 
-    /* ==========================================
-       🚀 인앱 파일 업로드 전용 로딩 오버레이 모달
-       ========================================== */
+    /* 인앱 파일 업로드 전용 로딩 오버레이 모달 */
     #upload-loading-overlay {
       display: none;
       position: fixed;
@@ -618,10 +618,10 @@
     </div>
   </div>
 
-  <!-- 🚀 파일 선택용 히든 input (네이티브 탐색기 호출) -->
+  <!-- 파일 선택용 히든 input -->
   <input type="file" id="score-file-hidden-input" style="display:none;" onchange="onScoreFileSelected(event)">
 
-  <!-- 🚀 업로드 진행 중 로딩 오버레이 모달 -->
+  <!-- 업로드 로딩 오버레이 모달 -->
   <div id="upload-loading-overlay">
     <div class="upload-loading-card">
       <i class="fa-solid fa-circle-notch fa-spin fa-3x"></i>
@@ -643,8 +643,6 @@
 
     let isRefreshing = false;
     let refreshTimeoutId = null;
-
-    // 인앱 업로드 대상 곡명 상태 관리
     let currentUploadSongName = '';
 
     function getFavorites() {
@@ -1025,6 +1023,28 @@
       window.addEventListener('touchcancel', cancelPullGesture, { passive: true });
     }
 
+    /* ====================================================
+       💡 날짜 헤더 자동 포맷 함수 (ISO 긴 문자열 -> MM/DD 축약)
+       ==================================================== */
+    function formatHeaderDate(val) {
+      if (!val) return '';
+      const str = String(val).trim();
+      
+      // ISO 포맷 (2026-10-16T15:00:00.000Z 등)
+      if (str.includes('T') && !isNaN(Date.parse(str))) {
+        const d = new Date(str);
+        return `${d.getMonth() + 1}/${d.getDate()}`;
+      }
+      
+      // 일반 YYYY-MM-DD 또는 YYYY.MM.DD 형태
+      const match = str.match(/(\d{4})[-./](\d{1,2})[-./](\d{1,2})/);
+      if (match) {
+        return `${parseInt(match[2], 10)}/${parseInt(match[3], 10)}`;
+      }
+      
+      return str;
+    }
+
     function renderAttendance() {
       const container = document.getElementById('attendance-container');
       if (!appData.attendance || appData.attendance.length === 0) return;
@@ -1035,7 +1055,8 @@
       
       html += '<thead><tr>';
       rows[0].forEach((header, colIdx) => {
-        html += `<th class="${colIdx === 0 ? 'member-name-cell' : ''}">${header}</th>`;
+        const displayHeader = colIdx === 0 ? header : formatHeaderDate(header);
+        html += `<th class="${colIdx === 0 ? 'member-name-cell' : ''}" title="${header}">${displayHeader}</th>`;
       });
       html += '</tr></thead><tbody>';
 
@@ -1053,7 +1074,8 @@
           if (c === 0) {
             html += `<td class="member-name-cell">${val}</td>`;
           } else {
-            const dateHeader = rows[0][c] || '';
+            const rawDateHeader = rows[0][c] || '';
+            const displayDateHeader = formatHeaderDate(rawDateHeader);
             const rowCoord = r + 1;
             const colCoord = c + 1;
             const statusClass = normalizeStatus(val);
@@ -1061,7 +1083,7 @@
 
             html += `<td>
               <span class="att-btn ${statusClass}" id="cell_${rowCoord}_${colCoord}"
-                    onclick="openAttModal(${rowCoord}, ${colCoord}, '${memberName}', '${dateHeader}')">
+                    onclick="openAttModal(${rowCoord}, ${colCoord}, '${memberName}', '${displayDateHeader}')">
                 ${displayText}
               </span>
             </td>`;
@@ -1292,10 +1314,10 @@
           });
         }
         
-        // 🚀 인앱 파일 선택기 호출 버튼 (+ 악보공유)
+        // 🚀 컴팩트 악보공유 버튼 (+ 기호 제거)
         extraHtml += `
           <button class="upload-share-btn" onclick="openFilePickerForSong('${escapeHtml(song)}')" title="이 곡의 개인 소장 악보/음원 공유하기">
-            <i class="fa-solid fa-cloud-arrow-up"></i> + 악보공유
+            <i class="fa-solid fa-cloud-arrow-up"></i> 악보공유
           </button>
         `;
         extraHtml += '</div>';
@@ -1373,22 +1395,17 @@
       document.body.removeChild(link);
     }
 
-    /* ====================================================
-       🚀 [인앱 파일 업로드 엔진]
-       - 구글 로그인 없이 네이티브 탐색기로 선택 후 관리자 권한 전송
-       ==================================================== */
     function openFilePickerForSong(songName) {
       currentUploadSongName = songName;
       const fileInput = document.getElementById('score-file-hidden-input');
-      fileInput.value = ''; // 이전 선택 파일 리셋
-      fileInput.click();    // 스마트폰 / PC 네이티브 파일 선택창 오픈
+      fileInput.value = '';
+      fileInput.click();
     }
 
     async function onScoreFileSelected(event) {
       const file = event.target.files[0];
       if (!file) return;
 
-      // 파일 크기 제한 (GAS 수신 안정권 25MB 이하 권장)
       const maxSizeBytes = 25 * 1024 * 1024;
       if (file.size > maxSizeBytes) {
         alert("파일 용량이 너무 큽니다. 25MB 이하의 파일만 업로드할 수 있습니다.");
@@ -1405,10 +1422,8 @@
       overlay.style.display = 'flex';
 
       try {
-        // 파일을 Base64 문자열로 비동기 변환
         const base64Data = await readFileAsBase64(file);
 
-        // GAS 백엔드로 POST 전송 (CORS 프리플라이트 없는 심플 POST)
         const payload = {
           action: "uploadScoreFile",
           songName: songName,
@@ -1443,7 +1458,6 @@
         const reader = new FileReader();
         reader.onload = () => {
           const result = reader.result;
-          // data:*/*;base64, 뒷부분 순수 Base64 데이터만 추출
           const base64 = result.split(',')[1];
           resolve(base64);
         };
