@@ -366,6 +366,7 @@
       gap: 9px;
       background: #fafbfc;
       -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
     }
 
     /* 타임라인 카드 */
@@ -513,7 +514,7 @@
       background: #f8f9fa;
     }
 
-    /* 기타 기본 모달 & 로딩 */
+    /* 출석 모달 */
     #att-modal-overlay {
       display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(0, 0, 0, 0.45); z-index: 1000;
@@ -638,7 +639,7 @@
         </div>
       </div>
 
-      <!-- 타임라인 스크롤 영역 -->
+      <!-- 타임라인 스크롤 영역 (위에서 아래로 시간순 정렬) -->
       <div class="tip-timeline-scroll" id="sheet-timeline-feed">
         <!-- 대화 카드 자동 렌더링 -->
       </div>
@@ -1028,7 +1029,7 @@
             const displayText = val === '' ? '미정' : val;
             html += `<td>
               <span class="att-btn ${statusClass}" id="cell_${rowCoord}_${colCoord}"
-                    onclick="openAttModal(${rowCoord}, ${colCoord}, '${memberName}', '${displayDate}')">
+                    onclick="openAttModal(${rowCoord}, ${colCoord}, '${escapeHtml(memberName)}', '${displayDate}')">
                 ${displayText}
               </span>
             </td>`;
@@ -1210,22 +1211,21 @@
           });
         }
         
-        // 🚀 악보공유 버튼 (+ 제거)
+        // 🚀 안전한 data-song 바인딩 (작은따옴표 충돌 원천 차단)
         extraHtml += `
-          <button class="upload-share-btn" onclick="openFilePickerForSong('${escapeHtml(song)}')" title="악보/음원 공유">
+          <button class="upload-share-btn js-upload-btn" data-song="${escapeHtml(song)}" title="악보/음원 공유">
             <i class="fa-solid fa-cloud-arrow-up"></i> 악보공유
           </button>`;
 
-        // 💬 신규 상단 팁공유 버튼 (개수 뱃지 포함)
         extraHtml += `
-          <button class="tip-hub-open-btn" onclick="openTipSheet('${escapeHtml(song)}')" title="밴드 팁 & 추천영상 열기">
+          <button class="tip-hub-open-btn js-tip-btn" data-song="${escapeHtml(song)}" title="밴드 팁 & 추천영상 열기">
             <i class="fa-regular fa-comment-dots"></i> 팁공유
             ${songNotesCount > 0 ? `<span class="tip-hub-badge">${songNotesCount}</span>` : ''}
           </button>`;
 
         extraHtml += '</div></div>';
 
-        // 악보 및 음원 파일 정렬 (본문에서 깔끔하게 유지)
+        // 악보 및 음원 파일 정렬
         const sortedFiles = [...songData.files].sort((a, b) => {
           const aAudio = isAudioFile(a.part), bAudio = isAudioFile(b.part);
           if (aAudio && !bAudio) return -1;
@@ -1247,8 +1247,8 @@
 
         accordion.innerHTML = `
           <button class="song-header-btn" onclick="toggleAccordion(this)">
-            <span class="song-title-text">${song}</span>
-            <span class="fav-star-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${escapeHtml(song)}', event)" title="즐겨찾기">
+            <span class="song-title-text">${escapeHtml(song)}</span>
+            <span class="fav-star-btn ${isFav ? 'active' : ''}" data-song="${escapeHtml(song)}" onclick="onFavStarClick(this, event)" title="즐겨찾기">
               <i class="${isFav ? 'fa-solid' : 'fa-regular'} fa-star"></i>
             </span>
           </button>
@@ -1256,12 +1256,31 @@
             ${extraHtml}
             ${filesHtml}
           </div>`;
+        
+        // 버튼 이벤트 안전 바인딩
+        accordion.querySelectorAll('.js-upload-btn').forEach(b => {
+          b.addEventListener('click', () => openFilePickerForSong(b.dataset.song));
+        });
+        accordion.querySelectorAll('.js-tip-btn').forEach(b => {
+          b.addEventListener('click', () => openTipSheet(b.dataset.song));
+        });
+
         container.appendChild(accordion);
       });
     }
 
+    function onFavStarClick(btn, event) {
+      const songName = btn.dataset.song;
+      toggleFavorite(songName, event);
+    }
+
     function escapeHtml(str) {
-      return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+      return String(str || '')
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
     }
 
     function toggleAccordion(btn) {
@@ -1327,7 +1346,7 @@
     }
 
     /* ====================================================
-       💬 팁공유 전용 바텀시트 (88dvh) 렌더링 & 제어 엔진
+       💬 팁공유 전용 바텀시트 제어 & 타임라인 포커스 엔진
        ==================================================== */
     function openTipSheet(songName) {
       currentActiveSheetSong = songName;
@@ -1336,20 +1355,18 @@
         <span>[${escapeHtml(songName)}] 밴드노트</span>
       `;
 
-      // 작성자 자동 복원
+      // 사용자 이름 영구 로컬 기억 복원
       const savedUser = localStorage.getItem('hr_user_name') || '';
       document.getElementById('sheet-author-input').value = savedUser;
       document.getElementById('sheet-content-input').value = '';
       document.getElementById('sheet-yt-input').value = '';
 
-      // 기본 파트: 전체
       selectedSheetPart = '전체';
       document.querySelectorAll('.tip-chip').forEach(c => c.classList.toggle('active', c.innerText === '전체'));
 
-      // 시트 콘텐츠 조립 (추천 1, 2 넘버링 및 타임라인)
-      renderTipSheetBody();
+      // 타임라인 시간순 렌더링 + 최하단(최신글) 자동 포커스
+      renderTipSheetBody(true);
 
-      // 바텀시트 표출 & 안드로이드 뒤로가기 등록
       document.getElementById('tip-sheet-overlay').style.display = 'flex';
       history.pushState({ tipSheetOpen: true }, '');
     }
@@ -1370,9 +1387,10 @@
       el.classList.add('active');
     }
 
-    function renderTipSheetBody() {
+    function renderTipSheetBody(autoScrollToBottom = false) {
       const allNotes = appData.bandNotes || [];
-      // 해당 곡의 밴드노트 추출 (시간 오름차순: 등록 순서대로 번호 부여)
+      // 💡 시간순 정렬 (위: 과거 ➔ 아래: 최신)
+      // 백엔드는 최신순(내림차순)으로 들어오므로 역순으로 뒤집어 과거->최신 오름차순으로 맞춥니다.
       const songNotesAsc = allNotes.filter(n => n.song === currentActiveSheetSong).slice().reverse();
 
       const shelfContainer = document.getElementById('sheet-shelf-scroll');
@@ -1380,13 +1398,12 @@
 
       let recoIndex = 0;
       let shelfHtml = '';
-      const recoMap = new Map(); // 각 노트별 추천영상 번호 매핑
+      const recoMap = new Map();
 
-      // 1) 추천 영상 번호 인덱싱 (추천 1, 추천 2...)
+      // 1) 추천 영상 넘버링 인덱싱 (추천 1, 추천 2...)
       songNotesAsc.forEach(note => {
         if (note.ytUrl && note.ytUrl.trim() !== '') {
           recoIndex++;
-          const recoTitle = `추천 ${recoIndex}: ${note.author}(${note.part})`;
           recoMap.set(note, recoIndex);
           shelfHtml += `
             <a href="${note.ytUrl.trim()}" class="shelf-yt-btn" target="_blank" rel="noopener noreferrer">
@@ -1402,10 +1419,8 @@
         shelfContainer.innerHTML = shelfHtml;
       }
 
-      // 2) 타임라인 렌더링 (최신순 표출을 위해 다시 역순)
-      const songNotesDesc = songNotesAsc.slice().reverse();
-
-      if (songNotesDesc.length === 0) {
+      // 2) 타임라인 렌더링 (과거 -> 최신 순으로 자연스럽게 아래로 쌓임)
+      if (songNotesAsc.length === 0) {
         timelineContainer.innerHTML = `
           <div style="text-align:center; padding:35px 15px; color:#a4b0be; font-size:0.83rem;">
             아직 남겨진 피드백이 없습니다.<br>곡에 대한 카피 팁이나 첫 커버 영상을 추천해 보세요!
@@ -1415,7 +1430,7 @@
       }
 
       let timelineHtml = '';
-      songNotesDesc.forEach(note => {
+      songNotesAsc.forEach(note => {
         const recoNum = recoMap.get(note);
         const ytBtnHtml = note.ytUrl ? `
           <a href="${note.ytUrl.trim()}" class="tip-inline-yt-btn" target="_blank" rel="noopener noreferrer">
@@ -1439,6 +1454,13 @@
       });
 
       timelineContainer.innerHTML = timelineHtml;
+
+      // 💡 최하단(최신글 & 입력창 앞)으로 자동 포커스 스크롤
+      if (autoScrollToBottom) {
+        setTimeout(() => {
+          timelineContainer.scrollTop = timelineContainer.scrollHeight;
+        }, 60);
+      }
     }
 
     async function submitSheetNote() {
@@ -1449,7 +1471,6 @@
       if (!author) { alert('작성자 이름을 입력해 주세요.'); return; }
       if (!content) { alert('팁 또는 메모 내용을 입력해 주세요.'); return; }
 
-      // 사용자 이름 영구 로컬 저장
       localStorage.setItem('hr_user_name', author);
 
       const sendBtn = document.getElementById('sheet-send-btn');
@@ -1469,19 +1490,21 @@
         ytUrl: ytUrl
       };
 
+      // 최신글을 배열 맨 앞(내림차순 기준)에 추가
       appData.bandNotes = [newNote, ...(appData.bandNotes || [])];
       localStorage.setItem('hr_band_notes', JSON.stringify(appData.bandNotes));
 
-      // 폼 초기화 및 시트 화면 재렌더링
       document.getElementById('sheet-content-input').value = '';
       document.getElementById('sheet-yt-input').value = '';
-      renderTipSheetBody();
-      renderScores(); // 본문 뱃지 숫자 갱신
+      
+      // 등록 후 즉시 렌더링하고 최하단으로 부드럽게 스크롤
+      renderTipSheetBody(true);
+      renderScores();
 
       sendBtn.innerText = '등록';
       sendBtn.disabled = false;
 
-      // 백그라운드 GAS 시트 비동기 전송
+      // 백그라운드 GAS 비동기 전송
       try {
         const payload = {
           action: "addBandNoteTest",
