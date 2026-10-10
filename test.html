@@ -263,7 +263,7 @@
     .score-file-row.audio-type .score-part-title { color: #1b5e20; }
 
     /* ====================================================
-       💬 팁공유 바텀시트 전용 창 (88dvh Bottom Sheet)
+       💬 팁공유 초슬림 컴팩트 바텀시트 모달 (88dvh)
        ==================================================== */
     #tip-sheet-overlay {
       display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -279,7 +279,7 @@
       display: flex;
       flex-direction: column;
       box-shadow: 0 -8px 30px rgba(0,0,0,0.22);
-      animation: tipSheetSlideUp 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+      animation: tipSheetSlideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
       overflow: hidden;
     }
     @keyframes tipSheetSlideUp {
@@ -289,7 +289,7 @@
 
     /* 시트 헤더 */
     .tip-sheet-header {
-      padding: 12px 16px;
+      padding: 10px 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -298,7 +298,7 @@
       flex-shrink: 0;
     }
     .tip-sheet-header-title {
-      font-size: 1.02rem;
+      font-size: 0.98rem;
       font-weight: 800;
       color: #2f3542;
       display: flex;
@@ -307,208 +307,182 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 82%;
+      max-width: 85%;
     }
     .tip-sheet-close-btn {
-      background: none; border: none; font-size: 1.25rem; color: #747d8c; cursor: pointer; padding: 4px;
+      background: none; border: none; font-size: 1.2rem; color: #747d8c; cursor: pointer; padding: 2px 4px;
     }
 
-    /* 📹 상단 추천영상 고정 쉘프 바 */
+    /* 📹 상단 추천영상 고정 쉘프 바 (컴팩트) */
     .tip-shelf-section {
       background: #f8f9fa;
-      padding: 8px 14px;
+      padding: 6px 12px;
       border-bottom: 1px solid var(--border);
       flex-shrink: 0;
       display: flex;
-      flex-direction: column;
-      gap: 5px;
+      align-items: center;
+      gap: 8px;
     }
     .tip-shelf-label {
-      font-size: 0.72rem;
+      font-size: 0.70rem;
       font-weight: 800;
       color: #57606f;
+      white-space: nowrap;
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 4px;
     }
     .tip-shelf-scroll {
       display: flex;
-      gap: 6px;
+      gap: 5px;
       overflow-x: auto;
-      padding-bottom: 2px;
+      flex: 1;
+      padding: 2px 0;
       -webkit-overflow-scrolling: touch;
     }
     .tip-shelf-scroll::-webkit-scrollbar { display: none; }
+    
+    /* [▶ 추천 1: 광철] 칩 버튼 */
     .shelf-yt-btn {
       flex-shrink: 0;
       display: inline-flex;
       align-items: center;
-      gap: 5px;
+      gap: 4px;
       background: #d91c1c;
       color: #ffffff;
       text-decoration: none;
-      font-size: 0.74rem;
+      font-size: 0.72rem;
       font-weight: 700;
-      padding: 5px 9px;
-      border-radius: 6px;
-      box-shadow: 0 1px 2px rgba(217, 28, 28, 0.2);
+      padding: 4px 8px;
+      border-radius: 5px;
+      box-shadow: 0 1px 2px rgba(217, 28, 28, 0.18);
     }
     .shelf-yt-btn:active { background: #b01515; }
-    .shelf-empty-hint { font-size: 0.74rem; color: #a4b0be; }
+    .shelf-empty-hint { font-size: 0.72rem; color: #a4b0be; }
 
     /* 타임라인 피드 스크롤 영역 */
     .tip-timeline-scroll {
       flex: 1;
       overflow-y: auto;
-      padding: 12px 14px;
+      padding: 10px 14px;
       display: flex;
       flex-direction: column;
-      gap: 9px;
-      background: #fafbfc;
+      gap: 8px;
+      background: #ffffff;
       -webkit-overflow-scrolling: touch;
       scroll-behavior: smooth;
     }
 
-    /* 타임라인 카드 */
-    .tip-timeline-card {
-      background: #ffffff;
-      border: 1px solid #e9ecef;
-      border-radius: 8px;
-      padding: 10px 12px;
+    /* 💬 초슬림 인라인 피드 아이템 (카드 박스/파트 태그 제거) */
+    .compact-feed-item {
       display: flex;
       flex-direction: column;
-      gap: 5px;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+      gap: 3px;
+      padding-bottom: 7px;
+      border-bottom: 1px solid #f1f2f6;
     }
-    .tip-card-top {
+    .compact-feed-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .feed-header-line {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      font-size: 0.76rem;
+      gap: 6px;
+      font-size: 0.75rem;
     }
-    .tip-author-box {
+    .feed-author {
       font-weight: 800;
       color: #2f3542;
-      display: flex;
-      align-items: center;
-      gap: 4px;
     }
-    .tip-part-tag {
-      background: #eef2f7;
-      color: #387d5e;
-      padding: 1px 6px;
-      border-radius: 8px;
+    .feed-time-rel {
+      color: #a4b0be;
       font-size: 0.69rem;
-      font-weight: 800;
+      font-weight: 500;
     }
-    .tip-time { color: #a4b0be; font-size: 0.70rem; }
-    .tip-text {
-      font-size: 0.83rem;
-      color: #343a40;
-      line-height: 1.48;
-      white-space: pre-wrap;
-      word-break: break-all;
-    }
-    .tip-inline-yt-btn {
-      align-self: flex-start;
+    /* 본문 옆/헤더 옆 인라인 [▶추천1] 미니 칩 */
+    .feed-inline-yt-chip {
       display: inline-flex;
       align-items: center;
-      gap: 5px;
+      gap: 3px;
       background: #fdf2f2;
       color: #d91c1c;
       border: 1px solid #f8d7da;
-      padding: 4px 8px;
-      border-radius: 5px;
-      font-size: 0.74rem;
-      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 0.68rem;
+      font-weight: 800;
       text-decoration: none;
-      margin-top: 3px;
+      margin-left: 2px;
     }
-    .tip-inline-yt-btn:active { background: #f8d7da; }
+    .feed-inline-yt-chip:active { background: #f8d7da; }
+    .feed-body-text {
+      font-size: 0.82rem;
+      color: #343a40;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
 
-    /* 하단 입력 폼 (고정) */
+    /* 하단 초슬림 입력 폼 */
     .tip-sheet-footer {
       background: #ffffff;
       border-top: 1px solid var(--border);
-      padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px)) 12px;
+      padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px)) 10px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 5px;
       flex-shrink: 0;
     }
-    .tip-form-row1 {
+    .footer-input-row {
       display: flex;
+      gap: 6px;
       align-items: center;
-      justify-content: space-between;
-      gap: 8px;
     }
-    .tip-author-field {
-      width: 90px;
+    .footer-author-box {
+      width: 75px;
       border: 1px solid #dcdde1;
       border-radius: 6px;
-      padding: 6px 8px;
-      font-size: 0.80rem;
+      padding: 6px 7px;
+      font-size: 0.78rem;
       color: #2f3542;
       background: #f8f9fa;
       outline: none;
-    }
-    .tip-part-chips {
-      display: flex;
-      gap: 3px;
-      overflow-x: auto;
-      flex: 1;
-    }
-    .tip-part-chips::-webkit-scrollbar { display: none; }
-    .tip-chip {
-      padding: 4px 7px;
-      font-size: 0.70rem;
+      text-align: center;
       font-weight: 700;
-      border-radius: 12px;
-      background: #f1f2f6;
-      border: 1px solid #dcdde1;
-      color: #57606f;
-      cursor: pointer;
-      white-space: nowrap;
+      flex-shrink: 0;
     }
-    .tip-chip.active { background: #387d5e; color: #ffffff; border-color: #387d5e; }
-
-    .tip-form-row2 {
-      display: flex;
-      gap: 6px;
-    }
-    .tip-text-area {
+    .footer-text-box {
       flex: 1;
       border: 1px solid #dcdde1;
       border-radius: 6px;
-      padding: 7px 9px;
-      font-size: 0.83rem;
+      padding: 6px 8px;
+      font-size: 0.82rem;
       color: #2f3542;
       background: #fafbfc;
       outline: none;
-      resize: none;
-      height: 38px;
-      line-height: 1.35;
+      height: 32px;
+      line-height: 1.3;
     }
-    .tip-send-btn {
-      width: 60px;
+    .footer-submit-btn {
+      width: 52px;
+      height: 32px;
       border: none;
       border-radius: 6px;
       background: #387d5e;
       color: #ffffff;
-      font-size: 0.82rem;
+      font-size: 0.80rem;
       font-weight: 800;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      flex-shrink: 0;
     }
-    .tip-send-btn:active { background: #2f684e; }
-    .tip-link-input {
+    .footer-submit-btn:active { background: #2f684e; }
+    .footer-yt-input {
       width: 100%;
-      border: 1px solid #e4e7eb;
+      border: 1px solid #eef1f4;
       border-radius: 5px;
-      padding: 4px 8px;
-      font-size: 0.74rem;
+      padding: 4px 7px;
+      font-size: 0.72rem;
       color: #57606f;
       outline: none;
       background: #f8f9fa;
@@ -618,7 +592,7 @@
     </div>
   </div>
 
-  <!-- 💬 팁공유 전용 바텀시트 모달 (88dvh) -->
+  <!-- 💬 팁공유 전용 초슬림 바텀시트 모달 (88dvh) -->
   <div id="tip-sheet-overlay" onclick="onTipOverlayClick(event)">
     <div class="tip-sheet-card" onclick="event.stopPropagation()">
       <div class="tip-sheet-header">
@@ -629,39 +603,29 @@
         <button class="tip-sheet-close-btn" onclick="closeTipSheet()"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
-      <!-- 📹 추천영상 상단 고정 쉘프 -->
+      <!-- 📹 상단 추천영상 고정 쉘프 -->
       <div class="tip-shelf-section">
         <div class="tip-shelf-label">
-          <i class="fa-brands fa-youtube" style="color:#d91c1c;"></i> 추천 커버영상 모아보기
+          <i class="fa-brands fa-youtube" style="color:#d91c1c;"></i> 추천영상:
         </div>
         <div class="tip-shelf-scroll" id="sheet-shelf-scroll">
-          <!-- 추천 1, 추천 2 칩 자동 렌더링 -->
+          <!-- [▶ 추천 1: 광철] 칩 자동 렌더링 -->
         </div>
       </div>
 
-      <!-- 타임라인 스크롤 영역 (위에서 아래로 시간순 정렬) -->
+      <!-- 타임라인 인라인 피드 스크롤 영역 -->
       <div class="tip-timeline-scroll" id="sheet-timeline-feed">
-        <!-- 대화 카드 자동 렌더링 -->
+        <!-- 인라인 피드 자동 렌더링 -->
       </div>
 
-      <!-- 하단 입력 폼 -->
+      <!-- 하단 초슬림 입력 폼 -->
       <div class="tip-sheet-footer">
-        <div class="tip-form-row1">
-          <input type="text" id="sheet-author-input" class="tip-author-field" placeholder="작성자(기억됨)">
-          <div class="tip-part-chips">
-            <span class="tip-chip active" onclick="selectSheetChip(this, '전체')">전체</span>
-            <span class="tip-chip" onclick="selectSheetChip(this, '보컬')">보컬</span>
-            <span class="tip-chip" onclick="selectSheetChip(this, '기타')">기타</span>
-            <span class="tip-chip" onclick="selectSheetChip(this, '베이스')">베이스</span>
-            <span class="tip-chip" onclick="selectSheetChip(this, '드럼')">드럼</span>
-            <span class="tip-chip" onclick="selectSheetChip(this, '건반')">건반</span>
-          </div>
+        <div class="footer-input-row">
+          <input type="text" id="sheet-author-input" class="footer-author-box" placeholder="작성자">
+          <input type="text" id="sheet-content-input" class="footer-text-box" placeholder="팁이나 피드백을 남겨주세요..." onkeydown="if(event.key==='Enter') submitSheetNote()">
+          <button class="footer-submit-btn" id="sheet-send-btn" onclick="submitSheetNote()">등록</button>
         </div>
-        <div class="tip-form-row2">
-          <textarea id="sheet-content-input" class="tip-text-area" placeholder="팁이나 피드백을 남겨주세요..."></textarea>
-          <button class="tip-send-btn" id="sheet-send-btn" onclick="submitSheetNote()">등록</button>
-        </div>
-        <input type="url" id="sheet-yt-input" class="tip-link-input" placeholder="추천 유튜브 영상 링크 (선택)">
+        <input type="url" id="sheet-yt-input" class="footer-yt-input" placeholder="추천 유튜브 영상 링크 (선택)">
       </div>
     </div>
   </div>
@@ -690,10 +654,7 @@
     let isRefreshing = false;
     let refreshTimeoutId = null;
     let currentUploadSongName = '';
-
-    // 팁공유 시트 제어 변수
     let currentActiveSheetSong = '';
-    let selectedSheetPart = '전체';
 
     function getFavorites() {
       try { return JSON.parse(localStorage.getItem('hr_favorite_songs') || '[]'); } catch (e) { return []; }
@@ -1195,8 +1156,6 @@
 
         const songData = groups[song];
         const ytList = parseYoutubeLinks(songData.youtube);
-
-        // 해당 곡의 밴드노트 개수 집계
         const songNotesCount = (appData.bandNotes || []).filter(n => n.song === song).length;
 
         let extraHtml = '';
@@ -1211,7 +1170,6 @@
           });
         }
         
-        // 🚀 안전한 data-song 바인딩 (작은따옴표 충돌 원천 차단)
         extraHtml += `
           <button class="upload-share-btn js-upload-btn" data-song="${escapeHtml(song)}" title="악보/음원 공유">
             <i class="fa-solid fa-cloud-arrow-up"></i> 악보공유
@@ -1225,7 +1183,6 @@
 
         extraHtml += '</div></div>';
 
-        // 악보 및 음원 파일 정렬
         const sortedFiles = [...songData.files].sort((a, b) => {
           const aAudio = isAudioFile(a.part), bAudio = isAudioFile(b.part);
           if (aAudio && !bAudio) return -1;
@@ -1257,7 +1214,6 @@
             ${filesHtml}
           </div>`;
         
-        // 버튼 이벤트 안전 바인딩
         accordion.querySelectorAll('.js-upload-btn').forEach(b => {
           b.addEventListener('click', () => openFilePickerForSong(b.dataset.song));
         });
@@ -1346,7 +1302,52 @@
     }
 
     /* ====================================================
-       💬 팁공유 전용 바텀시트 제어 & 타임라인 포커스 엔진
+       💡 상대 시간 (Relative Time) 계산 함수
+       ==================================================== */
+    function getRelativeTimeString(dateStr) {
+      if (!dateStr) return '';
+      try {
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        let targetDate = null;
+
+        // "MM.DD HH:mm" 형태 파싱
+        const match = String(dateStr).trim().match(/(\d{1,2})[./-](\d{1,2})\s+(\d{1,2}):(\d{1,2})/);
+        if (match) {
+          const m = parseInt(match[1], 10) - 1;
+          const d = parseInt(match[2], 10);
+          const h = parseInt(match[3], 10);
+          const min = parseInt(match[4], 10);
+          targetDate = new Date(currentYear, m, d, h, min);
+
+          // 만약 미래 시간으로 잡히면 전년도 데이터로 보정
+          if (targetDate.getTime() > now.getTime() + 60000) {
+            targetDate.setFullYear(currentYear - 1);
+          }
+        } else {
+          targetDate = new Date(dateStr);
+        }
+
+        if (isNaN(targetDate.getTime())) return dateStr;
+
+        const diffSec = Math.floor((now - targetDate) / 1000);
+        if (diffSec < 60) return '방금 전';
+        const diffMin = Math.floor(diffSec / 60);
+        if (diffMin < 60) return `${diffMin}분 전`;
+        const diffHour = Math.floor(diffMin / 60);
+        if (diffHour < 24) return `${diffHour}시간 전`;
+        const diffDay = Math.floor(diffHour / 24);
+        if (diffDay < 7) return `${diffDay}일 전`;
+        const diffMonth = Math.floor(diffDay / 30);
+        if (diffMonth < 12) return `${diffMonth || 1}달 전`;
+        return `${Math.floor(diffMonth / 12)}년 전`;
+      } catch (e) {
+        return dateStr;
+      }
+    }
+
+    /* ====================================================
+       💬 팁공유 초슬림 인라인 피드 엔진
        ==================================================== */
     function openTipSheet(songName) {
       currentActiveSheetSong = songName;
@@ -1355,16 +1356,11 @@
         <span>[${escapeHtml(songName)}] 밴드노트</span>
       `;
 
-      // 사용자 이름 영구 로컬 기억 복원
       const savedUser = localStorage.getItem('hr_user_name') || '';
       document.getElementById('sheet-author-input').value = savedUser;
       document.getElementById('sheet-content-input').value = '';
       document.getElementById('sheet-yt-input').value = '';
 
-      selectedSheetPart = '전체';
-      document.querySelectorAll('.tip-chip').forEach(c => c.classList.toggle('active', c.innerText === '전체'));
-
-      // 타임라인 시간순 렌더링 + 최하단(최신글) 자동 포커스
       renderTipSheetBody(true);
 
       document.getElementById('tip-sheet-overlay').style.display = 'flex';
@@ -1381,16 +1377,8 @@
       if (e.target.id === 'tip-sheet-overlay') closeTipSheet();
     }
 
-    function selectSheetChip(el, part) {
-      selectedSheetPart = part;
-      document.querySelectorAll('.tip-chip').forEach(c => c.classList.remove('active'));
-      el.classList.add('active');
-    }
-
     function renderTipSheetBody(autoScrollToBottom = false) {
       const allNotes = appData.bandNotes || [];
-      // 💡 시간순 정렬 (위: 과거 ➔ 아래: 최신)
-      // 백엔드는 최신순(내림차순)으로 들어오므로 역순으로 뒤집어 과거->최신 오름차순으로 맞춥니다.
       const songNotesAsc = allNotes.filter(n => n.song === currentActiveSheetSong).slice().reverse();
 
       const shelfContainer = document.getElementById('sheet-shelf-scroll');
@@ -1400,30 +1388,31 @@
       let shelfHtml = '';
       const recoMap = new Map();
 
-      // 1) 추천 영상 넘버링 인덱싱 (추천 1, 추천 2...)
+      // 1) 상단 쉘프: [▶ 추천 1: 작성자] 형태로 렌더링
       songNotesAsc.forEach(note => {
         if (note.ytUrl && note.ytUrl.trim() !== '') {
           recoIndex++;
           recoMap.set(note, recoIndex);
+          const authorLabel = (note.author || '멤버').trim();
           shelfHtml += `
             <a href="${note.ytUrl.trim()}" class="shelf-yt-btn" target="_blank" rel="noopener noreferrer">
-              <i class="fa-brands fa-youtube"></i> 추천 ${recoIndex} (${escapeHtml(note.part)})
+              <i class="fa-brands fa-youtube"></i> 추천 ${recoIndex}: ${escapeHtml(authorLabel)}
             </a>
           `;
         }
       });
 
       if (recoIndex === 0) {
-        shelfContainer.innerHTML = '<span class="shelf-empty-hint">등록된 추천 영상 링크가 아직 없습니다.</span>';
+        shelfContainer.innerHTML = '<span class="shelf-empty-hint">등록된 추천 영상이 없습니다.</span>';
       } else {
         shelfContainer.innerHTML = shelfHtml;
       }
 
-      // 2) 타임라인 렌더링 (과거 -> 최신 순으로 자연스럽게 아래로 쌓임)
+      // 2) 초슬림 인라인 피드 렌더링 (카드 테두리 및 파트 태그 삭제)
       if (songNotesAsc.length === 0) {
         timelineContainer.innerHTML = `
           <div style="text-align:center; padding:35px 15px; color:#a4b0be; font-size:0.83rem;">
-            아직 남겨진 피드백이 없습니다.<br>곡에 대한 카피 팁이나 첫 커버 영상을 추천해 보세요!
+            아직 피드백이 없습니다.<br>곡에 대한 카피 팁이나 커버 영상을 추천해 보세요!
           </div>
         `;
         return;
@@ -1432,30 +1421,29 @@
       let timelineHtml = '';
       songNotesAsc.forEach(note => {
         const recoNum = recoMap.get(note);
-        const ytBtnHtml = note.ytUrl ? `
-          <a href="${note.ytUrl.trim()}" class="tip-inline-yt-btn" target="_blank" rel="noopener noreferrer">
-            <i class="fa-brands fa-youtube"></i> ▶ 추천 ${recoNum} 영상 열기
+        const relTime = getRelativeTimeString(note.date);
+        
+        // 인라인 추천영상 미니 태그
+        const inlineYtChip = note.ytUrl ? `
+          <a href="${note.ytUrl.trim()}" class="feed-inline-yt-chip" target="_blank" rel="noopener noreferrer">
+            <i class="fa-brands fa-youtube"></i> 추천${recoNum}
           </a>
         ` : '';
 
         timelineHtml += `
-          <div class="tip-timeline-card">
-            <div class="tip-card-top">
-              <div class="tip-author-box">
-                <span class="tip-part-tag">${escapeHtml(note.part || '전체')}</span>
-                <span>${escapeHtml(note.author)}</span>
-              </div>
-              <span class="tip-time">${escapeHtml(note.date || '')}</span>
+          <div class="compact-feed-item">
+            <div class="feed-header-line">
+              <span class="feed-author">${escapeHtml(note.author)}</span>
+              <span class="feed-time-rel">· ${relTime}</span>
+              ${inlineYtChip}
             </div>
-            <div class="tip-text">${escapeHtml(note.content)}</div>
-            ${ytBtnHtml}
+            <div class="feed-body-text">${escapeHtml(note.content)}</div>
           </div>
         `;
       });
 
       timelineContainer.innerHTML = timelineHtml;
 
-      // 💡 최하단(최신글 & 입력창 앞)으로 자동 포커스 스크롤
       if (autoScrollToBottom) {
         setTimeout(() => {
           timelineContainer.scrollTop = timelineContainer.scrollHeight;
@@ -1469,7 +1457,7 @@
       const ytUrl = document.getElementById('sheet-yt-input').value.trim();
 
       if (!author) { alert('작성자 이름을 입력해 주세요.'); return; }
-      if (!content) { alert('팁 또는 메모 내용을 입력해 주세요.'); return; }
+      if (!content) { alert('팁 또는 피드백을 입력해 주세요.'); return; }
 
       localStorage.setItem('hr_user_name', author);
 
@@ -1480,36 +1468,33 @@
       const now = new Date();
       const dateStr = `${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-      // 낙관적 UI 즉시 반영 (0초 체감)
+      // 파트는 '전체'로 기본 설정하여 백엔드 DB와 100% 호환 유지
       const newNote = {
         date: dateStr,
         song: currentActiveSheetSong,
-        part: selectedSheetPart,
+        part: '전체',
         author: author,
         content: content,
         ytUrl: ytUrl
       };
 
-      // 최신글을 배열 맨 앞(내림차순 기준)에 추가
       appData.bandNotes = [newNote, ...(appData.bandNotes || [])];
       localStorage.setItem('hr_band_notes', JSON.stringify(appData.bandNotes));
 
       document.getElementById('sheet-content-input').value = '';
       document.getElementById('sheet-yt-input').value = '';
       
-      // 등록 후 즉시 렌더링하고 최하단으로 부드럽게 스크롤
       renderTipSheetBody(true);
       renderScores();
 
       sendBtn.innerText = '등록';
       sendBtn.disabled = false;
 
-      // 백그라운드 GAS 비동기 전송
       try {
         const payload = {
           action: "addBandNoteTest",
           song: currentActiveSheetSong,
-          part: selectedSheetPart,
+          part: '전체',
           author: author,
           content: content,
           ytUrl: ytUrl
