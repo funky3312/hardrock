@@ -4,8 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
   <meta name="theme-color" content="#ffffff">
-  <title>HardRock BAND</title>
-  <link rel="manifest" href="manifest.json">
+  <title>HardRock BAND (TEST)</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
@@ -77,26 +76,7 @@
     }
     .icon-btn:active { background: #f1f2f6; }
 
-    #pwa-install-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      background: #f1f2f6;
-      border: 1px solid #dcdde1;
-      color: #2f3542;
-      font-size: 0.76rem;
-      font-weight: 700;
-      padding: 6px 12px;
-      border-radius: 20px;
-      cursor: pointer;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    }
-    #pwa-install-btn:active { transform: scale(0.95); background: #e4e7eb; }
-    #pwa-install-btn i { color: #387d5e; }
-
-    /* ==========================================
-       🔄 순정 원형 새로고침(Pull-to-Refresh) 인디케이터
-       ========================================== */
+    /* 새로고침 인디케이터 */
     #ptr-indicator {
       position: absolute;
       top: 48px;
@@ -121,12 +101,8 @@
       color: #387d5e;
       transform-origin: center center;
     }
-    #ptr-indicator.refreshing i {
-      animation: ptrSpin 0.6s linear infinite;
-    }
-    @keyframes ptrSpin {
-      100% { transform: rotate(360deg); }
-    }
+    #ptr-indicator.refreshing i { animation: ptrSpin 0.6s linear infinite; }
+    @keyframes ptrSpin { 100% { transform: rotate(360deg); } }
 
     /* 슬라이더 구조 */
     #slider-viewport {
@@ -180,66 +156,21 @@
     .tab-btn.active { color: #2f3542; font-weight: 800; transform: translateY(-1px); }
     .tab-btn.active i { color: #387d5e; }
 
-    /* ==========================================
-       출석부 표 스타일 (컴팩트 최적화 27px)
-       ========================================== */
-    .att-table-wrap {
-      background: #ffffff;
-      width: 100%;
-      max-width: 600px;
-      margin: 0 auto;
-    }
-    table.att-table {
-      width: 100%;
-      table-layout: fixed;
-      border-collapse: collapse;
-      text-align: center;
-    }
+    /* 출석부 표 (27px 컴팩트) */
+    .att-table-wrap { background: #ffffff; width: 100%; max-width: 600px; margin: 0 auto; }
+    table.att-table { width: 100%; table-layout: fixed; border-collapse: collapse; text-align: center; }
     table.att-table th {
-      padding: 6px 1px;
-      font-weight: 600;
-      color: #57606f;
-      font-size: 0.73rem;
-      border: 1px solid var(--border);
-      background-color: var(--header-bg);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      padding: 6px 1px; font-weight: 600; color: #57606f; font-size: 0.73rem;
+      border: 1px solid var(--border); background-color: var(--header-bg);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    table.att-table td {
-      border: 1px solid var(--border);
-      padding: 2.5px 1px;
-    }
-    table.att-table tr.separator-row td {
-      border: 1px solid var(--border);
-      height: 8px;
-      background-color: #fafbfc;
-      padding: 0;
-    }
-    .member-name-cell {
-      font-weight: 700;
-      color: #2f3542;
-      font-size: 0.82rem;
-      text-align: center;
-      white-space: nowrap;
-      background-color: #ffffff;
-      width: 56px;
-    }
+    table.att-table td { border: 1px solid var(--border); padding: 2.5px 1px; }
+    table.att-table tr.separator-row td { border: 1px solid var(--border); height: 8px; background-color: #fafbfc; padding: 0; }
+    .member-name-cell { font-weight: 700; color: #2f3542; font-size: 0.82rem; text-align: center; white-space: nowrap; width: 56px; }
     .att-btn {
-      display: block;
-      width: 100%;
-      height: 27px;
-      line-height: 27px;
-      border-radius: 5px;
-      font-weight: 600;
-      font-size: 0.74rem;
-      color: #ffffff;
-      cursor: pointer;
-      user-select: none;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
-      white-space: nowrap;
-      transition: transform 0.08s, opacity 0.08s;
-      padding: 0 1px;
+      display: block; width: 100%; height: 27px; line-height: 27px; border-radius: 5px;
+      font-weight: 600; font-size: 0.74rem; color: #ffffff; cursor: pointer; user-select: none;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06); white-space: nowrap; transition: transform 0.08s, opacity 0.08s; padding: 0 1px;
     }
     .att-btn:active { transform: scale(0.95); opacity: 0.85; }
     .att-btn.참석 { background-color: var(--btn-ok); }
@@ -247,308 +178,206 @@
     .att-btn.미정 { background-color: var(--btn-wait); }
     .att-btn.백업 { background-color: var(--btn-backup); }
 
-    /* 출석 모달 */
-    #att-modal-overlay {
-      display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.45); z-index: 1000;
-      align-items: center; justify-content: center; padding: 20px;
-    }
-    .att-modal-card {
-      background: #ffffff; border-radius: 14px; width: 100%; max-width: 290px;
-      padding: 20px 18px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-    }
-    .modal-target-name { font-size: 1.15rem; font-weight: 700; color: #2f3542; margin-bottom: 2px; }
-    .modal-target-date { font-size: 0.85rem; font-weight: 500; color: #747d8c; margin-bottom: 16px; }
-    .modal-choice-list { display: flex; flex-direction: column; gap: 8px; }
-    .modal-btn {
-      width: 100%; height: 42px; border: none; border-radius: 6px;
-      font-size: 0.92rem; font-weight: 600; color: #ffffff; cursor: pointer;
-    }
-    .modal-btn.btn-참석 { background-color: var(--btn-ok); }
-    .modal-btn.btn-불참 { background-color: var(--btn-no); }
-    .modal-btn.btn-미정 { background-color: var(--btn-wait); }
-    .modal-btn.btn-백업 { background-color: var(--btn-backup); }
-    .modal-btn.btn-취소 { background-color: #f1f2f6; color: #57606f; margin-top: 4px; }
-
     /* 공연현황 */
     .gigs-wrap { max-width: 600px; margin: 0 auto; }
-    .gig-member-row {
-      display: flex; align-items: center; margin-bottom: 3px; gap: 10px;
-      background: #ffffff; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border);
-    }
-    .gig-part-separator {
-      height: 6px; margin: 4px 0;
-      background: #f1f3f5; border-radius: 3px;
-    }
+    .gig-member-row { display: flex; align-items: center; margin-bottom: 3px; gap: 10px; background: #ffffff; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border); }
+    .gig-part-separator { height: 6px; margin: 4px 0; background: #f1f3f5; border-radius: 3px; }
     .gig-name { width: 60px; font-weight: 700; font-size: 0.88rem; color: #2f3542; white-space: nowrap; }
     .gig-bar-wrap { flex: 1; background: #eef1f4; height: 8px; border-radius: 4px; overflow: hidden; }
-    .gig-bar-fill {
-      background: linear-gradient(90deg, #4a90e2, #68b0f7);
-      height: 100%; border-radius: 4px;
-      transition: width 0.6s cubic-bezier(0.25, 1, 0.5, 1);
-    }
+    .gig-bar-fill { background: linear-gradient(90deg, #4a90e2, #68b0f7); height: 100%; border-radius: 4px; transition: width 0.6s cubic-bezier(0.25, 1, 0.5, 1); }
     .gig-score-num { width: 44px; text-align: right; font-weight: 800; color: #4a90e2; font-size: 0.88rem; }
 
     /* 악보 탭 검색창 */
-    #score-search-bar {
-      display: none;
-      background: #ffffff;
-      padding: 8px 12px;
-      border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: 0;
-      z-index: 15;
-    }
-    .search-input-wrap {
-      display: flex;
-      align-items: center;
-      background: #f1f2f6;
-      border-radius: 8px;
-      padding: 0 10px;
-      border: 1px solid var(--border);
-    }
-    .search-input-wrap input {
-      flex: 1;
-      border: none;
-      background: transparent;
-      padding: 8px 6px;
-      font-size: 0.88rem;
-      color: #2f3542;
-      outline: none;
-    }
+    #score-search-bar { display: none; background: #ffffff; padding: 8px 12px; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 15; }
+    .search-input-wrap { display: flex; align-items: center; background: #f1f2f6; border-radius: 8px; padding: 0 10px; border: 1px solid var(--border); }
+    .search-input-wrap input { flex: 1; border: none; background: transparent; padding: 8px 6px; font-size: 0.88rem; color: #2f3542; outline: none; }
     .search-input-wrap i.search-icon { color: #747d8c; font-size: 0.85rem; }
-    .search-clear-btn {
-      background: none; border: none; color: #a4b0be; cursor: pointer; padding: 4px; font-size: 0.9rem;
-    }
+    .search-clear-btn { background: none; border: none; color: #a4b0be; cursor: pointer; padding: 4px; font-size: 0.9rem; }
 
     /* 악보집 아코디언 */
     .scores-list-wrap { max-width: 600px; margin: 0 auto; }
-    
-    .song-accordion {
-      background: #ffffff;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      margin-bottom: 6px;
-      overflow: hidden;
-      transition: border 0.18s ease, box-shadow 0.18s ease, margin 0.18s ease;
-    }
-    
-    .song-accordion.open {
-      border: 1.5px solid #387d5e;
-      box-shadow: 0 3px 12px rgba(56, 125, 94, 0.12);
-      margin-bottom: 12px;
-      margin-top: 4px;
-    }
-    .song-accordion.favorite {
-      border-color: #ffd43b;
-    }
-    .song-accordion.favorite.open {
-      border: 1.5px solid #fcc419;
-      box-shadow: 0 3px 12px rgba(252, 196, 25, 0.16);
-    }
+    .song-accordion { background: #ffffff; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 6px; overflow: hidden; transition: border 0.18s, box-shadow 0.18s; }
+    .song-accordion.open { border: 1.5px solid #387d5e; box-shadow: 0 3px 12px rgba(56, 125, 94, 0.12); margin-bottom: 12px; margin-top: 4px; }
+    .song-accordion.favorite { border-color: #ffd43b; }
+    .song-accordion.favorite.open { border: 1.5px solid #fcc419; box-shadow: 0 3px 12px rgba(252, 196, 25, 0.16); }
 
-    .song-header-btn {
-      width: 100%;
-      padding: 11px 14px;
+    .song-header-btn { width: 100%; padding: 11px 14px; display: flex; align-items: center; justify-content: space-between; background: #ffffff; border: none; cursor: pointer; text-align: left; }
+    .song-header-btn:active { background: #f8f9fa; }
+    .song-accordion.open .song-header-btn { background: #f4f8f6; border-bottom: 1px solid #e1ebe5; }
+    .song-title-text { flex: 1; font-size: 0.92rem; font-weight: 700; color: #2f3542; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 12px; }
+    
+    .fav-star-btn { background: none; border: none; padding: 4px 6px; cursor: pointer; color: #ced4da; font-size: 1.15rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .fav-star-btn.active { color: #fcc419; transform: scale(1.3); }
+
+    .file-accordion-body { display: none; padding: 10px; background: #fafbfc; }
+    .song-accordion.open .file-accordion-body { display: flex; flex-direction: column; }
+
+    /* 공식 메모 & 유튜브 버튼 */
+    .song-extra-box { margin-bottom: 8px; display: flex; flex-direction: column; gap: 6px; }
+    .song-memo-card { background: #fff9db; border-left: 4px solid #f59f00; padding: 8px 11px; border-radius: 4px; font-size: 0.84rem; font-weight: 500; color: #343a40; line-height: 1.5; white-space: pre-wrap; word-break: break-all; text-align: left; }
+    .youtube-btn-group { display: flex; flex-wrap: wrap; gap: 6px; }
+    .youtube-link-btn { display: inline-flex; align-items: center; justify-content: center; gap: 5px; background: #d91c1c; color: #ffffff; text-decoration: none; font-size: 0.78rem; font-weight: 700; padding: 6px 11px; border-radius: 6px; box-shadow: 0 1px 3px rgba(217, 28, 28, 0.25); }
+    .youtube-link-btn:active { background: #b01515; transform: scale(0.98); }
+
+    .upload-share-btn { display: inline-flex; align-items: center; justify-content: center; gap: 5px; background: #2b5c8f; color: #ffffff; border: none; font-size: 0.78rem; font-weight: 700; padding: 6px 10px; border-radius: 6px; box-shadow: 0 1px 3px rgba(43, 92, 143, 0.25); cursor: pointer; }
+    .upload-share-btn:active { background: #1f4369; transform: scale(0.98); }
+
+    .score-file-row { display: flex; align-items: center; padding: 11px 14px; margin-bottom: 5px; background: #f1f3f5; border-radius: 6px; border: 1px solid #e9ecef; cursor: pointer; user-select: none; }
+    .score-file-row:last-child { margin-bottom: 0; }
+    .score-file-row:active { background: #e4e7eb; transform: scale(0.99); }
+    .score-file-row.audio-type { background: #eef7f2; border-color: #d1e7dd; }
+    .score-file-row.audio-type:active { background: #dcf1e6; }
+    .score-part-title { flex: 1; font-weight: 700; color: #2f3542; font-size: 0.85rem; line-height: 1.35; word-break: break-all; display: flex; align-items: center; gap: 6px; }
+    .score-file-row.audio-type .score-part-title { color: #1b5e20; }
+
+    /* ==========================================
+       💬 밴드 노트 (곡별 멤버 팁/추천영상 영역)
+       ========================================== */
+    .band-notes-section {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .band-notes-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: #ffffff;
-      border: none;
-      cursor: pointer;
-      text-align: left;
+      padding: 0 2px;
     }
-    .song-header-btn:active { background: #f8f9fa; }
-    .song-accordion.open .song-header-btn {
-      background: #f4f8f6;
-      border-bottom: 1px solid #e1ebe5;
-    }
-
-    .song-title-text {
-      flex: 1;
-      font-size: 0.92rem;
-      font-weight: 700;
-      color: #2f3542;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      padding-right: 12px;
-    }
-    
-    .fav-star-btn {
-      background: none;
-      border: none;
-      padding: 4px 6px;
-      cursor: pointer;
-      color: #ced4da;
-      font-size: 1.15rem;
+    .band-notes-title {
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: #57606f;
       display: flex;
       align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      transition: transform 0.15s ease, color 0.15s ease;
+      gap: 5px;
     }
-    .fav-star-btn.active { color: #fcc419; }
-    .fav-star-btn.active { transform: scale(1.3); }
+    .add-note-open-btn {
+      background: #f1f2f6;
+      border: 1px solid #dcdde1;
+      color: #2f3542;
+      font-size: 0.74rem;
+      font-weight: 700;
+      padding: 4px 9px;
+      border-radius: 14px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .add-note-open-btn:active { background: #e4e7eb; transform: scale(0.96); }
 
-    .file-accordion-body {
-      display: none;
-      padding: 10px;
-      background: #fafbfc;
-    }
-    .song-accordion.open .file-accordion-body {
+    .note-card {
+      background: #ffffff;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      padding: 9px 11px;
       display: flex;
       flex-direction: column;
+      gap: 5px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
     }
-
-    /* 메모 & 유튜브 & 인앱 업로드 영역 */
-    .song-extra-box {
-      margin-bottom: 8px;
+    .note-card-meta {
       display: flex;
-      flex-direction: column;
-      gap: 6px;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.76rem;
     }
-    .song-memo-card {
-      background: #fff9db;
-      border-left: 4px solid #f59f00;
-      padding: 8px 11px;
-      border-radius: 4px;
-      font-size: 0.84rem;
-      font-weight: 500;
+    .note-author-info {
+      font-weight: 700;
+      color: #2f3542;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .note-part-badge {
+      background: #eef2f7;
+      color: #387d5e;
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-size: 0.70rem;
+      font-weight: 800;
+    }
+    .note-date { color: #a4b0be; font-size: 0.70rem; }
+    .note-content {
+      font-size: 0.82rem;
       color: #343a40;
-      line-height: 1.5;
+      line-height: 1.45;
       white-space: pre-wrap;
       word-break: break-all;
-      text-align: left;
     }
-    .youtube-btn-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-    .youtube-link-btn {
+    .note-yt-btn {
+      align-self: flex-start;
       display: inline-flex;
       align-items: center;
-      justify-content: center;
-      gap: 5px;
-      background: #d91c1c;
-      color: #ffffff;
+      gap: 4px;
+      background: #fdf2f2;
+      color: #d91c1c;
+      border: 1px solid #f8d7da;
+      padding: 4px 8px;
+      border-radius: 5px;
+      font-size: 0.74rem;
+      font-weight: 700;
       text-decoration: none;
+      margin-top: 2px;
+    }
+    .note-yt-btn:active { background: #f8d7da; }
+    .no-notes-msg {
       font-size: 0.78rem;
-      font-weight: 700;
-      padding: 6px 11px;
-      border-radius: 6px;
-      box-shadow: 0 1px 3px rgba(217, 28, 28, 0.25);
+      color: #a4b0be;
+      text-align: center;
+      padding: 8px 0;
     }
-    .youtube-link-btn:active { background: #b01515; transform: scale(0.98); }
 
-    /* 악보공유 버튼 (+ 제거, 컴팩트 여백) */
-    .upload-share-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 5px;
-      background: #2b5c8f;
-      color: #ffffff;
-      border: none;
-      font-size: 0.78rem;
-      font-weight: 700;
-      padding: 6px 10px;
-      border-radius: 6px;
-      box-shadow: 0 1px 3px rgba(43, 92, 143, 0.25);
-      cursor: pointer;
+    /* 공통 모달 오버레이 */
+    .app-modal-overlay {
+      display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.55); z-index: 1000;
+      align-items: center; justify-content: center; padding: 20px;
     }
-    .upload-share-btn:active { background: #1f4369; transform: scale(0.98); }
-
-    .score-file-row {
-      display: flex;
-      align-items: center;
-      padding: 11px 14px;
-      margin-bottom: 5px;
-      background: #f1f3f5;
-      border-radius: 6px;
-      border: 1px solid #e9ecef;
-      cursor: pointer;
-      user-select: none;
-      transition: background 0.12s ease, transform 0.08s ease;
+    .app-modal-card {
+      background: #ffffff; border-radius: 14px; width: 100%; max-width: 320px;
+      padding: 20px 18px; text-align: left; box-shadow: 0 10px 25px rgba(0,0,0,0.18);
     }
-    .score-file-row:last-child { margin-bottom: 0; }
-    .score-file-row:active { background: #e4e7eb; transform: scale(0.99); }
-
-    .score-file-row.audio-type {
-      background: #eef7f2;
-      border-color: #d1e7dd;
-    }
-    .score-file-row.audio-type:active { background: #dcf1e6; }
+    .modal-head-title { font-size: 1.05rem; font-weight: 800; color: #2f3542; margin-bottom: 14px; text-align: center; }
     
-    .score-part-title {
-      flex: 1;
-      font-weight: 700;
-      color: #2f3542;
-      font-size: 0.85rem;
-      line-height: 1.35;
-      word-break: break-all;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+    /* 밴드노트 입력 폼 스타일 */
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 0.76rem; font-weight: 700; color: #57606f; margin-bottom: 4px; }
+    .form-input {
+      width: 100%; border: 1px solid #dcdde1; border-radius: 6px; padding: 8px 10px;
+      font-size: 0.85rem; color: #2f3542; outline: none; background: #fafbfc;
     }
-    .score-file-row.audio-type .score-part-title { color: #1b5e20; }
+    .form-input:focus { border-color: #387d5e; background: #ffffff; }
+    .part-chip-group { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+    .part-chip {
+      background: #f1f2f6; border: 1px solid #dcdde1; border-radius: 15px;
+      padding: 4px 10px; font-size: 0.74rem; font-weight: 700; color: #57606f; cursor: pointer;
+    }
+    .part-chip.active { background: #387d5e; color: #ffffff; border-color: #387d5e; }
+    .modal-btn-row { display: flex; gap: 8px; margin-top: 16px; }
+    .modal-action-btn { flex: 1; height: 40px; border-radius: 6px; font-size: 0.88rem; font-weight: 700; border: none; cursor: pointer; }
+    .modal-action-btn.submit { background: #387d5e; color: #ffffff; }
+    .modal-action-btn.cancel { background: #f1f2f6; color: #57606f; }
 
     #loading { text-align: center; padding: 50px 20px; color: var(--text-sub); }
-
-    /* 인앱 파일 업로드 전용 로딩 오버레이 모달 */
-    #upload-loading-overlay {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.65);
-      z-index: 2000;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    .upload-loading-card {
-      background: #ffffff;
-      border-radius: 14px;
-      width: 100%;
-      max-width: 300px;
-      padding: 26px 20px;
-      text-align: center;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-    }
-    .upload-loading-card i {
-      color: #2b5c8f;
-      margin-bottom: 14px;
-    }
-    .upload-target-song-title {
-      font-size: 1.05rem;
-      font-weight: 800;
-      color: #2f3542;
-      margin-bottom: 6px;
-      word-break: break-all;
-    }
-    .upload-status-msg {
-      font-size: 0.84rem;
-      color: #747d8c;
-      line-height: 1.5;
-    }
+    #upload-loading-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.65); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
+    .upload-loading-card { background: #ffffff; border-radius: 14px; width: 100%; max-width: 300px; padding: 26px 20px; text-align: center; }
   </style>
 </head>
 <body>
 
-  <!-- 🔄 순정 원형 새로고침(Pull-to-Refresh) 인디케이터 -->
-  <div id="ptr-indicator">
-    <i class="fa-solid fa-arrow-rotate-right" id="ptr-icon"></i>
-  </div>
+  <!-- 새로고침 인디케이터 -->
+  <div id="ptr-indicator"><i class="fa-solid fa-arrow-rotate-right" id="ptr-icon"></i></div>
 
   <header>
     <h1 id="header-title">🎸 HardRock 출석부</h1>
     <div class="header-actions">
       <button id="score-search-toggle-btn" class="icon-btn" onclick="toggleScoreSearch()" style="display:none;" title="악보 검색">
         <i class="fa-solid fa-magnifying-glass"></i>
-      </button>
-      <button id="pwa-install-btn" onclick="triggerPwaInstall()">
-        <i class="fa-solid fa-arrow-down-to-bracket"></i> 앱 설치
       </button>
     </div>
   </header>
@@ -566,9 +395,7 @@
       <!-- 0: 출석부 슬라이드 -->
       <div class="slide-page" id="slide-attendance">
         <div id="loading"><i class="fa-solid fa-circle-notch fa-spin fa-2x"></i><br><br>출석부를 불러오는 중입니다...</div>
-        <div class="att-table-wrap">
-          <div id="attendance-container"></div>
-        </div>
+        <div class="att-table-wrap"><div id="attendance-container"></div></div>
       </div>
 
       <!-- 1: 공연현황 슬라이드 -->
@@ -588,56 +415,84 @@
   </div>
 
   <nav class="tab-bar">
-    <button class="tab-btn active" onclick="goToTab(0)">
-      <i class="fa-solid fa-calendar-check"></i>
-      <span>출석부</span>
-    </button>
-    <button class="tab-btn" onclick="goToTab(1)">
-      <i class="fa-solid fa-chart-column"></i>
-      <span>공연현황</span>
-    </button>
-    <button class="tab-btn" onclick="goToTab(2)">
-      <i class="fa-solid fa-music"></i>
-      <span>악보</span>
-    </button>
+    <button class="tab-btn active" onclick="goToTab(0)"><i class="fa-solid fa-calendar-check"></i><span>출석부</span></button>
+    <button class="tab-btn" onclick="goToTab(1)"><i class="fa-solid fa-chart-column"></i><span>공연현황</span></button>
+    <button class="tab-btn" onclick="goToTab(2)"><i class="fa-solid fa-music"></i><span>악보</span></button>
   </nav>
 
   <!-- 출석 모달 -->
-  <div id="att-modal-overlay">
-    <div class="att-modal-card">
-      <div id="modal-user-name" class="modal-target-name">멤버 이름 님</div>
-      <div id="modal-date-text" class="modal-target-date">00/00 출석 여부</div>
-      
-      <div class="modal-choice-list">
-        <button class="modal-btn btn-참석" onclick="selectStatus('참석')">참석</button>
-        <button class="modal-btn btn-불참" onclick="selectStatus('불참')">불참</button>
-        <button class="modal-btn btn-미정" onclick="selectStatus('미정')">미정</button>
-        <button class="modal-btn btn-백업" onclick="selectStatus('백업')">백업</button>
-        <button class="modal-btn btn-취소" onclick="closeAttModal()">취소</button>
+  <div id="att-modal-overlay" class="app-modal-overlay">
+    <div class="app-modal-card" style="text-align:center;">
+      <div id="modal-user-name" style="font-size:1.15rem; font-weight:700; color:#2f3542; margin-bottom:2px;">멤버 이름 님</div>
+      <div id="modal-date-text" style="font-size:0.85rem; font-weight:500; color:#747d8c; margin-bottom:16px;">00/00 출석 여부</div>
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <button class="att-btn 참석" style="height:42px; font-size:0.92rem;" onclick="selectStatus('참석')">참석</button>
+        <button class="att-btn 불참" style="height:42px; font-size:0.92rem;" onclick="selectStatus('불참')">불참</button>
+        <button class="att-btn 미정" style="height:42px; font-size:0.92rem;" onclick="selectStatus('미정')">미정</button>
+        <button class="att-btn 백업" style="height:42px; font-size:0.92rem;" onclick="selectStatus('백업')">백업</button>
+        <button class="modal-action-btn cancel" onclick="closeAttModal()">취소</button>
       </div>
     </div>
   </div>
 
-  <!-- 파일 선택용 히든 input -->
+  <!-- 💬 밴드노트 작성 모달 -->
+  <div id="note-modal-overlay" class="app-modal-overlay">
+    <div class="app-modal-card">
+      <div class="modal-head-title" id="note-modal-song-title">곡명 밴드노트</div>
+      
+      <div class="form-group">
+        <label>작성자 이름 (기억됨)</label>
+        <input type="text" id="note-author-input" class="form-input" placeholder="이름을 입력하세요">
+      </div>
+
+      <div class="form-group">
+        <label>파트 선택</label>
+        <div class="part-chip-group">
+          <span class="part-chip active" onclick="selectPartChip(this, '전체')">전체</span>
+          <span class="part-chip" onclick="selectPartChip(this, '보컬')">보컬</span>
+          <span class="part-chip" onclick="selectPartChip(this, '기타')">기타</span>
+          <span class="part-chip" onclick="selectPartChip(this, '베이스')">베이스</span>
+          <span class="part-chip" onclick="selectPartChip(this, '드럼')">드럼</span>
+          <span class="part-chip" onclick="selectPartChip(this, '건반')">건반</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>팁 / 메모 내용</label>
+        <textarea id="note-content-input" class="form-input" rows="3" placeholder="카피 팁이나 연습 메모를 적어주세요"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>추천 유튜브 링크 (선택)</label>
+        <input type="url" id="note-yt-input" class="form-input" placeholder="https://youtube.com/...">
+      </div>
+
+      <div class="modal-btn-row">
+        <button class="modal-action-btn cancel" onclick="closeNoteModal()">취소</button>
+        <button class="modal-action-btn submit" id="note-submit-btn" onclick="submitBandNote()">등록하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 파일 선택용 input -->
   <input type="file" id="score-file-hidden-input" style="display:none;" onchange="onScoreFileSelected(event)">
 
-  <!-- 업로드 로딩 오버레이 모달 -->
+  <!-- 업로드 로딩 오버레이 -->
   <div id="upload-loading-overlay">
     <div class="upload-loading-card">
-      <i class="fa-solid fa-circle-notch fa-spin fa-3x"></i>
-      <div id="upload-target-song-title" class="upload-target-song-title">곡명</div>
-      <div class="upload-status-msg" id="upload-status-text">
-        파일을 공유 폴더로 전송 중입니다...<br>잠시만 기다려주세요.
-      </div>
+      <i class="fa-solid fa-circle-notch fa-spin fa-3x" style="color:#2b5c8f; margin-bottom:14px;"></i>
+      <div id="upload-target-song-title" style="font-size:1.05rem; font-weight:800; margin-bottom:6px;">곡명</div>
+      <div style="font-size:0.84rem; color:#747d8c;" id="upload-status-text">파일을 전송 중입니다...</div>
     </div>
   </div>
 
   <script>
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxk46VNnAZtti3FtD2iMVPO9aPIohyoyLTI3cIegGl4jHXN8fyYSMU8QrAX47wpvt6c/exec";
 
-    let appData = { attendance: [], gigs: [], scores: [] };
+    let appData = { attendance: [], gigs: [], scores: [], bandNotes: [] };
     let currentEditTarget = null;
-    let deferredPrompt = null;
+    let currentTargetSongForNote = '';
+    let selectedNotePart = '전체';
     let currentTabIndex = 0;
     const tabTitles = ['🎸 HardRock 출석부', '📊 HardRock 공연현황', '🎵 HardRock 악보집'];
 
@@ -646,11 +501,7 @@
     let currentUploadSongName = '';
 
     function getFavorites() {
-      try {
-        return JSON.parse(localStorage.getItem('hr_favorite_songs') || '[]');
-      } catch (e) {
-        return [];
-      }
+      try { return JSON.parse(localStorage.getItem('hr_favorite_songs') || '[]'); } catch (e) { return []; }
     }
 
     function toggleFavorite(songName, event) {
@@ -664,35 +515,11 @@
     }
 
     window.addEventListener('popstate', (e) => {
-      const modal = document.getElementById('att-modal-overlay');
-      if (modal && modal.style.display === 'flex') {
-        closeAttModal(false);
-      }
+      const attModal = document.getElementById('att-modal-overlay');
+      const noteModal = document.getElementById('note-modal-overlay');
+      if (attModal && attModal.style.display === 'flex') closeAttModal(false);
+      if (noteModal && noteModal.style.display === 'flex') closeNoteModal(false);
     });
-
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
-    }
-
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-    if (isStandalone) {
-      document.getElementById('pwa-install-btn').style.display = 'none';
-    }
-
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      if (!isStandalone) {
-        document.getElementById('pwa-install-btn').style.display = 'inline-flex';
-      }
-    });
-
-    function triggerPwaInstall() {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
-      }
-    }
 
     window.onload = function() {
       restoreFromCache();
@@ -705,6 +532,7 @@
         const cachedAtt = localStorage.getItem('hr_attendance');
         const cachedGigs = localStorage.getItem('hr_gigs');
         const cachedScores = localStorage.getItem('hr_scores');
+        const cachedNotes = localStorage.getItem('hr_band_notes');
 
         if (cachedAtt && cachedGigs) {
           appData.attendance = JSON.parse(cachedAtt);
@@ -715,42 +543,31 @@
         }
         if (cachedScores) {
           appData.scores = JSON.parse(cachedScores);
+          appData.bandNotes = cachedNotes ? JSON.parse(cachedNotes) : [];
           renderScores();
         }
-      } catch (e) {
-        console.log('Cache restore err:', e);
-      }
+      } catch (e) {}
     }
 
     function normalizeBackendData(data) {
       let attendanceRows = [];
       let gigsRows = [];
-
       if (!data) return { attendance: [], gigs: [] };
 
-      if (Array.isArray(data.attendance)) {
-        attendanceRows = data.attendance;
-      } else if (data.attendance && data.attendance.rows) {
-        const headers = data.attendance.headers || [];
-        attendanceRows = [headers, ...data.attendance.rows];
+      if (Array.isArray(data.attendance)) attendanceRows = data.attendance;
+      else if (data.attendance && data.attendance.rows) {
+        attendanceRows = [data.attendance.headers || [], ...data.attendance.rows];
       }
 
-      if (Array.isArray(data.gigs)) {
-        gigsRows = data.gigs;
-      } else if (data.gigs && data.gigs.rows) {
-        gigsRows = data.gigs.rows;
-      }
+      if (Array.isArray(data.gigs)) gigsRows = data.gigs;
+      else if (data.gigs && data.gigs.rows) gigsRows = data.gigs.rows;
 
       return { attendance: attendanceRows, gigs: gigsRows };
     }
 
     async function loadFastData() {
       try {
-        const response = await fetch(`${GAS_API_URL}?action=getQuickData&_t=${Date.now()}`, {
-          method: 'GET',
-          redirect: 'follow',
-          headers: { 'Accept': 'application/json' }
-        });
+        const response = await fetch(`${GAS_API_URL}?action=getQuickData&_t=${Date.now()}`);
         const data = await response.json();
         
         if (data && (data.success || data.status === "success" || data.attendance)) {
@@ -767,43 +584,28 @@
 
           setTimeout(preloadScoresInBackground, 300);
         }
-      } catch (err) {
-        console.log('Load err:', err);
-      }
+      } catch (err) {}
     }
 
     async function preloadScoresInBackground() {
       try {
-        const response = await fetch(`${GAS_API_URL}?action=getScoresData&_t=${Date.now()}`, {
-          method: 'GET',
-          redirect: 'follow',
-          headers: { 'Accept': 'application/json' }
-        });
+        const response = await fetch(`${GAS_API_URL}?action=getScoresData&_t=${Date.now()}`);
         const data = await response.json();
         if (data && (data.success || data.status === "success" || data.scores)) {
-          const newScores = data.scores || [];
-          const oldScoresStr = localStorage.getItem('hr_scores') || '[]';
-          const newScoresStr = JSON.stringify(newScores);
+          appData.scores = data.scores || [];
+          appData.bandNotes = data.bandNotes || [];
 
-          if (oldScoresStr !== newScoresStr) {
-            appData.scores = newScores;
-            localStorage.setItem('hr_scores', newScoresStr);
-            renderScores();
-          }
+          localStorage.setItem('hr_scores', JSON.stringify(appData.scores));
+          localStorage.setItem('hr_band_notes', JSON.stringify(appData.bandNotes));
+          renderScores();
         }
-      } catch (e) {
-        console.log('Scores sync err:', e);
-      }
+      } catch (e) {}
     }
 
     function resetPtrIndicator() {
       const ptrIndicator = document.getElementById('ptr-indicator');
       const ptrIcon = document.getElementById('ptr-icon');
-      
-      if (refreshTimeoutId) {
-        clearTimeout(refreshTimeoutId);
-        refreshTimeoutId = null;
-      }
+      if (refreshTimeoutId) clearTimeout(refreshTimeoutId);
       
       ptrIndicator.style.transition = 'transform 0.18s ease, opacity 0.15s ease';
       ptrIndicator.style.transform = 'translate3d(-50%, -60px, 0)';
@@ -826,14 +628,12 @@
       ptrIndicator.style.transform = 'translate3d(-50%, 8px, 0)';
       ptrIndicator.style.opacity = '1';
 
-      refreshTimeoutId = setTimeout(() => {
-        resetPtrIndicator();
-      }, 650);
+      refreshTimeoutId = setTimeout(resetPtrIndicator, 650);
 
       try {
         const [quickRes, scoreRes] = await Promise.all([
-          fetch(`${GAS_API_URL}?action=getQuickData&_t=${Date.now()}`, { method: 'GET', redirect: 'follow' }),
-          fetch(`${GAS_API_URL}?action=getScoresData&_t=${Date.now()}`, { method: 'GET', redirect: 'follow' })
+          fetch(`${GAS_API_URL}?action=getQuickData&_t=${Date.now()}`),
+          fetch(`${GAS_API_URL}?action=getScoresData&_t=${Date.now()}`)
         ]);
 
         const quickData = await quickRes.json();
@@ -851,29 +651,23 @@
 
         if (scoreData && (scoreData.success || scoreData.status === "success" || scoreData.scores)) {
           appData.scores = scoreData.scores || [];
+          appData.bandNotes = scoreData.bandNotes || [];
           localStorage.setItem('hr_scores', JSON.stringify(appData.scores));
+          localStorage.setItem('hr_band_notes', JSON.stringify(appData.bandNotes));
           renderScores();
         }
-      } catch (e) {
-        console.log('Refresh fallback:', e);
-      }
+      } catch (e) {}
     }
 
     function goToTab(index) {
       if (index < 0 || index > 2) return;
       currentTabIndex = index;
-
       resetPtrIndicator();
 
-      const track = document.getElementById('slider-track');
-      track.style.transform = `translate3d(-${(index * 33.333333).toFixed(4)}%, 0, 0)`;
+      document.getElementById('slider-track').style.transform = `translate3d(-${(index * 33.333333).toFixed(4)}%, 0, 0)`;
 
       const btns = document.querySelectorAll('.tab-btn');
-      btns.forEach((btn, i) => {
-        if (i === index) btn.classList.add('active');
-        else btn.classList.remove('active');
-      });
-
+      btns.forEach((btn, i) => btn.classList.toggle('active', i === index));
       document.getElementById('header-title').innerText = tabTitles[index];
 
       const searchBtn = document.getElementById('score-search-toggle-btn');
@@ -889,36 +683,21 @@
     function toggleScoreSearch() {
       const bar = document.getElementById('score-search-bar');
       const input = document.getElementById('score-search');
-      if (bar.style.display === 'block') {
-        bar.style.display = 'none';
-      } else {
-        bar.style.display = 'block';
-        input.focus();
-      }
+      if (bar.style.display === 'block') bar.style.display = 'none';
+      else { bar.style.display = 'block'; input.focus(); }
     }
 
     function clearScoreSearch() {
-      const input = document.getElementById('score-search');
-      input.value = '';
+      document.getElementById('score-search').value = '';
       filterScores();
     }
 
     function initSmoothGestures() {
-      let startX = 0;
-      let startY = 0;
-      let startTime = 0;
-      let gestureIntent = null;
-      let currentPullDiff = 0;
-
+      let startX = 0, startY = 0, startTime = 0, gestureIntent = null, currentPullDiff = 0;
       const ptrIndicator = document.getElementById('ptr-indicator');
       const ptrIcon = document.getElementById('ptr-icon');
       const pullThreshold = 60;
-
-      const slidePages = [
-        document.getElementById('slide-attendance'),
-        document.getElementById('slide-gigs'),
-        document.getElementById('slide-scores')
-      ];
+      const slidePages = [document.getElementById('slide-attendance'), document.getElementById('slide-gigs'), document.getElementById('slide-scores')];
 
       function cancelPullGesture() {
         if (!isRefreshing) {
@@ -926,164 +705,109 @@
           ptrIndicator.style.transform = 'translate3d(-50%, -60px, 0)';
           ptrIndicator.style.opacity = '0';
         }
-        gestureIntent = null;
-        currentPullDiff = 0;
-        startX = 0;
-        startY = 0;
+        gestureIntent = null; currentPullDiff = 0; startX = 0; startY = 0;
       }
 
       window.addEventListener('touchstart', (e) => {
-        if (isRefreshing ||
-            document.getElementById('att-modal-overlay').style.display === 'flex' ||
-            document.getElementById('upload-loading-overlay').style.display === 'flex' ||
-            e.target.tagName === 'INPUT') {
-          startX = 0;
-          startY = 0;
-          return;
+        if (isRefreshing || document.querySelector('.app-modal-overlay[style*="display: flex"]') || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+          startX = 0; startY = 0; return;
         }
-
         const touch = e.touches[0];
-        startX = touch.clientX;
-        startY = touch.clientY;
-        startTime = Date.now();
-        gestureIntent = null;
-        currentPullDiff = 0;
+        startX = touch.clientX; startY = touch.clientY; startTime = Date.now();
+        gestureIntent = null; currentPullDiff = 0;
       }, { passive: true });
 
       window.addEventListener('touchmove', (e) => {
         if (!startX || isRefreshing) return;
-
         const touch = e.touches[0];
         const diffX = touch.clientX - startX;
         const diffY = touch.clientY - startY;
-
         const activePage = slidePages[currentTabIndex];
         const isAtTop = activePage ? activePage.scrollTop <= 0 : false;
 
         if (!gestureIntent) {
           if (Math.abs(diffX) > 6 || Math.abs(diffY) > 6) {
-            if (isAtTop && diffY > 6 && Math.abs(diffY) > Math.abs(diffX) * 1.3) {
-              gestureIntent = 'pull';
-            } else if (Math.abs(diffY) >= Math.abs(diffX)) {
-              gestureIntent = 'scroll';
-            } else {
-              gestureIntent = 'swipe';
-            }
+            if (isAtTop && diffY > 6 && Math.abs(diffY) > Math.abs(diffX) * 1.3) gestureIntent = 'pull';
+            else if (Math.abs(diffY) >= Math.abs(diffX)) gestureIntent = 'scroll';
+            else gestureIntent = 'swipe';
           }
         }
 
         if (gestureIntent === 'pull' && isAtTop && diffY > 0) {
           currentPullDiff = diffY;
           ptrIndicator.style.transition = 'none';
-
           const pullDistance = Math.min(diffY * 0.4, 75);
           const rotateDeg = (pullDistance / pullThreshold) * 360;
-
           ptrIndicator.style.transform = `translate3d(-50%, ${pullDistance - 50}px, 0)`;
           ptrIndicator.style.opacity = `${Math.min(1, pullDistance / (pullThreshold * 0.75))}`;
           ptrIcon.style.transform = `rotate(${rotateDeg}deg)`;
-        } else if (gestureIntent === 'pull' && diffY <= 0) {
-          cancelPullGesture();
-        }
+        } else if (gestureIntent === 'pull' && diffY <= 0) cancelPullGesture();
       }, { passive: true });
 
       window.addEventListener('touchend', (e) => {
         if (!startX || isRefreshing) return;
-
         const touch = e.changedTouches[0];
         const diffX = touch.clientX - startX;
         const duration = Date.now() - startTime;
 
         if (gestureIntent === 'pull') {
-          const effectivePull = currentPullDiff * 0.4;
-          if (effectivePull >= pullThreshold) {
-            startRefreshProcess();
-          } else {
-            cancelPullGesture();
-          }
-          gestureIntent = null;
-          startX = 0;
-          startY = 0;
-          return;
+          if (currentPullDiff * 0.4 >= pullThreshold) startRefreshProcess();
+          else cancelPullGesture();
+          gestureIntent = null; startX = 0; startY = 0; return;
         }
 
         if (gestureIntent === 'swipe' && duration < 600 && Math.abs(diffX) > 40) {
-          if (diffX < 0) {
-            if (currentTabIndex < 2) goToTab(currentTabIndex + 1);
-          } else {
-            if (currentTabIndex > 0) goToTab(currentTabIndex - 1);
-          }
+          if (diffX < 0 && currentTabIndex < 2) goToTab(currentTabIndex + 1);
+          else if (diffX > 0 && currentTabIndex > 0) goToTab(currentTabIndex - 1);
         }
-
-        gestureIntent = null;
-        startX = 0;
-        startY = 0;
+        gestureIntent = null; startX = 0; startY = 0;
       }, { passive: true });
 
       window.addEventListener('touchcancel', cancelPullGesture, { passive: true });
     }
 
-    /* ====================================================
-       💡 날짜 헤더 자동 포맷 함수 (ISO 긴 문자열 -> MM/DD 축약)
-       ==================================================== */
     function formatHeaderDate(val) {
       if (!val) return '';
       const str = String(val).trim();
-      
-      // ISO 포맷 (2026-10-16T15:00:00.000Z 등)
       if (str.includes('T') && !isNaN(Date.parse(str))) {
-        const d = new Date(str);
-        return `${d.getMonth() + 1}/${d.getDate()}`;
+        const d = new Date(str); return `${d.getMonth() + 1}/${d.getDate()}`;
       }
-      
-      // 일반 YYYY-MM-DD 또는 YYYY.MM.DD 형태
       const match = str.match(/(\d{4})[-./](\d{1,2})[-./](\d{1,2})/);
-      if (match) {
-        return `${parseInt(match[2], 10)}/${parseInt(match[3], 10)}`;
-      }
-      
+      if (match) return `${parseInt(match[2], 10)}/${parseInt(match[3], 10)}`;
       return str;
     }
 
     function renderAttendance() {
       const container = document.getElementById('attendance-container');
       if (!appData.attendance || appData.attendance.length === 0) return;
-
       const rows = appData.attendance;
       const colCount = rows[0].length;
-      let html = '<table class="att-table">';
-      
-      html += '<thead><tr>';
+      let html = '<table class="att-table"><thead><tr>';
       rows[0].forEach((header, colIdx) => {
         const displayHeader = colIdx === 0 ? header : formatHeaderDate(header);
-        html += `<th class="${colIdx === 0 ? 'member-name-cell' : ''}" title="${header}">${displayHeader}</th>`;
+        html += `<th class="${colIdx === 0 ? 'member-name-cell' : ''}">${displayHeader}</th>`;
       });
       html += '</tr></thead><tbody>';
 
       for (let r = 1; r < rows.length; r++) {
         const memberName = (rows[r][0] || '').trim();
-        
         if (!memberName) {
           html += `<tr class="separator-row"><td colspan="${colCount}"></td></tr>`;
           continue;
         }
-
         html += '<tr>';
         for (let c = 0; c < rows[r].length; c++) {
           const val = (rows[r][c] || '').trim();
-          if (c === 0) {
-            html += `<td class="member-name-cell">${val}</td>`;
-          } else {
-            const rawDateHeader = rows[0][c] || '';
-            const displayDateHeader = formatHeaderDate(rawDateHeader);
-            const rowCoord = r + 1;
-            const colCoord = c + 1;
+          if (c === 0) html += `<td class="member-name-cell">${val}</td>`;
+          else {
+            const rawDate = rows[0][c] || '';
+            const displayDate = formatHeaderDate(rawDate);
+            const rowCoord = r + 1, colCoord = c + 1;
             const statusClass = normalizeStatus(val);
             const displayText = val === '' ? '미정' : val;
-
             html += `<td>
               <span class="att-btn ${statusClass}" id="cell_${rowCoord}_${colCoord}"
-                    onclick="openAttModal(${rowCoord}, ${colCoord}, '${memberName}', '${displayDateHeader}')">
+                    onclick="openAttModal(${rowCoord}, ${colCoord}, '${memberName}', '${displayDate}')">
                 ${displayText}
               </span>
             </td>`;
@@ -1113,17 +837,13 @@
     function closeAttModal(needHistoryBack = true) {
       document.getElementById('att-modal-overlay').style.display = 'none';
       currentEditTarget = null;
-      if (needHistoryBack && window.history.state && window.history.state.modalOpen) {
-        history.back();
-      }
+      if (needHistoryBack && window.history.state && window.history.state.modalOpen) history.back();
     }
 
     function selectStatus(status) {
       if (!currentEditTarget) return;
-
       const { row, col } = currentEditTarget;
       const cell = document.getElementById(`cell_${row}_${col}`);
-      
       cell.innerText = status;
       cell.className = `att-btn ${status}`;
       closeAttModal();
@@ -1132,11 +852,7 @@
         appData.attendance[row - 1][col - 1] = status;
         localStorage.setItem('hr_attendance', JSON.stringify(appData.attendance));
       }
-
-      fetch(`${GAS_API_URL}?action=updateAttendance&row=${row}&col=${col}&status=${encodeURIComponent(status)}&_t=${Date.now()}`, {
-        method: 'GET',
-        mode: 'no-cors'
-      }).catch(err => console.log('Update Error:', err));
+      fetch(`${GAS_API_URL}?action=updateAttendance&row=${row}&col=${col}&status=${encodeURIComponent(status)}&_t=${Date.now()}`, { mode: 'no-cors' });
     }
 
     function renderGigs() {
@@ -1145,18 +861,12 @@
       if (!appData.gigs || appData.gigs.length === 0) return;
       
       let gigStats = [];
-
       if (typeof appData.gigs[0] === 'object' && !Array.isArray(appData.gigs[0])) {
-        gigStats = appData.gigs.map(g => ({
-          isSeparator: !g.name || g.name === '',
-          name: g.name || '',
-          score: g.count || 0
-        }));
+        gigStats = appData.gigs.map(g => ({ isSeparator: !g.name, name: g.name || '', score: g.count || 0 }));
       } else {
         gigStats = appData.gigs.map(row => {
           const name = (row[0] || '').trim();
           if (!name) return { isSeparator: true };
-
           let total = 0;
           for (let col = 1; col < row.length; col++) {
             const num = parseFloat(row[col]);
@@ -1171,22 +881,17 @@
 
       let html = '';
       gigStats.forEach(g => {
-        if (g.isSeparator) {
-          html += `<div class="gig-part-separator"></div>`;
-        } else {
+        if (g.isSeparator) html += `<div class="gig-part-separator"></div>`;
+        else {
           const percent = Math.min(100, Math.round((g.score / maxScore) * 100));
           html += `
             <div class="gig-member-row">
               <div class="gig-name">${g.name}</div>
-              <div class="gig-bar-wrap">
-                <div class="gig-bar-fill" style="width: ${percent}%;"></div>
-              </div>
+              <div class="gig-bar-wrap"><div class="gig-bar-fill" style="width: ${percent}%;"></div></div>
               <div class="gig-score-num">${g.score}회</div>
-            </div>
-          `;
+            </div>`;
         }
       });
-
       container.innerHTML = html;
     }
 
@@ -1194,16 +899,12 @@
       if (!rawText) return [];
       const lines = rawText.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
       const results = [];
-      
       lines.forEach((line, idx) => {
         const match = line.match(/(https?:\/\/[^\s]+)/i);
         if (match) {
           const url = match[1];
-          let label = line.replace(url, '').trim();
-          label = label.replace(/[\[\]]/g, '').trim();
-          if (!label) {
-            label = lines.length > 1 ? `영상 ${idx + 1}` : '참고 영상';
-          }
+          let label = line.replace(url, '').replace(/[\[\]]/g, '').trim();
+          if (!label) label = lines.length > 1 ? `영상 ${idx + 1}` : '참고 영상';
           results.push({ label, url });
         }
       });
@@ -1211,8 +912,7 @@
     }
 
     function isAudioFile(filename) {
-      const cleanName = (filename || '').trim().toLowerCase();
-      return /\.(mp3|m4a|wav|aac|flac|ogg)$/i.test(cleanName);
+      return /\.(mp3|m4a|wav|aac|flac|ogg)$/i.test((filename || '').trim().toLowerCase());
     }
 
     function renderScores() {
@@ -1226,7 +926,6 @@
       });
 
       container.innerHTML = '';
-
       if (!appData.scores || appData.scores.length === 0) {
         container.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-sub);">등록된 악보가 없습니다.</div>';
         return;
@@ -1235,44 +934,27 @@
       const groups = {};
       appData.scores.forEach(row => {
         let song = '', part = '', preview = '', download = '', youtube = '', memo = '', fileId = '';
-        
         if (Array.isArray(row)) {
-          song = (row[0] || '').trim();
-          part = (row[1] || '').trim();
-          preview = (row[2] || '').trim();
-          download = (row[3] || '').trim();
-          youtube = (row[4] || '').trim();
-          memo = (row[5] || '').trim();
+          song = (row[0] || '').trim(); part = (row[1] || '').trim(); preview = (row[2] || '').trim();
+          download = (row[3] || '').trim(); youtube = (row[4] || '').trim(); memo = (row[5] || '').trim();
           fileId = (row[6] || '').trim();
         } else if (typeof row === 'object') {
-          song = (row.song || '').trim();
-          part = (row.fileName || row.part || '').trim();
-          preview = (row.viewUrl || row.preview || '').trim();
-          download = (row.downloadUrl || row.download || '').trim();
-          youtube = (row.youtube || '').trim();
-          memo = (row.memo || '').trim();
-          fileId = (row.fileId || '').trim();
+          song = (row.song || '').trim(); part = (row.fileName || row.part || '').trim();
+          preview = (row.viewUrl || row.preview || '').trim(); download = (row.downloadUrl || row.download || '').trim();
+          youtube = (row.youtube || '').trim(); memo = (row.memo || '').trim(); fileId = (row.fileId || '').trim();
         }
 
         if (!song) return;
         if (query && !song.toLowerCase().includes(query) && !part.toLowerCase().includes(query)) return;
-        
-        if (!groups[song]) {
-          groups[song] = { files: [], youtube: '', memo: '' };
-        }
-        
-        if (part || preview || download) {
-          groups[song].files.push({ part, preview, download, fileId });
-        }
+        if (!groups[song]) groups[song] = { files: [], youtube: '', memo: '' };
+        if (part || preview || download) groups[song].files.push({ part, preview, download, fileId });
         if (youtube && !groups[song].youtube) groups[song].youtube = youtube;
         if (memo && !groups[song].memo) groups[song].memo = memo;
       });
 
       const favs = getFavorites();
-
       const songNames = Object.keys(groups).sort((a, b) => {
-        const aFav = favs.includes(a);
-        const bFav = favs.includes(b);
+        const aFav = favs.includes(a), bFav = favs.includes(b);
         if (aFav && !bFav) return -1;
         if (!aFav && bFav) return 1;
         return a.localeCompare(b);
@@ -1287,45 +969,31 @@
         const isFav = favs.includes(song);
         const accordion = document.createElement('div');
         accordion.className = `song-accordion ${isFav ? 'favorite' : ''}`;
-
-        if (query.length > 0 || openSongs.has(song)) {
-          accordion.classList.add('open');
-        }
+        if (query.length > 0 || openSongs.has(song)) accordion.classList.add('open');
 
         const songData = groups[song];
         const ytList = parseYoutubeLinks(songData.youtube);
 
         let extraHtml = '';
         const memoContent = (songData.memo || '').trim();
-        
         extraHtml += '<div class="song-extra-box">';
-        if (memoContent) {
-          extraHtml += `<div class="song-memo-card">${escapeHtml(memoContent)}</div>`;
-        }
+        if (memoContent) extraHtml += `<div class="song-memo-card">${escapeHtml(memoContent)}</div>`;
         
         extraHtml += '<div class="youtube-btn-group">';
         if (ytList.length > 0) {
           ytList.forEach(yt => {
-            extraHtml += `
-              <a class="youtube-link-btn" href="${yt.url}" target="_blank" rel="noopener noreferrer">
-                <i class="fa-brands fa-youtube"></i> ${escapeHtml(yt.label)}
-              </a>
-            `;
+            extraHtml += `<a class="youtube-link-btn" href="${yt.url}" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-youtube"></i> ${escapeHtml(yt.label)}</a>`;
           });
         }
-        
-        // 🚀 컴팩트 악보공유 버튼 (+ 기호 제거)
         extraHtml += `
-          <button class="upload-share-btn" onclick="openFilePickerForSong('${escapeHtml(song)}')" title="이 곡의 개인 소장 악보/음원 공유하기">
+          <button class="upload-share-btn" onclick="openFilePickerForSong('${escapeHtml(song)}')" title="악보/음원 공유">
             <i class="fa-solid fa-cloud-arrow-up"></i> 악보공유
-          </button>
-        `;
-        extraHtml += '</div>';
-        extraHtml += '</div>';
+          </button>`;
+        extraHtml += '</div></div>';
 
+        // 악보 및 음원 파일 정렬
         const sortedFiles = [...songData.files].sort((a, b) => {
-          const aAudio = isAudioFile(a.part);
-          const bAudio = isAudioFile(b.part);
+          const aAudio = isAudioFile(a.part), bAudio = isAudioFile(b.part);
           if (aAudio && !bAudio) return -1;
           if (!aAudio && bAudio) return 1;
           return 0;
@@ -1335,23 +1003,50 @@
           const fileIdMatch = (f.preview || f.download || '').match(/[-\w]{25,}/);
           const fileId = f.fileId || (fileIdMatch ? fileIdMatch[0] : '');
           const isAudio = isAudioFile(f.part);
-          
-          const cleanViewUrl = fileId 
-            ? `https://drive.google.com/file/d/${fileId}/preview` 
-            : f.preview;
-
-          const iconHtml = isAudio 
-            ? '<i class="fa-solid fa-headphones" style="font-size:0.85rem; margin-right:4px;"></i>' 
-            : '';
-
+          const cleanViewUrl = fileId ? `https://drive.google.com/file/d/${fileId}/preview` : f.preview;
+          const iconHtml = isAudio ? '<i class="fa-solid fa-headphones" style="font-size:0.85rem; margin-right:4px;"></i>' : '';
           return `
-            <div class="score-file-row ${isAudio ? 'audio-type' : ''}" 
-                 onclick="openGoogleMedia('${cleanViewUrl}')" 
-                 title="${escapeHtml(f.part)} 열기">
+            <div class="score-file-row ${isAudio ? 'audio-type' : ''}" onclick="openGoogleMedia('${cleanViewUrl}')">
               <span class="score-part-title">${iconHtml}${escapeHtml(f.part || '파일')}</span>
-            </div>
-          `;
+            </div>`;
         }).join('');
+
+        // 💬 밴드노트 목록 구성
+        const songNotes = (appData.bandNotes || []).filter(n => n.song === song);
+        let notesListHtml = '';
+        if (songNotes.length === 0) {
+          notesListHtml = '<div class="no-notes-msg">아직 남겨진 팁이 없습니다. 첫 팁을 공유해 보세요!</div>';
+        } else {
+          songNotes.forEach(note => {
+            const ytBtn = note.ytUrl ? `
+              <a href="${note.ytUrl}" class="note-yt-btn" target="_blank" rel="noopener noreferrer">
+                <i class="fa-brands fa-youtube"></i> 추천영상
+              </a>` : '';
+            notesListHtml += `
+              <div class="note-card">
+                <div class="note-card-meta">
+                  <div class="note-author-info">
+                    <span class="note-part-badge">${escapeHtml(note.part)}</span>
+                    <span>${escapeHtml(note.author)}</span>
+                  </div>
+                  <span class="note-date">${escapeHtml(note.date)}</span>
+                </div>
+                <div class="note-content">${escapeHtml(note.content)}</div>
+                ${ytBtn}
+              </div>`;
+          });
+        }
+
+        const bandNotesSectionHtml = `
+          <div class="band-notes-section">
+            <div class="band-notes-header">
+              <span class="band-notes-title"><i class="fa-regular fa-comment-dots"></i> 밴드 노트</span>
+              <button class="add-note-open-btn" onclick="openNoteModal('${escapeHtml(song)}')">
+                <i class="fa-solid fa-pen"></i> 팁 남기기
+              </button>
+            </div>
+            <div class="band-notes-list">${notesListHtml}</div>
+          </div>`;
 
         accordion.innerHTML = `
           <button class="song-header-btn" onclick="toggleAccordion(this)">
@@ -1363,67 +1058,48 @@
           <div class="file-accordion-body">
             ${extraHtml}
             ${filesHtml}
-          </div>
-        `;
+            ${bandNotesSectionHtml}
+          </div>`;
         container.appendChild(accordion);
       });
     }
 
     function escapeHtml(str) {
-      return str
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+      return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     }
 
     function toggleAccordion(btn) {
-      const parent = btn.closest('.song-accordion');
-      parent.classList.toggle('open');
+      btn.closest('.song-accordion').classList.toggle('open');
     }
 
     function filterScores() { renderScores(); }
 
     function openGoogleMedia(url) {
       const link = document.createElement('a');
-      link.href = url;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer';
+      document.body.appendChild(link); link.click(); document.body.removeChild(link);
     }
 
     function openFilePickerForSong(songName) {
       currentUploadSongName = songName;
       const fileInput = document.getElementById('score-file-hidden-input');
-      fileInput.value = '';
-      fileInput.click();
+      fileInput.value = ''; fileInput.click();
     }
 
     async function onScoreFileSelected(event) {
       const file = event.target.files[0];
       if (!file) return;
-
-      const maxSizeBytes = 25 * 1024 * 1024;
-      if (file.size > maxSizeBytes) {
-        alert("파일 용량이 너무 큽니다. 25MB 이하의 파일만 업로드할 수 있습니다.");
-        return;
+      if (file.size > 25 * 1024 * 1024) {
+        alert("25MB 이하의 파일만 업로드할 수 있습니다."); return;
       }
-
       const songName = currentUploadSongName || "미지정 곡";
       const overlay = document.getElementById('upload-loading-overlay');
-      const songTitleEl = document.getElementById('upload-target-song-title');
-      const statusTextEl = document.getElementById('upload-status-text');
-
-      songTitleEl.innerText = songName;
-      statusTextEl.innerHTML = `선택한 파일: <strong>${escapeHtml(file.name)}</strong><br>공유 폴더로 안전하게 전송 중입니다...`;
+      document.getElementById('upload-target-song-title').innerText = songName;
+      document.getElementById('upload-status-text').innerHTML = `선택: <strong>${escapeHtml(file.name)}</strong><br>전송 중입니다...`;
       overlay.style.display = 'flex';
 
       try {
         const base64Data = await readFileAsBase64(file);
-
         const payload = {
           action: "uploadScoreFile",
           songName: songName,
@@ -1431,39 +1107,111 @@
           mimeType: file.type || "application/octet-stream",
           fileBase64: base64Data
         };
-
-        const response = await fetch(GAS_API_URL, {
-          method: "POST",
-          body: JSON.stringify(payload)
-        });
-
+        const response = await fetch(GAS_API_URL, { method: "POST", body: JSON.stringify(payload) });
         const resData = await response.json();
-
         overlay.style.display = 'none';
-
         if (resData && (resData.status === "success" || resData.success)) {
-          alert(`✅ 업로드 완료!\n\n'${file.name}' 파일이 공유 폴더로 안전하게 전송되었습니다.\n관리자 확인 후 정식 악보로 등록됩니다.`);
+          alert(`✅ '${file.name}' 업로드 완료! 관리자 확인 후 정식 악보로 반영됩니다.`);
         } else {
-          alert(`⚠️ 업로드 실패: ${resData.message || "서버 응답 오류"}`);
+          alert(`⚠️ 업로드 실패: ${resData.message || "오류"}`);
         }
       } catch (err) {
         overlay.style.display = 'none';
-        console.error("Upload Error:", err);
-        alert("업로드 처리 중 통신 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+        alert("업로드 중 통신 오류가 발생했습니다.");
       }
     }
 
     function readFileAsBase64(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = () => {
-          const result = reader.result;
-          const base64 = result.split(',')[1];
-          resolve(base64);
-        };
+        reader.onload = () => resolve(reader.result.split(',')[1]);
         reader.onerror = error => reject(error);
         reader.readAsDataURL(file);
       });
+    }
+
+    /* ====================================================
+       💬 밴드노트 작성/등록 제어 로직
+       ==================================================== */
+    function openNoteModal(songName) {
+      currentTargetSongForNote = songName;
+      document.getElementById('note-modal-song-title').innerText = `[${songName}] 팁 남기기`;
+      
+      // 저장된 사용자 이름 자동 복원
+      const savedAuthor = localStorage.getItem('hr_user_name') || '';
+      document.getElementById('note-author-input').value = savedAuthor;
+      document.getElementById('note-content-input').value = '';
+      document.getElementById('note-yt-input').value = '';
+
+      // 파트 기본값: '전체'
+      selectedNotePart = '전체';
+      document.querySelectorAll('.part-chip').forEach(c => {
+        c.classList.toggle('active', c.innerText === '전체');
+      });
+
+      document.getElementById('note-modal-overlay').style.display = 'flex';
+      history.pushState({ noteModalOpen: true }, '');
+    }
+
+    function closeNoteModal(needHistoryBack = true) {
+      document.getElementById('note-modal-overlay').style.display = 'none';
+      if (needHistoryBack && window.history.state && window.history.state.noteModalOpen) history.back();
+    }
+
+    function selectPartChip(el, part) {
+      selectedNotePart = part;
+      document.querySelectorAll('.part-chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+    }
+
+    async function submitBandNote() {
+      const author = document.getElementById('note-author-input').value.trim();
+      const content = document.getElementById('note-content-input').value.trim();
+      const ytUrl = document.getElementById('note-yt-input').value.trim();
+
+      if (!author) { alert('작성자 이름을 입력해 주세요.'); return; }
+      if (!content) { alert('팁 또는 메모 내용을 입력해 주세요.'); return; }
+
+      // 이름 로컬 저장 (다음부터 자동 입력)
+      localStorage.setItem('hr_user_name', author);
+
+      const submitBtn = document.getElementById('note-submit-btn');
+      submitBtn.innerText = '등록 중...';
+      submitBtn.disabled = true;
+
+      const now = new Date();
+      const dateStr = `${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+      // 낙관적 UI 즉시 반영 (0초 지연)
+      const newNote = {
+        date: dateStr,
+        song: currentTargetSongForNote,
+        part: selectedNotePart,
+        author: author,
+        content: content,
+        ytUrl: ytUrl
+      };
+
+      appData.bandNotes = [newNote, ...(appData.bandNotes || [])];
+      localStorage.setItem('hr_band_notes', JSON.stringify(appData.bandNotes));
+      renderScores();
+      closeNoteModal();
+
+      submitBtn.innerText = '등록하기';
+      submitBtn.disabled = false;
+
+      // 백그라운드 전송
+      try {
+        const payload = {
+          action: "addBandNoteTest",
+          song: currentTargetSongForNote,
+          part: selectedNotePart,
+          author: author,
+          content: content,
+          ytUrl: ytUrl
+        };
+        fetch(GAS_API_URL, { method: "POST", body: JSON.stringify(payload) });
+      } catch (e) {}
     }
   </script>
 </body>
