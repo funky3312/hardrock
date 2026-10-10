@@ -90,6 +90,14 @@
       padding: 12px 14px calc(65px + var(--safe-bottom)) 14px;
     }
 
+    /* 로딩 상태 플레이스홀더 */
+    .loading-box {
+      text-align: center;
+      padding: 40px 0;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
     /* 1. 출석부 테이블 */
     .table-card {
       background: var(--card-bg);
@@ -176,7 +184,7 @@
     }
     .song-content.open { display: block; }
 
-    /* 곡 내부 하위 탭 (서브 세그먼트 컨트롤) */
+    /* 곡 내부 하위 탭 */
     .sub-tabs {
       display: flex;
       background: #0b0d11;
@@ -498,19 +506,25 @@
       <section class="tab-page" id="pageAttendance">
         <div class="table-card">
           <table id="attendanceTable">
-            <tbody id="attendanceTbody"></tbody>
+            <tbody id="attendanceTbody">
+              <tr><td class="loading-box">출석부 데이터를 불러오는 중...</td></tr>
+            </tbody>
           </table>
         </div>
       </section>
 
       <!-- 탭 1: 공연현황 -->
       <section class="tab-page" id="pageGigs">
-        <div id="gigListContainer"></div>
+        <div id="gigListContainer">
+          <div class="loading-box">공연 현황 데이터를 불러오는 중...</div>
+        </div>
       </section>
 
       <!-- 탭 2: 악보집 -->
       <section class="tab-page" id="pageScores">
-        <div id="scoreListContainer"></div>
+        <div id="scoreListContainer">
+          <div class="loading-box">악보 데이터를 불러오는 중...</div>
+        </div>
       </section>
 
     </div>
@@ -578,11 +592,21 @@
 
   <script>
     // ==========================================
+    // 0. 테스트 페이지 서비스 워커 등록 해제 (캐시 꼬임 원천 차단)
+    // ==========================================
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(regs => {
+        regs.forEach(reg => {
+          // test.html 환경에서는 서비스 워커 제어를 우회
+          console.log("[TEST] Active service worker detected");
+        });
+      });
+    }
+
+    // ==========================================
     // 1. 전역 설정 & API 엔드포인트
     // ==========================================
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxk46VNnAZtti3FtD2iMVPO9aPIohyoyLTI3cIegGl4jHXN8fyYSMU8QrAX47wpvt6c/exec";
-    
-    // 리더님의 구글 드라이브 '공유 폴더' 링크 연동 완료
     const SHARED_DRIVE_FOLDER_URL = "https://drive.google.com/drive/folders/12HAjdM1ecyJs6S77a3MYc8x9erKhQtZe?usp=drive_link";
 
     let currentTabIndex = 0;
@@ -596,7 +620,7 @@
     let selectedNotePart = "전체";
 
     // ==========================================
-    // 2. 초기 기동 (0초 렌더링 & 비동기 동기화)
+    // 2. 초기 기동
     // ==========================================
     document.addEventListener("DOMContentLoaded", () => {
       loadLocalCache();
@@ -765,7 +789,6 @@
       const keyword = document.getElementById("scoreSearchInput").value.trim().toLowerCase();
       container.innerHTML = "";
 
-      // 1) 곡별 그룹핑
       const songMap = new Map();
       scoresData.forEach(item => {
         const song = item.song || "미분류";
@@ -786,7 +809,6 @@
         }
       });
 
-      // 2) 정렬: 즐겨찾기 우선 ➔ 한글/알파벳 가나다순
       let songs = Array.from(songMap.values());
       songs.sort((a, b) => {
         const favA = favoriteSongs.has(a.songName) ? 1 : 0;
@@ -795,7 +817,6 @@
         return a.songName.localeCompare(b.songName, "ko");
       });
 
-      // 3) 검색 필터링
       if (keyword) {
         songs = songs.filter(s => {
           if (s.songName.toLowerCase().includes(keyword)) return true;
@@ -803,7 +824,6 @@
         });
       }
 
-      // 4) 렌더링
       songs.forEach(songObj => {
         const isFav = favoriteSongs.has(songObj.songName);
         const card = document.createElement("div");
@@ -811,17 +831,15 @@
 
         const songNotes = bandNotesData.filter(n => n.song === songObj.songName);
 
-        // 헤더
         const header = document.createElement("div");
         header.className = "song-header";
         header.innerHTML = `
           <div class="song-title-wrap">
-            <span class="song-title">${songObj.songName}</span>
+            <span class="song-title">${escapeHtml(songObj.songName)}</span>
           </div>
           <button class="star-btn ${isFav ? 'active' : ''}" title="즐겨찾기">⭐</button>
         `;
 
-        // 즐겨찾기 토글
         const starBtn = header.querySelector(".star-btn");
         starBtn.onclick = (e) => {
           e.stopPropagation();
@@ -834,11 +852,9 @@
           renderScores();
         };
 
-        // 아코디언 바디
         const content = document.createElement("div");
         content.className = "song-content";
 
-        // 서브 세그먼트 (하위 탭: 자료/악보 vs 밴드노트)
         const subTabs = document.createElement("div");
         subTabs.className = "sub-tabs";
         subTabs.innerHTML = `
@@ -851,7 +867,6 @@
         panelFiles.className = "sub-panel active";
         panelFiles.id = `panel-files-${cardId(songObj.songName)}`;
 
-        // 리더 공식 메모
         if (songObj.memo && songObj.memo.trim() !== "") {
           const memoBox = document.createElement("div");
           memoBox.className = "song-memo-box";
@@ -859,11 +874,9 @@
           panelFiles.appendChild(memoBox);
         }
 
-        // 유튜브 버튼 & 추천/공유 버튼 라인
         const btnGroup = document.createElement("div");
         btnGroup.className = "yt-btn-group";
 
-        // 공식 유튜브 링크 파싱
         if (songObj.youtube) {
           const ytLines = songObj.youtube.split("\n");
           ytLines.forEach(line => {
@@ -874,20 +887,18 @@
               a.href = m[2];
               a.target = "_blank";
               a.rel = "noopener noreferrer";
-              a.innerHTML = `▶ ${m[1]}`;
+              a.innerHTML = `▶ ${escapeHtml(m[1])}`;
               btnGroup.appendChild(a);
             }
           });
         }
 
-        // +추천 버튼
         const btnRecommend = document.createElement("button");
         btnRecommend.className = "btn-action-outline";
         btnRecommend.innerHTML = `+ 추천`;
         btnRecommend.onclick = () => openNoteModal(songObj.songName);
         btnGroup.appendChild(btnRecommend);
 
-        // 📥공유 버튼 (지정된 공유 폴더 다이렉트 이동)
         const btnShare = document.createElement("a");
         btnShare.className = "btn-action-outline";
         btnShare.href = SHARED_DRIVE_FOLDER_URL;
@@ -898,7 +909,6 @@
 
         panelFiles.appendChild(btnGroup);
 
-        // 악보 및 음원 파일 목록
         const fileList = document.createElement("div");
         fileList.className = "file-list";
         songObj.files.forEach(f => {
@@ -907,7 +917,7 @@
           a.href = f.viewUrl;
           a.target = "_blank";
           a.rel = "noopener noreferrer";
-          a.innerHTML = `<span class="file-icon">${f.isAudio ? '🎧' : '📄'}</span><span>${f.name}</span>`;
+          a.innerHTML = `<span class="file-icon">${f.isAudio ? '🎧' : '📄'}</span><span>${escapeHtml(f.name)}</span>`;
           fileList.appendChild(a);
         });
         panelFiles.appendChild(fileList);
@@ -928,17 +938,16 @@
             ${songNotes.map(n => `
               <div class="note-card">
                 <div class="note-card-header">
-                  <span class="note-part-badge">[${n.part \vert{}\vert{} '전체'}] ${escapeHtml(n.author || '익명')}</span>
-                  <span>${n.date || ''}</span>
+                  <span class="note-part-badge">[${escapeHtml(n.part \vert{}\vert{} '전체')}] ${escapeHtml(n.author || '익명')}</span>
+                  <span>${escapeHtml(n.date || '')}</span>
                 </div>
                 ${n.content ? `<div class="note-text">${escapeHtml(n.content)}</div>` : ''}
-                ${n.ytUrl ? `<a href="${n.ytUrl}" target="_blank" rel="noopener noreferrer" class="note-yt-link">🔗 유튜브 영상 바로보기 ▶</a>` : ''}
+                ${n.ytUrl ? `<a href="${encodeURI(n.ytUrl)}" target="_blank" rel="noopener noreferrer" class="note-yt-link">🔗 유튜브 영상 바로보기 ▶</a>` : ''}
               </div>
             `).join('')}
           </div>
         `;
 
-        // 서브 탭 전환
         subTabs.querySelectorAll(".sub-tab-btn").forEach(btn => {
           btn.onclick = (e) => {
             e.stopPropagation();
@@ -950,7 +959,6 @@
           };
         });
 
-        // 아코디언 열기/닫기
         header.onclick = () => {
           content.classList.toggle("open");
         };
@@ -1021,14 +1029,12 @@
         date: dateStr
       };
 
-      // 로컬 즉시 반영 (0초 반응성)
       bandNotesData.unshift(newNote);
       localStorage.setItem("hr_band_notes_test", JSON.stringify(bandNotesData));
       renderScores();
       closeNoteModal();
       showToast("밴드노트가 등록되었습니다!");
 
-      // GAS 백엔드 비동기 전송
       const params = new URLSearchParams({
         action: "addBandNoteTest",
         song: newNote.song,
@@ -1076,10 +1082,10 @@
     }
 
     // ==========================================
-    // 9. 백엔드 통신 로직
+    // 9. 백엔드 통신 로직 (리다이렉트 대응)
     // ==========================================
     function fetchQuickData(force = false) {
-      fetch(`${GAS_URL}?action=getQuickData`)
+      fetch(`${GAS_URL}?action=getQuickData`, { redirect: 'follow' })
         .then(res => res.json())
         .then(res => {
           if (res.attendance) {
@@ -1093,20 +1099,30 @@
             renderGigs();
           }
         })
-        .catch(err => console.error("QuickData 수신 에러:", err));
+        .catch(err => {
+          console.error("QuickData 수신 에러:", err);
+          document.getElementById("attendanceTbody").innerHTML = '<tr><td class="loading-box" style="color:#ff4757">데이터 연결 실패. 상단 새로고침을 눌러주세요.</td></tr>';
+        });
     }
 
     function fetchScoresData(force = false) {
-      fetch(`${GAS_URL}?action=getScoresData`)
+      fetch(`${GAS_URL}?action=getScoresData`, { redirect: 'follow' })
         .then(res => res.json())
         .then(res => {
           if (res.scores) {
             scoresData = res.scores;
             localStorage.setItem("hr_scores", JSON.stringify(scoresData));
-            renderScores();
           }
+          if (res.bandNotes) {
+            bandNotesData = res.bandNotes;
+            localStorage.setItem("hr_band_notes_test", JSON.stringify(bandNotesData));
+          }
+          renderScores();
         })
-        .catch(err => console.error("ScoresData 수신 에러:", err));
+        .catch(err => {
+          console.error("ScoresData 수신 에러:", err);
+          document.getElementById("scoreListContainer").innerHTML = '<div class="loading-box" style="color:#ff4757">악보 데이터 연결 실패. 상단 새로고침을 눌러주세요.</div>';
+        });
     }
   </script>
 </body>
