@@ -263,7 +263,7 @@
     .score-file-row.audio-type .score-part-title { color: #1b5e20; }
 
     /* ====================================================
-       💬 팁공유 초슬림 컴팩트 바텀시트 모달 (88dvh)
+       💬 팁공유 전용 바텀시트 모달 (88dvh)
        ==================================================== */
     #tip-sheet-overlay {
       display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -373,7 +373,7 @@
       scroll-behavior: smooth;
     }
 
-    /* 💬 초슬림 인라인 피드 아이템 (카드 박스/파트 태그 제거) */
+    /* 💬 초슬림 인라인 피드 아이템 */
     .compact-feed-item {
       display: flex;
       flex-direction: column;
@@ -400,7 +400,6 @@
       font-size: 0.69rem;
       font-weight: 500;
     }
-    /* 본문 옆/헤더 옆 인라인 [▶추천1] 미니 칩 */
     .feed-inline-yt-chip {
       display: inline-flex;
       align-items: center;
@@ -424,14 +423,14 @@
       word-break: break-all;
     }
 
-    /* 하단 초슬림 입력 폼 */
+    /* 💡 하단 입력 폼 (바닥 안전 여백 14px + safe-area 확보) */
     .tip-sheet-footer {
       background: #ffffff;
       border-top: 1px solid var(--border);
-      padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px)) 10px;
+      padding: 9px 12px calc(14px + env(safe-area-inset-bottom, 0px)) 12px;
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 6px;
       flex-shrink: 0;
     }
     .footer-input-row {
@@ -481,8 +480,8 @@
       width: 100%;
       border: 1px solid #eef1f4;
       border-radius: 5px;
-      padding: 4px 7px;
-      font-size: 0.72rem;
+      padding: 5px 8px;
+      font-size: 0.73rem;
       color: #57606f;
       outline: none;
       background: #f8f9fa;
@@ -1311,7 +1310,6 @@
         const currentYear = now.getFullYear();
         let targetDate = null;
 
-        // "MM.DD HH:mm" 형태 파싱
         const match = String(dateStr).trim().match(/(\d{1,2})[./-](\d{1,2})\s+(\d{1,2}):(\d{1,2})/);
         if (match) {
           const m = parseInt(match[1], 10) - 1;
@@ -1320,7 +1318,6 @@
           const min = parseInt(match[4], 10);
           targetDate = new Date(currentYear, m, d, h, min);
 
-          // 만약 미래 시간으로 잡히면 전년도 데이터로 보정
           if (targetDate.getTime() > now.getTime() + 60000) {
             targetDate.setFullYear(currentYear - 1);
           }
@@ -1388,7 +1385,6 @@
       let shelfHtml = '';
       const recoMap = new Map();
 
-      // 1) 상단 쉘프: [▶ 추천 1: 작성자] 형태로 렌더링
       songNotesAsc.forEach(note => {
         if (note.ytUrl && note.ytUrl.trim() !== '') {
           recoIndex++;
@@ -1408,7 +1404,6 @@
         shelfContainer.innerHTML = shelfHtml;
       }
 
-      // 2) 초슬림 인라인 피드 렌더링 (카드 테두리 및 파트 태그 삭제)
       if (songNotesAsc.length === 0) {
         timelineContainer.innerHTML = `
           <div style="text-align:center; padding:35px 15px; color:#a4b0be; font-size:0.83rem;">
@@ -1423,7 +1418,6 @@
         const recoNum = recoMap.get(note);
         const relTime = getRelativeTimeString(note.date);
         
-        // 인라인 추천영상 미니 태그
         const inlineYtChip = note.ytUrl ? `
           <a href="${note.ytUrl.trim()}" class="feed-inline-yt-chip" target="_blank" rel="noopener noreferrer">
             <i class="fa-brands fa-youtube"></i> 추천${recoNum}
@@ -1468,7 +1462,6 @@
       const now = new Date();
       const dateStr = `${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-      // 파트는 '전체'로 기본 설정하여 백엔드 DB와 100% 호환 유지
       const newNote = {
         date: dateStr,
         song: currentActiveSheetSong,
@@ -1492,7 +1485,7 @@
 
       try {
         const payload = {
-          action: "addBandNoteTest",
+          action: "addBandNote",
           song: currentActiveSheetSong,
           part: '전체',
           author: author,
