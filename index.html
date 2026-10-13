@@ -271,7 +271,7 @@
       flex-shrink: 0;
     }
 
-    /* 악보공유 버튼 (동일 28px 규격) */
+    /* 악보공유 버튼 */
     .upload-share-btn { 
       display: inline-flex; 
       align-items: center; 
@@ -301,7 +301,7 @@
       flex-shrink: 0;
     }
 
-    /* 💬 팁공유 상단 버튼 (동일 28px 규격) */
+    /* 💬 팁공유 상단 버튼 */
     .tip-hub-open-btn {
       display: inline-flex; 
       align-items: center; 
@@ -629,7 +629,7 @@
   <div id="score-search-bar">
     <div class="search-input-wrap">
       <i class="fa-solid fa-magnifying-glass search-icon"></i>
-      <input type="text" id="score-search" placeholder="곡명 또는 파트 검색..." oninput="filterScores()">
+      <input type="text" id="score-search" placeholder="곡명 또는 파트 검색..." oninput="filterScores()" autocomplete="off">
       <button class="search-clear-btn" onclick="clearScoreSearch()"><i class="fa-solid fa-circle-xmark"></i></button>
     </div>
   </div>
@@ -701,14 +701,14 @@
       <!-- 타임라인 인라인 피드 스크롤 영역 -->
       <div class="tip-timeline-scroll" id="sheet-timeline-feed"></div>
 
-      <!-- 하단 초슬림 입력 폼 -->
+      <!-- 하단 초슬림 입력 폼 (삼성패스 및 브라우저 자동완성 원천 차단) -->
       <div class="tip-sheet-footer">
         <div class="footer-input-row">
-          <input type="text" id="sheet-author-input" class="footer-author-box" placeholder="작성자">
-          <input type="text" id="sheet-content-input" class="footer-text-box" placeholder="팁이나 피드백을 남겨주세요..." onkeydown="if(event.key==='Enter') submitSheetNote()">
+          <input type="text" id="sheet-author-input" class="footer-author-box" placeholder="작성자" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+          <input type="text" id="sheet-content-input" class="footer-text-box" placeholder="팁이나 피드백을 남겨주세요..." onkeydown="if(event.key==='Enter') submitSheetNote()" autocomplete="off" autocorrect="off" spellcheck="false">
           <button class="footer-submit-btn" id="sheet-send-btn" onclick="submitSheetNote()">등록</button>
         </div>
-        <input type="url" id="sheet-yt-input" class="footer-yt-input" placeholder="추천 유튜브 영상 링크 (선택)">
+        <input type="text" id="sheet-yt-input" class="footer-yt-input" placeholder="추천 유튜브 영상 링크 (선택)" inputmode="url" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
       </div>
     </div>
   </div>
