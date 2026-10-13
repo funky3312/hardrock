@@ -242,7 +242,7 @@
     .song-memo-card { background: #fff9db; border-left: 4px solid #f59f00; padding: 8px 11px; border-radius: 4px; font-size: 0.84rem; font-weight: 500; color: #343a40; line-height: 1.5; white-space: pre-wrap; word-break: break-all; text-align: left; }
     .youtube-btn-group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
     
-    /* 🚀 유튜브 버튼: 높이 28px 완전 고정 & 폰트 충돌 차단 */
+    /* 유튜브 버튼: 높이 28px 완전 고정 & 폰트 충돌 차단 */
     .youtube-link-btn { 
       display: inline-flex; 
       align-items: center; 
@@ -788,12 +788,6 @@
       restoreFromCache();
       loadFastData();
       initSmoothGestures();
-
-      window.addEventListener('focusin', (e) => {
-        if (e.target && e.target.closest && e.target.closest('.tip-sheet-footer')) {
-          window.scrollTo(0, 0);
-        }
-      });
     };
 
     function restoreFromCache() {
@@ -1400,7 +1394,7 @@
     }
 
     /* ====================================================
-       💡 상대 시간 (Relative Time) 완전 보정 엔진
+       상대 시간 (Relative Time) 완전 보정 엔진
        ==================================================== */
     function getRelativeTimeString(dateStr) {
       if (!dateStr) return '';
