@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover, interactive-widget=resizes-content">
   <meta name="theme-color" content="#ffffff">
   <title>HardRock BAND</title>
   <link rel="manifest" href="manifest.json">
@@ -263,24 +263,27 @@
     .score-file-row.audio-type .score-part-title { color: #1b5e20; }
 
     /* ====================================================
-       💬 팁공유 바텀시트 모달 (88dvh + 안정 패딩)
+       💬 팁공유 바텀시트 모달 (자판 대응 및 바운스 차단)
        ==================================================== */
     #tip-sheet-overlay {
       display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(0, 0, 0, 0.55); z-index: 1500;
       align-items: flex-end; justify-content: center;
+      overscroll-behavior: contain;
     }
     .tip-sheet-card {
       background: #ffffff;
       width: 100%;
       max-width: 520px;
       height: 88dvh;
+      max-height: 88dvh;
       border-radius: 18px 18px 0 0;
       display: flex;
       flex-direction: column;
       box-shadow: 0 -8px 30px rgba(0,0,0,0.22);
       animation: tipSheetSlideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
       overflow: hidden;
+      overscroll-behavior: contain;
     }
     @keyframes tipSheetSlideUp {
       from { transform: translateY(100%); }
@@ -699,6 +702,13 @@
       restoreFromCache();
       loadFastData();
       initSmoothGestures();
+
+      // 💡 키보드가 뜬 상태에서 인풋 간 전환 시 브라우저 윈도우 스크롤 덜컹거림 원천 차단
+      window.addEventListener('focusin', (e) => {
+        if (e.target && e.target.closest && e.target.closest('.tip-sheet-footer')) {
+          window.scrollTo(0, 0);
+        }
+      });
     };
 
     function restoreFromCache() {
@@ -996,7 +1006,6 @@
       html += '</tbody></table>';
       container.innerHTML = html;
 
-      // 안전한 이벤트 바인딩
       container.querySelectorAll('.js-att-cell').forEach(btn => {
         btn.addEventListener('click', () => {
           openAttModal(btn.dataset.row, btn.dataset.col, btn.dataset.name, btn.dataset.date);
@@ -1340,7 +1349,6 @@
         if (diffHour < 24) return `${diffHour}시간 전`;
         const diffDay = Math.floor(diffHour / 24);
         
-        // 🚀 1~29일까지 일 단위 표기 (7~29일 왜곡 버그 해결)
         if (diffDay < 30) return `${diffDay}일 전`;
         
         const diffMonth = Math.floor(diffDay / 30);
@@ -1354,7 +1362,7 @@
     }
 
     /* ====================================================
-       💬 팁공유 바텀시트 제어 & 포커스 엔진 (무결점 타이밍)
+       💬 팁공유 바텀시트 제어 & 포커스 엔진
        ==================================================== */
     function openTipSheet(songName) {
       currentActiveSheetSong = songName;
@@ -1368,7 +1376,6 @@
       document.getElementById('sheet-content-input').value = '';
       document.getElementById('sheet-yt-input').value = '';
 
-      // 💡 display = 'flex'를 먼저 켜서 렌더 트리에 올린 뒤 렌더링 (0-height 버그 원천 차단)
       document.getElementById('tip-sheet-overlay').style.display = 'flex';
       history.pushState({ tipSheetOpen: true }, '');
 
@@ -1449,7 +1456,6 @@
 
       timelineContainer.innerHTML = timelineHtml;
 
-      // 💡 바텀시트 슬라이드 애니메이션 완료 후 최하단 포커스 안착
       if (autoScrollToBottom) {
         setTimeout(() => {
           timelineContainer.scrollTop = timelineContainer.scrollHeight;
