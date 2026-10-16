@@ -1480,20 +1480,33 @@
         const now = new Date();
         const currentYear = now.getFullYear();
         let targetDate = null;
+        const str = String(dateStr).trim();
 
-        const match = String(dateStr).trim().match(/(\d{1,2})[./-](\d{1,2})\s+(\d{1,2}):(\d{1,2})/);
-        if (match) {
-          const m = parseInt(match[1], 10) - 1;
-          const d = parseInt(match[2], 10);
-          const h = parseInt(match[3], 10);
-          const min = parseInt(match[4], 10);
-          targetDate = new Date(currentYear, m, d, h, min);
-
-          if (targetDate.getTime() > now.getTime() + 60000) {
-            targetDate.setFullYear(currentYear - 1);
-          }
+        // 1) YYYY.MM.DD HH:mm (또는 YYYY-MM-DD 등) 연도 포함 포맷
+        const ymdMatch = str.match(/(\d{4})[./-](\d{1,2})[./-](\d{1,2})(?:\s+(\d{1,2}):(\d{1,2}))?/);
+        if (ymdMatch) {
+          const y = parseInt(ymdMatch[1], 10);
+          const m = parseInt(ymdMatch[2], 10) - 1;
+          const d = parseInt(ymdMatch[3], 10);
+          const h = ymdMatch[4] ? parseInt(ymdMatch[4], 10) : 0;
+          const min = ymdMatch[5] ? parseInt(ymdMatch[5], 10) : 0;
+          targetDate = new Date(y, m, d, h, min);
         } else {
-          targetDate = new Date(dateStr);
+          // 2) MM.DD HH:mm 기존 연도 미포함 포맷 하위 호환
+          const mdMatch = str.match(/(\d{1,2})[./-](\d{1,2})\s+(\d{1,2}):(\d{1,2})/);
+          if (mdMatch) {
+            const m = parseInt(mdMatch[1], 10) - 1;
+            const d = parseInt(mdMatch[2], 10);
+            const h = parseInt(mdMatch[3], 10);
+            const min = parseInt(mdMatch[4], 10);
+            targetDate = new Date(currentYear, m, d, h, min);
+
+            if (targetDate.getTime() > now.getTime() + 60000) {
+              targetDate.setFullYear(currentYear - 1);
+            }
+          } else {
+            targetDate = new Date(dateStr);
+          }
         }
 
         if (isNaN(targetDate.getTime())) return dateStr;
@@ -1631,7 +1644,7 @@
       sendBtn.disabled = true;
 
       const now = new Date();
-      const dateStr = `${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      const dateStr = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
       const newNote = {
         date: dateStr,
@@ -1661,7 +1674,8 @@
           part: '전체',
           author: author,
           content: content,
-          ytUrl: ytUrl
+          ytUrl: ytUrl,
+          date: dateStr
         };
         fetch(GAS_API_URL, { method: "POST", body: JSON.stringify(payload) });
       } catch (e) {}
