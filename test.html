@@ -704,7 +704,7 @@
     </div>
   </div>
 
-  <!-- 💬 팁공유 바텀시트 모달 (88dvh) -->
+  <!-- 💬 팁공유 전용 바텀시트 모달 (88dvh) -->
   <div id="tip-sheet-overlay" onclick="onTipOverlayClick(event)">
     <div class="tip-sheet-card" onclick="event.stopPropagation()">
       <div class="tip-sheet-header">
@@ -1259,7 +1259,8 @@
           }
         }
         if (youtube && !groups[song].youtube) groups[song].youtube = youtube;
-        if (memo && !groups[song].memo) groups[memo] = memo;
+        // ⭐ 오타 수정 완료: groups[memo] = memo 가 아닌 groups[song].memo = memo 로 정상 매핑!
+        if (memo && !groups[song].memo) groups[song].memo = memo;
       });
 
       const favs = getFavorites();
@@ -1276,12 +1277,15 @@
       }
 
       songNames.forEach((song) => {
+        const songData = groups[song];
+        // 방어 코드: 정상 객체가 아니면 건너뜀
+        if (!songData || typeof songData !== 'object' || !songData.directFiles) return;
+
         const isFav = favs.includes(song);
         const accordion = document.createElement('div');
         accordion.className = `song-accordion ${isFav ? 'favorite' : ''}`;
         if (query.length > 0 || openSongs.has(song)) accordion.classList.add('open');
 
-        const songData = groups[song];
         const ytList = parseYoutubeLinks(songData.youtube);
         const songNotesCount = (appData.bandNotes || []).filter(n => (n.song || '').trim() === song).length;
 
@@ -1323,15 +1327,15 @@
         };
 
         // 1) 직속 파일 중 음원(🎧) 분리
-        const directAudioFiles = songData.directFiles.filter(f => isAudioFile(f.part));
+        const directAudioFiles = (songData.directFiles || []).filter(f => isAudioFile(f.part));
         const audioFilesHtml = directAudioFiles.map(renderRowHtml).join('');
 
         // 2) 하위 폴더별 서브 아코디언 (가나다순 정렬 & 일반 악보 위 배치)
-        const subFolderNames = Object.keys(songData.subFolders).sort((a, b) => a.localeCompare(b));
+        const subFolderNames = Object.keys(songData.subFolders || {}).sort((a, b) => a.localeCompare(b));
         let subFoldersHtml = '';
         if (subFolderNames.length > 0) {
           subFoldersHtml = subFolderNames.map(folderName => {
-            const folderFiles = songData.subFolders[folderName];
+            const folderFiles = songData.subFolders[folderName] || [];
             const sortedFolderFiles = [...folderFiles].sort((a, b) => {
               const aAudio = isAudioFile(a.part), bAudio = isAudioFile(b.part);
               if (aAudio && !bAudio) return -1;
@@ -1358,7 +1362,7 @@
         }
 
         // 3) 직속 일반 악보 파일 (PDF, HWP 등 문서)
-        const directDocFiles = songData.directFiles.filter(f => !isAudioFile(f.part));
+        const directDocFiles = (songData.directFiles || []).filter(f => !isAudioFile(f.part));
         const docFilesHtml = directDocFiles.map(renderRowHtml).join('');
 
         // 최종 렌더링 순서:
