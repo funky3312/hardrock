@@ -242,7 +242,7 @@
     .song-memo-card { background: #fff9db; border-left: 4px solid #f59f00; padding: 8px 11px; border-radius: 4px; font-size: 0.84rem; font-weight: 500; color: #343a40; line-height: 1.5; white-space: pre-wrap; word-break: break-all; text-align: left; }
     .youtube-btn-group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
     
-    /* 유튜브 버튼: 높이 28px 완전 고정 & 폰트 충돌 차단 */
+    /* 유튜브 버튼: 높이 28px 완전 고정 */
     .youtube-link-btn { 
       display: inline-flex; 
       align-items: center; 
@@ -336,7 +336,7 @@
       line-height: 1.3;
     }
 
-    /* 악보 파일 목록 행 */
+    /* 직속 악보 파일 행 */
     .score-file-row { display: flex; align-items: center; padding: 11px 14px; margin-bottom: 5px; background: #f1f3f5; border-radius: 6px; border: 1px solid #e9ecef; cursor: pointer; user-select: none; }
     .score-file-row:last-child { margin-bottom: 0; }
     .score-file-row:active { background: #e4e7eb; transform: scale(0.99); }
@@ -346,8 +346,60 @@
     .score-file-row.audio-type .score-part-title { color: #1b5e20; }
 
     /* ====================================================
-       💬 팁공유 바텀시트 모달
+       📁 하위 폴더 서브 아코디언 (최하단 접이식 그룹)
        ==================================================== */
+    .subfolder-group {
+      margin-top: 6px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      background: #ffffff;
+      overflow: hidden;
+    }
+    .subfolder-header-btn {
+      width: 100%;
+      padding: 9px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #f8fafc;
+      border: none;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #334155;
+      text-align: left;
+    }
+    .subfolder-header-btn:active { background: #f1f5f9; }
+    .subfolder-title { display: flex; align-items: center; }
+    .subfolder-count {
+      display: inline-block;
+      background: #e2e8f0;
+      color: #475569;
+      font-size: 0.70rem;
+      font-weight: 800;
+      padding: 1px 6px;
+      border-radius: 10px;
+      margin-left: 6px;
+    }
+    .subfolder-arrow {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      transition: transform 0.2s ease;
+    }
+    .subfolder-group.open .subfolder-arrow {
+      transform: rotate(180deg);
+    }
+    .subfolder-content {
+      display: none;
+      padding: 8px;
+      background: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+    }
+    .subfolder-group.open .subfolder-content {
+      display: block;
+    }
+
+    /* 💬 팁공유 바텀시트 모달 (88dvh) */
     #tip-sheet-overlay {
       display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(0, 0, 0, 0.55); z-index: 1500;
@@ -373,7 +425,6 @@
       to { transform: translateY(0); }
     }
 
-    /* 시트 헤더 */
     .tip-sheet-header {
       padding: 10px 14px;
       display: flex;
@@ -399,7 +450,6 @@
       background: none; border: none; font-size: 1.2rem; color: #747d8c; cursor: pointer; padding: 2px 4px;
     }
 
-    /* 📹 상단 추천영상 고정 쉘프 바 */
     .tip-shelf-section {
       background: #f8f9fa;
       padding: 6px 12px;
@@ -446,7 +496,6 @@
     .shelf-yt-btn i { font-size: 0.78rem; line-height: 1; flex-shrink: 0; }
     .shelf-empty-hint { font-size: 0.72rem; color: #a4b0be; }
 
-    /* 타임라인 피드 스크롤 영역 */
     .tip-timeline-scroll {
       flex: 1;
       overflow-y: auto;
@@ -459,7 +508,6 @@
       scroll-behavior: smooth;
     }
 
-    /* 💬 초슬림 인라인 피드 아이템 */
     .compact-feed-item {
       display: flex;
       flex-direction: column;
@@ -477,15 +525,8 @@
       gap: 6px;
       font-size: 0.75rem;
     }
-    .feed-author {
-      font-weight: 800;
-      color: #2f3542;
-    }
-    .feed-time-rel {
-      color: #a4b0be;
-      font-size: 0.69rem;
-      font-weight: 500;
-    }
+    .feed-author { font-weight: 800; color: #2f3542; }
+    .feed-time-rel { color: #a4b0be; font-size: 0.69rem; font-weight: 500; }
     .feed-inline-yt-chip {
       display: inline-flex;
       align-items: center;
@@ -511,9 +552,7 @@
       word-break: break-all;
     }
 
-    /* ====================================================
-       하단 입력 폼 (삼성패스 툴바 100% 차단 단일행 textarea)
-       ==================================================== */
+    /* 단일행 textarea (삼성패스 100% 차단) */
     .tip-sheet-footer {
       background: #ffffff;
       border-top: 1px solid var(--border);
@@ -532,66 +571,33 @@
       scrollbar-width: none;
       vertical-align: middle;
     }
-    .tip-sheet-footer textarea::-webkit-scrollbar {
-      display: none;
-    }
+    .tip-sheet-footer textarea::-webkit-scrollbar { display: none; }
 
-    .footer-input-row {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    }
+    .footer-input-row { display: flex; gap: 6px; align-items: center; }
     .footer-author-box {
-      width: 75px;
-      height: 32px;
-      line-height: 18px;
-      border: 1px solid #dcdde1;
-      border-radius: 6px;
-      padding: 6px 7px;
-      font-size: 0.78rem;
-      color: #2f3542;
-      background: #f8f9fa;
-      outline: none;
-      text-align: center;
-      font-weight: 700;
-      flex-shrink: 0;
+      width: 75px; height: 32px; line-height: 18px;
+      border: 1px solid #dcdde1; border-radius: 6px;
+      padding: 6px 7px; font-size: 0.78rem; color: #2f3542;
+      background: #f8f9fa; outline: none; text-align: center;
+      font-weight: 700; flex-shrink: 0;
     }
     .footer-text-box {
-      flex: 1;
-      height: 32px;
-      line-height: 18px;
-      border: 1px solid #dcdde1;
-      border-radius: 6px;
-      padding: 6px 8px;
-      font-size: 0.82rem;
-      color: #2f3542;
-      background: #fafbfc;
-      outline: none;
+      flex: 1; height: 32px; line-height: 18px;
+      border: 1px solid #dcdde1; border-radius: 6px;
+      padding: 6px 8px; font-size: 0.82rem; color: #2f3542;
+      background: #fafbfc; outline: none;
     }
     .footer-submit-btn {
-      width: 52px;
-      height: 32px;
-      border: none;
-      border-radius: 6px;
-      background: #387d5e;
-      color: #ffffff;
-      font-size: 0.80rem;
-      font-weight: 800;
-      cursor: pointer;
-      flex-shrink: 0;
+      width: 52px; height: 32px; border: none; border-radius: 6px;
+      background: #387d5e; color: #ffffff; font-size: 0.80rem;
+      font-weight: 800; cursor: pointer; flex-shrink: 0;
     }
     .footer-submit-btn:active { background: #2f684e; }
     .footer-yt-input {
-      width: 100%;
-      height: 28px;
-      line-height: 16px;
-      border: 1px solid #eef1f4;
-      border-radius: 5px;
-      padding: 5px 8px;
-      font-size: 0.73rem;
-      color: #57606f;
-      outline: none;
-      background: #f8f9fa;
+      width: 100%; height: 28px; line-height: 16px;
+      border: 1px solid #eef1f4; border-radius: 5px;
+      padding: 5px 8px; font-size: 0.73rem; color: #57606f;
+      outline: none; background: #f8f9fa;
     }
 
     /* 출석 모달 */
@@ -709,7 +715,6 @@
         <button class="tip-sheet-close-btn" onclick="closeTipSheet()"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
-      <!-- 📹 상단 추천영상 고정 쉘프 -->
       <div class="tip-shelf-section">
         <div class="tip-shelf-label">
           <i class="fa-brands fa-youtube" style="color:#d91c1c;"></i> 추천영상:
@@ -717,10 +722,9 @@
         <div class="tip-shelf-scroll" id="sheet-shelf-scroll"></div>
       </div>
 
-      <!-- 타임라인 인라인 피드 스크롤 영역 -->
       <div class="tip-timeline-scroll" id="sheet-timeline-feed"></div>
 
-      <!-- 하단 초슬림 입력 폼 (삼성패스 100% 무력화 단일행 textarea) -->
+      <!-- 하단 입력 폼 (삼성패스 차단 단일행 textarea) -->
       <div class="tip-sheet-footer">
         <div class="footer-input-row">
           <textarea id="sheet-author-input" class="footer-author-box" placeholder="작성자" rows="1" wrap="off" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('sheet-content-input').focus();}"></textarea>
@@ -1225,23 +1229,35 @@
         return;
       }
 
+      // H열(하위폴더) 분기 조립
       const groups = {};
       appData.scores.forEach(row => {
-        let song = '', part = '', preview = '', download = '', youtube = '', memo = '', fileId = '';
+        let song = '', part = '', preview = '', download = '', youtube = '', memo = '', fileId = '', subFolder = '';
         if (Array.isArray(row)) {
           song = (row[0] || '').trim(); part = (row[1] || '').trim(); preview = (row[2] || '').trim();
           download = (row[3] || '').trim(); youtube = (row[4] || '').trim(); memo = (row[5] || '').trim();
-          fileId = (row[6] || '').trim();
+          fileId = (row[6] || '').trim(); subFolder = (row[7] || '').trim();
         } else if (typeof row === 'object') {
           song = (row.song || '').trim(); part = (row.fileName || row.part || '').trim();
           preview = (row.viewUrl || row.preview || '').trim(); download = (row.downloadUrl || row.download || '').trim();
           youtube = (row.youtube || '').trim(); memo = (row.memo || '').trim(); fileId = (row.fileId || '').trim();
+          subFolder = (row.subFolder || '').trim();
         }
 
         if (!song) return;
-        if (query && !song.toLowerCase().includes(query) && !part.toLowerCase().includes(query)) return;
-        if (!groups[song]) groups[song] = { files: [], youtube: '', memo: '' };
-        if (part || preview || download) groups[song].files.push({ part, preview, download, fileId });
+        if (query && !song.toLowerCase().includes(query) && !part.toLowerCase().includes(query) && !subFolder.toLowerCase().includes(query)) return;
+        
+        if (!groups[song]) groups[song] = { directFiles: [], subFolders: {}, youtube: '', memo: '' };
+        
+        if (part || preview || download) {
+          const fileObj = { part, preview, download, fileId };
+          if (subFolder) {
+            if (!groups[song].subFolders[subFolder]) groups[song].subFolders[subFolder] = [];
+            groups[song].subFolders[subFolder].push(fileObj);
+          } else {
+            groups[song].directFiles.push(fileObj);
+          }
+        }
         if (youtube && !groups[song].youtube) groups[song].youtube = youtube;
         if (memo && !groups[song].memo) groups[song].memo = memo;
       });
@@ -1294,14 +1310,15 @@
 
         extraHtml += '</div></div>';
 
-        const sortedFiles = [...songData.files].sort((a, b) => {
+        // 1) 직속 파일 렌더링
+        const sortedDirectFiles = [...songData.directFiles].sort((a, b) => {
           const aAudio = isAudioFile(a.part), bAudio = isAudioFile(b.part);
           if (aAudio && !bAudio) return -1;
           if (!aAudio && bAudio) return 1;
           return 0;
         });
 
-        let filesHtml = sortedFiles.map(f => {
+        let directFilesHtml = sortedDirectFiles.map(f => {
           const fileIdMatch = (f.preview || f.download || '').match(/[-\w]{25,}/);
           const fileId = f.fileId || (fileIdMatch ? fileIdMatch[0] : '');
           const isAudio = isAudioFile(f.part);
@@ -1313,6 +1330,48 @@
             </div>`;
         }).join('');
 
+        // 2) 하위 폴더별 서브 아코디언 렌더링 (최하단 정렬)
+        const subFolderNames = Object.keys(songData.subFolders);
+        let subFoldersHtml = '';
+        if (subFolderNames.length > 0) {
+          subFoldersHtml = subFolderNames.map(folderName => {
+            const folderFiles = songData.subFolders[folderName];
+            const sortedFolderFiles = [...folderFiles].sort((a, b) => {
+              const aAudio = isAudioFile(a.part), bAudio = isAudioFile(b.part);
+              if (aAudio && !bAudio) return -1;
+              if (!aAudio && bAudio) return 1;
+              return 0;
+            });
+
+            const folderFilesListHtml = sortedFolderFiles.map(f => {
+              const fileIdMatch = (f.preview || f.download || '').match(/[-\w]{25,}/);
+              const fileId = f.fileId || (fileIdMatch ? fileIdMatch[0] : '');
+              const isAudio = isAudioFile(f.part);
+              const cleanViewUrl = fileId ? `https://drive.google.com/file/d/${fileId}/preview` : f.preview;
+              const iconHtml = isAudio ? '<i class="fa-solid fa-headphones" style="font-size:0.85rem; margin-right:4px;"></i>' : '';
+              return `
+                <div class="score-file-row ${isAudio ? 'audio-type' : ''}" onclick="openGoogleMedia('${cleanViewUrl}')">
+                  <span class="score-part-title">${iconHtml}${escapeHtml(f.part || '파일')}</span>
+                </div>`;
+            }).join('');
+
+            const shouldOpenSub = query.length > 0;
+            return `
+              <div class="subfolder-group ${shouldOpenSub ? 'open' : ''}">
+                <button class="subfolder-header-btn" onclick="toggleSubFolder(this)">
+                  <span class="subfolder-title">
+                    <i class="fa-solid fa-folder" style="color:#d97706; margin-right:5px;"></i>${escapeHtml(folderName)}
+                    <span class="subfolder-count">${folderFiles.length}</span>
+                  </span>
+                  <i class="fa-solid fa-chevron-down subfolder-arrow"></i>
+                </button>
+                <div class="subfolder-content">
+                  ${folderFilesListHtml}
+                </div>
+              </div>`;
+          }).join('');
+        }
+
         accordion.innerHTML = `
           <button class="song-header-btn" onclick="toggleAccordion(this)">
             <span class="song-title-text">${escapeHtml(song)}</span>
@@ -1322,7 +1381,8 @@
           </button>
           <div class="file-accordion-body">
             ${extraHtml}
-            ${filesHtml}
+            ${directFilesHtml}
+            ${subFoldersHtml}
           </div>`;
         
         accordion.querySelectorAll('.js-upload-btn').forEach(b => {
@@ -1334,6 +1394,11 @@
 
         container.appendChild(accordion);
       });
+    }
+
+    function toggleSubFolder(btn) {
+      const group = btn.closest('.subfolder-group');
+      if (group) group.classList.toggle('open');
     }
 
     function onFavStarClick(btn, event) {
@@ -1412,9 +1477,7 @@
       });
     }
 
-    /* ====================================================
-       상대 시간 (Relative Time) 완전 보정 엔진
-       ==================================================== */
+    /* 상대 시간 계산기 */
     function getRelativeTimeString(dateStr) {
       if (!dateStr) return '';
       try {
@@ -1448,10 +1511,8 @@
         const diffDay = Math.floor(diffHour / 24);
         
         if (diffDay < 30) return `${diffDay}일 전`;
-        
         const diffMonth = Math.floor(diffDay / 30);
         if (diffMonth < 12) return `${diffMonth}달 전`;
-        
         const diffYear = Math.floor(diffDay / 365);
         return `${diffYear || 1}년 전`;
       } catch (e) {
@@ -1459,9 +1520,7 @@
       }
     }
 
-    /* ====================================================
-       💬 팁공유 바텀시트 제어 & 포커스 엔진
-       ==================================================== */
+    /* 💬 팁공유 바텀시트 제어 */
     function openTipSheet(songName) {
       currentActiveSheetSong = songName;
       document.getElementById('sheet-song-title').innerHTML = `
